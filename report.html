@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>98GO e-bike｜銷售報表</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --brand:#2B2D42;--accent:#E63946;--green:#1D9E75;
+  --blue:#185FA5;--amber:#854F0B;--purple:#534AB7;
+  --gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;
+  --gray4:#aaa;--gray5:#666;--text:#1a1a1a;
+}
+body{font-family:'Noto Sans TC',sans-serif;background:#f0f2f5;color:var(--text);min-height:100vh;}
+
+/* Header */
+.header{background:var(--brand);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.2);}
+.logo{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:var(--accent);flex-shrink:0;}
+.logo span:first-child{font-size:14px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;}
+.logo span:last-child{font-size:8px;color:rgba(255,255,255,.8);letter-spacing:.1em;}
+.header h1{font-size:17px;font-weight:700;}
+.header p{font-size:11px;opacity:.6;margin-top:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.refresh-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;}
+.refresh-btn:hover{background:rgba(255,255,255,.2);}
+.last-update{font-size:11px;opacity:.5;}
+
+/* Nav tabs */
+.nav{background:#fff;border-bottom:1px solid var(--gray3);padding:0 1.5rem;display:flex;gap:0;overflow-x:auto;}
+.nav-tab{padding:.75rem 1.25rem;border:none;background:none;font-size:13px;font-family:inherit;color:var(--gray5);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.nav-tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600;}
+.nav-tab:hover{color:var(--text);}
+
+/* Main */
+.main{max-width:1200px;margin:0 auto;padding:1.5rem;}
+
+/* Loading */
+.loading{text-align:center;padding:4rem 0;color:var(--gray4);}
+.spinner{width:36px;height:36px;border:3px solid var(--gray2);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Metric cards */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:1.5rem;}
+.metric{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.metric .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+.metric .val{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.metric .sub{font-size:11px;color:var(--gray4);margin-top:4px;}
+.metric.accent{background:var(--brand);}
+.metric.accent .lbl,.metric.accent .val,.metric.accent .sub{color:#fff;}
+.metric.accent .lbl{opacity:.6;}
+.metric.accent .sub{opacity:.5;}
+
+/* Cards */
+.card{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:1rem;}
+.card-title{font-size:14px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 10px;color:var(--gray5);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--gray3);white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid var(--gray2);color:var(--text);white-space:nowrap;}
+tr:hover td{background:var(--gray1);}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;}
+.badge-green{background:#E1F5EE;color:#085041;}
+.badge-blue{background:#E6F1FB;color:#185FA5;}
+.badge-amber{background:#FFF3E5;color:#633806;}
+.badge-red{background:#fff0f1;color:#A32D2D;}
+.badge-purple{background:#EEEDFE;color:#534AB7;}
+
+/* Bar chart manual */
+.bar-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bar-label{font-size:12px;color:var(--gray5);width:100px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:22px;background:var(--gray2);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding:0 8px;}
+.bar-fill span{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;}
+
+/* Status pills */
+.status-pending{background:#FFF3E5;color:#633806;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
+.status-done{background:#E1F5EE;color:#085041;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
+.status-late{background:#fff0f1;color:#A32D2D;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
+
+/* Section filter */
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
+.filter-row label{font-size:12px;color:var(--gray5);}
+.filter-row select,.filter-row input{padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;}
+.search-input{flex:1;min-width:180px;}
+
+/* Error */
+.error-box{background:#fff0f1;border:1px solid #F5C4B3;border-radius:8px;padding:1rem;color:#712B13;font-size:13px;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <span>98GO</span>
+    <span>e-bike</span>
+  </div>
+  <div>
+    <h1>銷售報表</h1>
+    <p>內部管理系統</p>
+  </div>
+  <div class="header-right">
+    <span class="last-update" id="last-update"></span>
+    <button class="refresh-btn" onclick="loadData()">重新整理</button>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" onclick="switchTab('overview')">業績總覽</button>
+  <button class="nav-tab" onclick="switchTab('sales')">銷售排行</button>
+  <button class="nav-tab" onclick="switchTab('purchase')">採購計算</button>
+  <button class="nav-tab" onclick="switchTab('delivery')">出貨進度</button>
+  <button class="nav-tab" onclick="switchTab('customer')">客戶分析</button>
+  <button class="nav-tab" onclick="switchTab('records')">所有記錄</button>
+</div>
+
+<div class="main">
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>載入資料中...</p>
+  </div>
+
+  <div id="content" style="display:none;">
+
+    <!-- 業績總覽 -->
+    <div id="tab-overview">
+      <div class="metrics" id="metrics-overview"></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📅 每月業績</div>
+          <canvas id="chart-monthly" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">👤 Sale 業績排行</div>
+          <div id="sale-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 銷售排行 -->
+    <div id="tab-sales" style="display:none;">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🏍 車款銷售排行</div>
+          <div id="model-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔋 電池規格排行</div>
+          <div id="battery-bars"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🎨 顏色排行</div>
+          <div id="color-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💳 付款方式分布</div>
+          <div id="payment-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 採購計算 -->
+    <div id="tab-purchase" style="display:none;">
+      <div class="filter-row">
+        <label>篩選月份：</label>
+        <select id="purchase-month" onchange="renderPurchase()"></select>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📦 車款銷售數量</div>
+          <div id="purchase-model"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔋 電池需求數量</div>
+          <div id="purchase-battery"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 出貨進度 -->
+    <div id="tab-delivery" style="display:none;">
+      <div class="metrics" id="metrics-delivery"></div>
+      <div class="card">
+        <div class="card-title">🚚 待交車清單</div>
+        <div class="tbl-wrap">
+          <table id="table-delivery">
+            <thead><tr>
+              <th>預計交車日</th><th>狀態</th><th>客戶</th><th>手機</th>
+              <th>車款</th><th>顏色</th><th>電池</th><th>Sale</th><th>總金額</th>
+            </tr></thead>
+            <tbody id="tbody-delivery"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 客戶分析 -->
+    <div id="tab-customer" style="display:none;">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📍 客戶地區分布</div>
+          <div id="city-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📣 來源渠道分析</div>
+          <div id="source-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 所有記錄 -->
+    <div id="tab-records" style="display:none;">
+      <div class="filter-row">
+        <input type="text" class="search-input" id="search-input" placeholder="搜尋客戶、車款、Sale..." oninput="filterRecords()">
+        <select id="filter-month" onchange="filterRecords()"></select>
+        <select id="filter-sale" onchange="filterRecords()">
+          <option value="">所有 Sale</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
+              <th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>尾款</th><th>付款</th><th>Sale</th>
+            </tr></thead>
+            <tbody id="tbody-records"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ====== CONFIG ======
+const SHEET_ID = '1eLlGkJ2hvk_XJvJYtVGqGgQ8pCrQolfSkUlGnDhXO8k';
+const SHEET_NAME = '購車保固資料表';
+const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+let allData = [];
+let monthlyChart = null;
+let currentTab = 'overview';
+
+// ====== LOAD DATA ======
+async function loadData() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+  try {
+    const res = await fetch(API_URL);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+    const cols = json.table.cols;
+    allData = rows.map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col.label || col.id] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
+      });
+      return obj;
+    }).filter(r => r['單號']);
+    document.getElementById('last-update').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
+    renderAll();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請確認 Google Sheets 已開放「知道連結的人可以檢視」<br><br>錯誤：${e.message}</div>`;
+  }
+}
+
+function getVal(row, key) {
+  return (row[key] || '').toString().trim();
+}
+function getNum(row, key) {
+  return parseFloat(row[key]) || 0;
+}
+function getDate(row, key) {
+  const v = row[key];
+  if (!v) return null;
+  if (typeof v === 'string') return new Date(v);
+  if (typeof v === 'number') return new Date((v - 25569) * 86400000);
+  return null;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  if (typeof d === 'string') return d.slice(0,10);
+  return d.toISOString ? d.toISOString().slice(0,10) : '—';
+}
+function fmtMoney(n) {
+  return 'NT$ ' + Math.round(n).toLocaleString();
+}
+function getYM(row) {
+  const d = getDate(row, '成交日期');
+  if (!d) return '';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+// ====== RENDER ALL ======
+function renderAll() {
+  populateFilters();
+  renderOverview();
+  renderSales();
+  renderPurchase();
+  renderDelivery();
+  renderCustomer();
+  filterRecords();
+}
+
+function populateFilters() {
+  const months = [...new Set(allData.map(r => getYM(r)).filter(Boolean))].sort().reverse();
+  ['purchase-month','filter-month'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">全部月份</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  });
+  const sales = [...new Set(allData.map(r => getVal(r,'Sale')).filter(Boolean))].sort();
+  const fSale = document.getElementById('filter-sale');
+  fSale.innerHTML = '<option value="">所有 Sale</option>' + sales.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// ====== OVERVIEW ======
+function renderOverview() {
+  const now = new Date();
+  const thisMonth = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  });
+  const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const avgOrder = allData.length ? totalRevenue/allData.length : 0;
+
+  document.getElementById('metrics-overview').innerHTML = `
+    <div class="metric accent"><div class="lbl">本月成交</div><div class="val">${thisMonth.length} 筆</div><div class="sub">累計 ${allData.length} 筆</div></div>
+    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">累計 ${fmtMoney(totalRevenue)}</div></div>
+    <div class="metric"><div class="lbl">平均客單</div><div class="val">${fmtMoney(avgOrder)}</div><div class="sub">全部訂單</div></div>
+    <div class="metric"><div class="lbl">本月訂金</div><div class="val">${fmtMoney(thisMonth.reduce((s,r)=>s+getNum(r,'訂金'),0))}</div><div class="sub">本月尾款 ${fmtMoney(thisMonth.reduce((s,r)=>s+getNum(r,'尾款'),0))}</div></div>
+  `;
+
+  // Monthly chart
+  const monthMap = {};
+  allData.forEach(r => {
+    const ym = getYM(r);
+    if (!ym) return;
+    if (!monthMap[ym]) monthMap[ym] = {count:0, revenue:0};
+    monthMap[ym].count++;
+    monthMap[ym].revenue += getNum(r,'總金額');
+  });
+  const labels = Object.keys(monthMap).sort().slice(-12);
+  const revenues = labels.map(m => monthMap[m].revenue);
+  const counts = labels.map(m => monthMap[m].count);
+
+  if (monthlyChart) monthlyChart.destroy();
+  const ctx = document.getElementById('chart-monthly').getContext('2d');
+  monthlyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '營收',
+        data: revenues,
+        backgroundColor: '#2B2D42',
+        borderRadius: 4,
+        yAxisID: 'y'
+      },{
+        label: '筆數',
+        data: counts,
+        type: 'line',
+        borderColor: '#E63946',
+        backgroundColor: 'rgba(230,57,70,.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#E63946',
+        yAxisID: 'y1',
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { position:'left', ticks:{ callback: v => 'NT$'+v.toLocaleString(), font:{size:10} } },
+        y1: { position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:10}} }
+      }
+    }
+  });
+
+  // Sale bars
+  const saleMap = {};
+  allData.forEach(r => {
+    const s = getVal(r,'Sale');
+    if (!s) return;
+    if (!saleMap[s]) saleMap[s] = 0;
+    saleMap[s] += getNum(r,'總金額');
+  });
+  const sortedSales = Object.entries(saleMap).sort((a,b)=>b[1]-a[1]);
+  const maxSale = sortedSales[0]?.[1] || 1;
+  document.getElementById('sale-bars').innerHTML = sortedSales.map(([name,rev]) => `
+    <div class="bar-item">
+      <div class="bar-label">${name}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${rev/maxSale*100}%;background:var(--brand);"><span>${fmtMoney(rev)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+// ====== SALES RANKING ======
+function renderSales() {
+  renderBars('model-bars', countBy('車款'), '#2B2D42', v => v+' 筆');
+  renderBars('battery-bars', countBy2('電池規格(V)','電池規格(ah)'), '#1D9E75', v => v+' 筆');
+  renderBars('color-bars', countBy('顏色'), '#534AB7', v => v+' 筆');
+  renderBars('payment-bars', countBy('訂金支付方式'), '#E63946', v => v+' 筆');
+}
+
+function countBy(key) {
+  const map = {};
+  allData.forEach(r => {
+    const v = getVal(r, key);
+    if (!v) return;
+    map[v] = (map[v]||0)+1;
+  });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+function countBy2(k1, k2) {
+  const map = {};
+  allData.forEach(r => {
+    const v = (getVal(r,k1)+' '+getVal(r,k2)).trim();
+    if (!v) return;
+    map[v] = (map[v]||0)+1;
+  });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+function renderBars(id, entries, color, fmt) {
+  const max = entries[0]?.[1] || 1;
+  document.getElementById(id).innerHTML = entries.slice(0,10).map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%;background:${color};"><span>${fmt(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+// ====== PURCHASE ======
+function renderPurchase() {
+  const ym = document.getElementById('purchase-month').value;
+  const filtered = ym ? allData.filter(r => getYM(r)===ym) : allData;
+  const modelMap = {};
+  const batMap = {};
+  filtered.forEach(r => {
+    const m = getVal(r,'車款'); if(m) modelMap[m]=(modelMap[m]||0)+1;
+    const b = getVal(r,'電池規格(V)')+' '+getVal(r,'電池規格(ah)');
+    if(b.trim()) batMap[b]=(batMap[b]||0)+1;
+  });
+  const mEntries = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]);
+  const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
+  const mMax = mEntries[0]?.[1]||1;
+  const bMax = bEntries[0]?.[1]||1;
+  document.getElementById('purchase-model').innerHTML = mEntries.map(([l,v])=>`
+    <div class="bar-item"><div class="bar-label">${l}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:var(--amber);"><span>${v} 台</span></div></div></div>`).join('')||'<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  document.getElementById('purchase-battery').innerHTML = bEntries.map(([l,v])=>`
+    <div class="bar-item"><div class="bar-label">${l}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('')||'<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+// ====== DELIVERY ======
+function renderDelivery() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const pending = allData.filter(r => getVal(r,'預計交車日'));
+  const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
+  const thisWeek = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d>=today && d<=new Date(today.getTime()+7*86400000); });
+
+  document.getElementById('metrics-delivery').innerHTML = `
+    <div class="metric"><div class="lbl">待交車總數</div><div class="val">${pending.length} 筆</div></div>
+    <div class="metric accent"><div class="lbl">本週待交車</div><div class="val">${thisWeek.length} 筆</div></div>
+    <div class="metric"><div class="lbl">逾期未交車</div><div class="val" style="color:#E63946;">${overdue.length} 筆</div></div>
+  `;
+
+  const tbody = document.getElementById('tbody-delivery');
+  tbody.innerHTML = pending.sort((a,b)=>{
+    const da=getDate(a,'預計交車日'), db=getDate(b,'預計交車日');
+    return (da||0)-(db||0);
+  }).map(r => {
+    const d = getDate(r,'預計交車日');
+    let status = '<span class="status-pending">待交車</span>';
+    if (d && d < today) status = '<span class="status-late">已逾期</span>';
+    else if (d && d <= new Date(today.getTime()+7*86400000)) status = '<span class="status-pending">本週</span>';
+    return `<tr>
+      <td>${fmtDate(getVal(r,'預計交車日'))}</td>
+      <td>${status}</td>
+      <td>${getVal(r,'姓名')}</td>
+      <td>${getVal(r,'手機號碼')}</td>
+      <td>${getVal(r,'車款')}</td>
+      <td>${getVal(r,'顏色')}</td>
+      <td>${getVal(r,'電池類型')} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
+      <td>${getVal(r,'Sale')}</td>
+      <td>${fmtMoney(getNum(r,'總金額'))}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--gray4);padding:2rem;">尚無待交車資料</td></tr>';
+}
+
+// ====== CUSTOMER ======
+function renderCustomer() {
+  renderBars('city-bars', countBy('縣市'), '#185FA5', v => v+' 人');
+  const srcMap = {};
+  allData.forEach(r => {
+    const sources = getVal(r,'從哪裡認識我們').split('、');
+    sources.forEach(s => { s=s.trim(); if(s) srcMap[s]=(srcMap[s]||0)+1; });
+  });
+  const srcEntries = Object.entries(srcMap).sort((a,b)=>b[1]-a[1]);
+  const srcMax = srcEntries[0]?.[1]||1;
+  document.getElementById('source-bars').innerHTML = srcEntries.map(([l,v])=>`
+    <div class="bar-item"><div class="bar-label">${l}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${v/srcMax*100}%;background:var(--purple);"><span>${v} 人</span></div></div></div>`).join('')||'<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+// ====== RECORDS ======
+function filterRecords() {
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  const ym = document.getElementById('filter-month').value;
+  const sale = document.getElementById('filter-sale').value;
+  const filtered = allData.filter(r => {
+    if (ym && getYM(r)!==ym) return false;
+    if (sale && getVal(r,'Sale')!==sale) return false;
+    if (q) {
+      const haystack = [getVal(r,'姓名'),getVal(r,'車款'),getVal(r,'Sale'),getVal(r,'單號'),getVal(r,'手機號碼')].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+  const pmMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
+  document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記'))).map(r => `<tr>
+    <td>${getVal(r,'成交日期')}</td>
+    <td style="font-size:11px;color:var(--gray4);">${getVal(r,'單號').slice(-8)}</td>
+    <td>${getVal(r,'姓名')}</td>
+    <td>${getVal(r,'手機號碼')}</td>
+    <td>${getVal(r,'車款')}</td>
+    <td>${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
+    <td style="font-weight:600;">${fmtMoney(getNum(r,'總金額'))}</td>
+    <td>${fmtMoney(getNum(r,'訂金'))}</td>
+    <td>${fmtMoney(getNum(r,'尾款'))}</td>
+    <td><span class="badge ${pmMap[getVal(r,'訂金支付方式')]||'badge-green'}">${getVal(r,'訂金支付方式')||'—'}</span></td>
+    <td>${getVal(r,'Sale')||'—'}</td>
+  </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+}
+
+// ====== TAB SWITCH ======
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach((t,i) => {
+    const tabs = ['overview','sales','purchase','delivery','customer','records'];
+    t.classList.toggle('active', tabs[i]===tab);
+  });
+  ['overview','sales','purchase','delivery','customer','records'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab?'':'none';
+  });
+}
+
+// ====== INIT ======
+loadData();
+</script>
+</body>
+</html>
