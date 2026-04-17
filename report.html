@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>98GO e-bike｜銷售報表</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -132,14 +131,32 @@ tr:last-child td{border-bottom:none;}
     <!-- 業績總覽 -->
     <div id="tab-overview">
       <div class="metrics" id="metrics-overview"></div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">📅 每月業績</div>
-          <canvas id="chart-monthly" height="220"></canvas>
+
+      <div class="card">
+        <div class="card-title">💰 現金流明細</div>
+        <div class="filter-row" style="margin-bottom:1rem;">
+          <label>查帳區間：</label>
+          <input type="date" id="cf-from" onchange="renderOverview()">
+          <span style="color:var(--gray4);font-size:13px;">～</span>
+          <input type="date" id="cf-to" onchange="renderOverview()">
+          <button onclick="setCFToday()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">今日</button>
+          <button onclick="setCFMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
+          <button onclick="setCFYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
+          <button onclick="clearCF()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
         </div>
-        <div class="card">
-          <div class="card-title">👤 Sale 業績排行</div>
-          <div id="sale-bars"></div>
+        <div class="tbl-wrap">
+          <table id="table-cashflow">
+            <thead><tr>
+              <th>付款方式</th>
+              <th style="text-align:right;">訂金筆數</th>
+              <th style="text-align:right;">訂金合計</th>
+              <th style="text-align:right;">尾款筆數</th>
+              <th style="text-align:right;">尾款合計</th>
+              <th style="text-align:right;">小計</th>
+            </tr></thead>
+            <tbody id="tbody-cashflow"></tbody>
+            <tfoot id="tfoot-cashflow"></tfoot>
+          </table>
         </div>
       </div>
     </div>
@@ -249,12 +266,10 @@ const SHEET_NAME = '購車保固資料表';
 const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
 let allData = [];
-let monthlyChart = null;
 let currentTab = 'overview';
 
 // ====== LOAD DATA ======
-async function loadData() {
-  document.getElementById('loading').style.display = 'block';
+async function loadData() {  document.getElementById('loading').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
     const res = await fetch(API_URL);
@@ -328,85 +343,111 @@ function populateFilters() {
 }
 
 // ====== OVERVIEW ======
+function setCFToday() {
+  const t = new Date().toISOString().slice(0,10);
+  document.getElementById('cf-from').value = t;
+  document.getElementById('cf-to').value = t;
+  renderOverview();
+}
+function setCFMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('cf-from').value = `${y}-${m}-01`;
+  document.getElementById('cf-to').value = `${y}-${m}-${last}`;
+  renderOverview();
+}
+function setCFYear() {
+  const y = new Date().getFullYear();
+  document.getElementById('cf-from').value = `${y}-01-01`;
+  document.getElementById('cf-to').value = `${y}-12-31`;
+  renderOverview();
+}
+function clearCF() {
+  document.getElementById('cf-from').value = '';
+  document.getElementById('cf-to').value = '';
+  renderOverview();
+}
+
 function renderOverview() {
   const now = new Date();
+  const fromVal = document.getElementById('cf-from')?.value;
+  const toVal = document.getElementById('cf-to')?.value;
+  const fromD = fromVal ? new Date(fromVal) : null;
+  const toD = toVal ? new Date(toVal + 'T23:59:59') : null;
+
+  const filtered = allData.filter(r => {
+    const d = getDate(r, '成交日期');
+    if (!d) return false;
+    if (fromD && d < fromD) return false;
+    if (toD && d > toD) return false;
+    return true;
+  });
+
   const thisMonth = allData.filter(r => {
     const d = getDate(r,'成交日期');
     return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
+  const today = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    const t = now.toISOString().slice(0,10);
+    return d && d.toISOString().slice(0,10) === t;
+  });
   const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
   const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const avgOrder = allData.length ? totalRevenue/allData.length : 0;
+  const todayRevenue = today.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const yearRevenue = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return d && d.getFullYear()===now.getFullYear();
+  }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
   document.getElementById('metrics-overview').innerHTML = `
-    <div class="metric accent"><div class="lbl">本月成交</div><div class="val">${thisMonth.length} 筆</div><div class="sub">累計 ${allData.length} 筆</div></div>
-    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">累計 ${fmtMoney(totalRevenue)}</div></div>
-    <div class="metric"><div class="lbl">平均客單</div><div class="val">${fmtMoney(avgOrder)}</div><div class="sub">全部訂單</div></div>
-    <div class="metric"><div class="lbl">本月訂金</div><div class="val">${fmtMoney(thisMonth.reduce((s,r)=>s+getNum(r,'訂金'),0))}</div><div class="sub">本月尾款 ${fmtMoney(thisMonth.reduce((s,r)=>s+getNum(r,'尾款'),0))}</div></div>
+    <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
+    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
+    <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
+    <div class="metric"><div class="lbl">累計總營收</div><div class="val">${fmtMoney(totalRevenue)}</div><div class="sub">共 ${allData.length} 筆</div></div>
   `;
 
-  // Monthly chart
-  const monthMap = {};
-  allData.forEach(r => {
-    const ym = getYM(r);
-    if (!ym) return;
-    if (!monthMap[ym]) monthMap[ym] = {count:0, revenue:0};
-    monthMap[ym].count++;
-    monthMap[ym].revenue += getNum(r,'總金額');
-  });
-  const labels = Object.keys(monthMap).sort().slice(-12);
-  const revenues = labels.map(m => monthMap[m].revenue);
-  const counts = labels.map(m => monthMap[m].count);
-
-  if (monthlyChart) monthlyChart.destroy();
-  const ctx = document.getElementById('chart-monthly').getContext('2d');
-  monthlyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: '營收',
-        data: revenues,
-        backgroundColor: '#2B2D42',
-        borderRadius: 4,
-        yAxisID: 'y'
-      },{
-        label: '筆數',
-        data: counts,
-        type: 'line',
-        borderColor: '#E63946',
-        backgroundColor: 'rgba(230,57,70,.1)',
-        borderWidth: 2,
-        pointBackgroundColor: '#E63946',
-        yAxisID: 'y1',
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { position:'left', ticks:{ callback: v => 'NT$'+v.toLocaleString(), font:{size:10} } },
-        y1: { position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:10}} }
-      }
-    }
+  // 現金流表格
+  const methods = ['現金','匯款/轉帳','刷卡','無卡分期'];
+  const cfMap = {};
+  methods.forEach(m => cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0});
+  filtered.forEach(r => {
+    const dm = getVal(r,'訂金支付方式') || '現金';
+    const bm = getVal(r,'尾款支付方式') || '現金';
+    const dep = getNum(r,'訂金');
+    const bal = getNum(r,'尾款');
+    if (!cfMap[dm]) cfMap[dm] = {depCount:0,dep:0,balCount:0,bal:0};
+    if (!cfMap[bm]) cfMap[bm] = {depCount:0,dep:0,balCount:0,bal:0};
+    if (dep > 0) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
+    if (bal > 0) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
   });
 
-  // Sale bars
-  const saleMap = {};
-  allData.forEach(r => {
-    const s = getVal(r,'Sale');
-    if (!s) return;
-    if (!saleMap[s]) saleMap[s] = 0;
-    saleMap[s] += getNum(r,'總金額');
-  });
-  const sortedSales = Object.entries(saleMap).sort((a,b)=>b[1]-a[1]);
-  const maxSale = sortedSales[0]?.[1] || 1;
-  document.getElementById('sale-bars').innerHTML = sortedSales.map(([name,rev]) => `
-    <div class="bar-item">
-      <div class="bar-label">${name}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${rev/maxSale*100}%;background:var(--brand);"><span>${fmtMoney(rev)}</span></div></div>
-    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  const colorMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
+  let totalDep=0, totalBal=0, totalDepCount=0, totalBalCount=0;
+  const rows = Object.entries(cfMap).filter(([,v]) => v.dep+v.bal > 0).map(([method, v]) => {
+    totalDep += v.dep; totalBal += v.bal;
+    totalDepCount += v.depCount; totalBalCount += v.balCount;
+    return `<tr>
+      <td><span class="badge ${colorMap[method]||'badge-green'}">${method}</span></td>
+      <td style="text-align:right;color:var(--gray5);">${v.depCount} 筆</td>
+      <td style="text-align:right;font-weight:500;">${fmtMoney(v.dep)}</td>
+      <td style="text-align:right;color:var(--gray5);">${v.balCount} 筆</td>
+      <td style="text-align:right;font-weight:500;">${fmtMoney(v.bal)}</td>
+      <td style="text-align:right;font-weight:700;color:var(--brand);">${fmtMoney(v.dep+v.bal)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tbody-cashflow').innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray4);padding:2rem;">此區間無資料</td></tr>`;
+  document.getElementById('tfoot-cashflow').innerHTML = `
+    <tr style="background:#2B2D42;color:#fff;">
+      <td style="font-weight:700;padding:10px;border-radius:0;">合計</td>
+      <td style="text-align:right;padding:10px;opacity:.7;">${totalDepCount} 筆</td>
+      <td style="text-align:right;padding:10px;font-weight:700;">${fmtMoney(totalDep)}</td>
+      <td style="text-align:right;padding:10px;opacity:.7;">${totalBalCount} 筆</td>
+      <td style="text-align:right;padding:10px;font-weight:700;">${fmtMoney(totalBal)}</td>
+      <td style="text-align:right;padding:10px;font-weight:700;font-size:15px;">${fmtMoney(totalDep+totalBal)}</td>
+    </tr>`;
 }
 
 // ====== SALES RANKING ======
@@ -561,7 +602,7 @@ function switchTab(tab) {
 }
 
 // ====== INIT ======
-loadData();
+loadData().then(() => setCFToday());
 </script>
 </body>
 </html>
