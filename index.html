@@ -513,6 +513,10 @@
       <div class="field"><label>顏色</label><input type="text" id="s1-color" placeholder="請輸入顏色"></div>
     </div>
     <div class="field" style="margin-top:10px;">
+      <label>車輛備註</label>
+      <input type="text" id="s1-model-note" placeholder="例：客人指定加裝後座架、特殊烤漆...">
+    </div>
+    <div class="field" style="margin-top:10px;">
       <label>電池類型</label>
       <select id="s1-battype">
         <option>鋰電池</option>
@@ -533,6 +537,10 @@
           <option>45ah</option><option>50ah</option>
         </select>
       </div>
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <label>電池備註</label>
+      <input type="text" id="s1-bat-note" placeholder="例：客人指定升級電池容量、特殊規格...">
     </div>
     <div class="grid2" style="margin-top:10px;">
       <div class="field"><label>車架號碼</label><input type="text" id="s1-frame" placeholder="EB2024XXXXXX"></div>
@@ -602,6 +610,9 @@
           <option value="匯款/轉帳">匯款／轉帳</option>
           <option value="刷卡">刷卡</option>
           <option value="無卡分期">無卡分期</option>
+          <option value="蝦皮">蝦皮</option>
+          <option value="官網">官網</option>
+          <option value="其他">其他</option>
         </select>
       </div>
       <div class="price-row" id="dep-installment-row" style="display:none;">
@@ -626,6 +637,9 @@
           <option value="匯款/轉帳">匯款／轉帳</option>
           <option value="刷卡">刷卡</option>
           <option value="無卡分期">無卡分期</option>
+          <option value="蝦皮">蝦皮</option>
+          <option value="官網">官網</option>
+          <option value="其他">其他</option>
         </select>
       </div>
       <div class="price-row" id="bal-installment-row" style="display:none;">
@@ -1130,10 +1144,12 @@ async function submitForm() {
     birthday: document.getElementById('s1-birthday').value,
     source: sourceSelected.join('、'),
     model: document.getElementById('s1-model').value,
+    modelNote: v('s1-model-note'),
     color: document.getElementById('s1-color').value,
     batType: document.getElementById('s1-battype').value,
     batV: document.getElementById('s1-batv').value,
     batAh: document.getElementById('s1-batah').value,
+    batNote: v('s1-bat-note'),
     frame: v('s1-frame'), motor: v('s1-motor'),
     date: v('s1-date'), delivery: v('s1-delivery'), staff: v('s1-staff'),
     addons, addonItems: addons.map(a => a.name).join('、'),
@@ -1251,13 +1267,14 @@ table.price td:last-child{text-align:right;}
 <div class="sec-title">車主基本資料</div>
 <table class="info">
 <tr><td class="lbl">車主姓名</td><td>${r.name}</td><td class="lbl">車款</td><td>${r.model}</td></tr>
-<tr><td class="lbl">身份證字號</td><td>${r.idNo}</td><td class="lbl">顏色</td><td>${r.color}</td></tr>
-<tr><td class="lbl">手機號碼</td><td>${r.phone}</td><td class="lbl">車架號碼</td><td>${r.frame || '—'}</td></tr>
-<tr><td class="lbl">生日</td><td>${r.birthday || '—'}</td><td class="lbl">馬達編號</td><td>${r.motor || '—'}</td></tr>
+<tr><td class="lbl">身份證字號</td><td>${r.idNo}</td><td class="lbl">車輛備註</td><td>${r.modelNote||'—'}</td></tr>
+<tr><td class="lbl">手機號碼</td><td>${r.phone}</td><td class="lbl">顏色</td><td>${r.color}</td></tr>
+<tr><td class="lbl">生日</td><td>${r.birthday || '—'}</td><td class="lbl">車架號碼</td><td>${r.frame || '—'}</td></tr>
 <tr><td class="lbl">通訊地址</td><td colspan="3">${r.city || ''}${r.district || ''} ${r.addr || '—'}</td></tr>
-<tr><td class="lbl">電池規格</td><td>${r.batType}｜${r.batV} ${r.batAh}</td><td class="lbl">成交日期</td><td>${r.date}</td></tr>
-<tr><td class="lbl">Sale</td><td>${r.staff || '—'}</td><td class="lbl">預計交車日</td><td>${r.delivery || '—'}</td></tr>
-<tr><td class="lbl">從哪認識我們</td><td colspan="3">${r.source || '—'}</td></tr>
+<tr><td class="lbl">電池規格</td><td>${r.batType}｜${r.batV} ${r.batAh}</td><td class="lbl">馬達編號</td><td>${r.motor || '—'}</td></tr>
+<tr><td class="lbl">電池備註</td><td colspan="3">${r.batNote||'—'}</td></tr>
+<tr><td class="lbl">成交日期</td><td>${r.date}</td><td class="lbl">預計交車日</td><td>${r.delivery || '—'}</td></tr>
+<tr><td class="lbl">Sale</td><td>${r.staff || '—'}</td><td class="lbl">從哪認識我們</td><td>${r.source || '—'}</td></tr>
 </table>
 <div class="notice">電池、充電器為消耗品，請依照電池規格搭配相對應的充電器規格，請勿混充，避免用電安全風險。</div>
 </div>
