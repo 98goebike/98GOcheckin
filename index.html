@@ -892,7 +892,7 @@
 <script>
 // ====== CONFIG ======
 // 將下方的 SCRIPT_URL 替換成你的 Google Apps Script 部署網址
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyj7OBSpY2SEd5JlUg5YJVjbQTZw_jdsw9-ydjVcpCT4dwkEImyKwjtkWvIpUUmaj0lrQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 
 // ====== STATE ======
 let currentStep = 0;
@@ -1170,18 +1170,20 @@ async function submitForm() {
     sigImg
   };
 
-  // Upload to Google Sheets - 用 Image beacon 方式，完全避開重導向問題
+  // Upload to Google Sheets
   document.getElementById('uploading').classList.add('show');
   if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     try {
       const payload = { ...finalData }; delete payload.sigImg;
-      const url = SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
-      await new Promise((resolve) => {
-        const img = new Image();
-        img.onload = img.onerror = () => resolve();
-        img.src = url;
-        setTimeout(resolve, 3000);
+      // 用 no-cors fetch POST 送出
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
       });
+      // 等待 2 秒讓請求完成
+      await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (e) { console.warn('Google Sheets 上傳失敗', e); }
   }
   document.getElementById('uploading').classList.remove('show');
