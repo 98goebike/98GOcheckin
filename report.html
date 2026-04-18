@@ -92,10 +92,60 @@ tr:last-child td{border-bottom:none;}
 
 /* Error */
 .error-box{background:#fff0f1;border:1px solid #F5C4B3;border-radius:8px;padding:1rem;color:#712B13;font-size:13px;line-height:1.7;}
+
+/* ===== 密碼保護 ===== */
+#lock-screen {
+  position:fixed;inset:0;background:#f0f2f5;
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;
+}
+.lock-box {
+  background:#fff;border-radius:16px;padding:2.5rem 2rem;
+  box-shadow:0 8px 40px rgba(0,0,0,0.13);
+  width:100%;max-width:360px;text-align:center;
+}
+.lock-logo {
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  width:60px;height:60px;background:#E63946;border-radius:14px;
+  margin-bottom:1.25rem;
+}
+.lock-logo span:first-child{font-size:18px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;}
+.lock-logo span:last-child{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.1em;}
+.lock-box h2{font-size:18px;font-weight:700;color:var(--brand);margin-bottom:.4rem;}
+.lock-box p{font-size:12px;color:var(--gray4);margin-bottom:1.5rem;}
+.lock-input {
+  width:100%;padding:12px 14px;border:2px solid var(--gray3);border-radius:10px;
+  font-size:16px;font-family:inherit;text-align:center;letter-spacing:.15em;
+  color:var(--brand);transition:border-color .2s;margin-bottom:.75rem;
+}
+.lock-input:focus{outline:none;border-color:var(--brand);}
+.lock-input.error{border-color:var(--accent);animation:shake .3s;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.lock-btn {
+  width:100%;padding:12px;background:var(--brand);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:background .2s;
+}
+.lock-btn:hover{background:#1a1c2e;}
+.lock-error{font-size:12px;color:var(--accent);margin-top:.5rem;height:16px;}
 </style>
 </head>
 <body>
 
+<!-- 密碼保護畫面 -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-logo"><span>98GO</span><span>e-bike</span></div>
+    <h2>🔒 內部管理系統</h2>
+    <p>請輸入存取密碼</p>
+    <input class="lock-input" type="password" id="lock-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkPassword()" autocomplete="off" maxlength="20">
+    <button class="lock-btn" onclick="checkPassword()">確認進入</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+<div id="app-body" style="display:none;">
 <div class="header">
   <div class="logo">
     <span>98GO</span>
@@ -219,8 +269,16 @@ tr:last-child td{border-bottom:none;}
     <!-- 出貨進度 -->
     <div id="tab-delivery" style="display:none;">
       <div class="metrics" id="metrics-delivery"></div>
+      <div class="filter-row">
+        <label>顯示：</label>
+        <select id="delivery-filter" onchange="renderDelivery()">
+          <option value="pending">待交車</option>
+          <option value="all">全部（含已交車）</option>
+          <option value="done">已交車</option>
+        </select>
+      </div>
       <div class="card">
-        <div class="card-title">🚚 待交車清單</div>
+        <div class="card-title">🚚 交車清單</div>
         <div class="tbl-wrap">
           <table id="table-delivery">
             <thead><tr>
@@ -285,8 +343,32 @@ tr:last-child td{border-bottom:none;}
 
   </div>
 </div>
+</div><!-- end app-body -->
 
 <script>
+// ====== PASSWORD ======
+const CORRECT_PASSWORD = '9866';
+function checkPassword() {
+  const input = document.getElementById('lock-input');
+  const err = document.getElementById('lock-error');
+  if (input.value === CORRECT_PASSWORD) {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app-body').style.display = 'block';
+    sessionStorage.setItem('98go_auth', '1');
+    loadData();
+  } else {
+    input.classList.add('error');
+    err.textContent = '密碼錯誤，請再試一次';
+    input.value = '';
+    setTimeout(() => { input.classList.remove('error'); err.textContent = ''; input.focus(); }, 1000);
+  }
+}
+// 若本次已驗證過（重新整理不需重輸）
+if (sessionStorage.getItem('98go_auth') === '1') {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('app-body').style.display = 'block';
+}
+
 // ====== CONFIG ======
 const SHEET_ID = '1eLlGkJ2hvk_XJvJYtVGqGgQ8pCrQolfSkUlGnDhXO8k';
 const SHEET_NAME = '購車保固資料表';
@@ -320,9 +402,6 @@ async function loadData() {  document.getElementById('loading').style.display = 
   }
 }
 
-function getVal(row, key) {
-  return (row[key] || '').toString().trim();
-}
 function getNum(row, key) {
   return parseFloat(row[key]) || 0;
 }
@@ -670,7 +749,12 @@ function renderPurchase() {
 // ====== DELIVERY ======
 function renderDelivery() {
   const today = new Date(); today.setHours(0,0,0,0);
-  const pending = allData.filter(r => getVal(r,'預計交車日'));
+  const filterVal = document.getElementById('delivery-filter')?.value || 'pending';
+
+  // 判斷「已交車」：尾款已收 TRUE 且有預計交車日
+  const hasDeliveryDate = allData.filter(r => getVal(r,'預計交車日'));
+  const delivered = allData.filter(r => getVal(r,'尾款已收')==='TRUE');
+  const pending = allData.filter(r => getVal(r,'預計交車日') && getVal(r,'尾款已收')!=='TRUE');
   const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
   const thisWeek = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d>=today && d<=new Date(today.getTime()+7*86400000); });
 
@@ -678,18 +762,32 @@ function renderDelivery() {
     <div class="metric"><div class="lbl">待交車總數</div><div class="val">${pending.length} 筆</div></div>
     <div class="metric accent"><div class="lbl">本週待交車</div><div class="val">${thisWeek.length} 筆</div></div>
     <div class="metric"><div class="lbl">逾期未交車</div><div class="val" style="color:#E63946;">${overdue.length} 筆</div></div>
+    <div class="metric" style="background:#E1F5EE;"><div class="lbl" style="color:#085041;">已交車</div><div class="val" style="color:#1D9E75;">${delivered.length} 筆</div></div>
   `;
 
+  let showData;
+  if (filterVal === 'done') showData = delivered;
+  else if (filterVal === 'all') showData = [...pending, ...delivered];
+  else showData = pending;
+
   const tbody = document.getElementById('tbody-delivery');
-  tbody.innerHTML = pending.sort((a,b)=>{
+  tbody.innerHTML = showData.sort((a,b)=>{
     const da=getDate(a,'預計交車日'), db=getDate(b,'預計交車日');
     return (da||0)-(db||0);
   }).map(r => {
     const d = getDate(r,'預計交車日');
-    let status = '<span class="status-pending">待交車</span>';
-    if (d && d < today) status = '<span class="status-late">已逾期</span>';
-    else if (d && d <= new Date(today.getTime()+7*86400000)) status = '<span class="status-pending">本週</span>';
-    return `<tr>
+    const isDone = getVal(r,'尾款已收')==='TRUE';
+    let status;
+    if (isDone) {
+      status = '<span class="status-done">✅ 已交車</span>';
+    } else if (d && d < today) {
+      status = '<span class="status-late">已逾期</span>';
+    } else if (d && d <= new Date(today.getTime()+7*86400000)) {
+      status = '<span class="status-pending">本週</span>';
+    } else {
+      status = '<span class="status-pending">待交車</span>';
+    }
+    return `<tr${isDone ? ' style="opacity:.6;"' : ''}>
       <td>${fmtDate(getVal(r,'預計交車日'))}</td>
       <td>${status}</td>
       <td>${getVal(r,'姓名')}</td>
@@ -699,9 +797,9 @@ function renderDelivery() {
       <td>${getVal(r,'電池類型')} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
       <td>${getVal(r,'Sale')}</td>
       <td>${fmtMoney(getNum(r,'總金額'))}</td>
-      <td>${getVal(r,'尾款已收')==='TRUE' ? '<span class="status-done">已收款</span>' : '<span class="status-late">未收款</span>'}</td>
+      <td>${isDone ? '<span class="status-done">已收款</span>' : '<span class="status-late">未收款</span>'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--gray4);padding:2rem;">尚無待交車資料</td></tr>';
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">尚無資料</td></tr>';
 }
 
 // ====== CUSTOMER ======
@@ -794,7 +892,9 @@ function switchTab(tab) {
 }
 
 // ====== INIT ======
-loadData();
+// loadData() 由密碼驗證通過後呼叫
+// 若已在 session 中驗證過，直接載入
+if (sessionStorage.getItem('98go_auth') === '1') loadData();
 </script>
 </body>
 </html>
