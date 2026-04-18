@@ -302,14 +302,21 @@ function getNum(row, key) {
 function getDate(row, key) {
   const v = row[key];
   if (!v) return null;
-  if (typeof v === 'string') return new Date(v);
+  // Google Sheets gviz returns dates as "Date(year,month,day)" format
+  if (typeof v === 'string') {
+    const match = v.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (match) return new Date(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
   if (typeof v === 'number') return new Date((v - 25569) * 86400000);
   return null;
 }
-function fmtDate(d) {
-  if (!d) return '—';
-  if (typeof d === 'string') return d.slice(0,10);
-  return d.toISOString ? d.toISOString().slice(0,10) : '—';
+function fmtDate(v) {
+  if (!v) return '—';
+  const d = getDate({k:v},'k') || (typeof v === 'string' ? new Date(v) : null);
+  if (!d || isNaN(d.getTime())) return v.toString().slice(0,10) || '—';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function fmtMoney(n) {
   return 'NT$ ' + Math.round(n).toLocaleString();
@@ -390,8 +397,9 @@ function renderOverview() {
   });
   const today = allData.filter(r => {
     const d = getDate(r,'成交日期');
-    const t = now.toISOString().slice(0,10);
-    return d && d.toISOString().slice(0,10) === t;
+    if (!d) return false;
+    const t = new Date(); 
+    return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
   });
   const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
   const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
