@@ -423,14 +423,18 @@ function renderOverview() {
   const now = new Date();
   const fromVal = document.getElementById('cf-from')?.value;
   const toVal = document.getElementById('cf-to')?.value;
-  const fromD = fromVal ? new Date(fromVal) : null;
-  const toD = toVal ? new Date(toVal + 'T23:59:59') : null;
 
   const filtered = allData.filter(r => {
     const d = getDate(r, '成交日期');
-    if (!d) return false;
-    if (fromD && d < fromD) return false;
-    if (toD && d > toD) return false;
+    if (!d || isNaN(d.getTime())) return false;
+    if (fromVal) {
+      const from = new Date(fromVal); from.setHours(0,0,0,0);
+      if (d < from) return false;
+    }
+    if (toVal) {
+      const to = new Date(toVal); to.setHours(23,59,59,999);
+      if (d > to) return false;
+    }
     return true;
   });
 
