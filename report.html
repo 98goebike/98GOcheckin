@@ -418,7 +418,7 @@ function renderOverview() {
     <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
     <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
     <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
-    <div class="metric"><div class="lbl">累計總營收</div><div class="val">${fmtMoney(totalRevenue)}</div><div class="sub">共 ${allData.length} 筆</div></div>
+    <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
   `;
 
   // 現金流表格
