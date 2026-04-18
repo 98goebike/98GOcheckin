@@ -163,6 +163,10 @@ tr:last-child td{border-bottom:none;}
 
     <!-- 銷售排行 -->
     <div id="tab-sales" style="display:none;">
+      <div class="filter-row">
+        <label>篩選月份：</label>
+        <select id="sales-month" onchange="renderSales()"></select>
+      </div>
       <div class="grid2">
         <div class="card">
           <div class="card-title">🏍 車款銷售排行</div>
@@ -188,8 +192,13 @@ tr:last-child td{border-bottom:none;}
     <!-- 採購計算 -->
     <div id="tab-purchase" style="display:none;">
       <div class="filter-row">
-        <label>篩選月份：</label>
-        <select id="purchase-month" onchange="renderPurchase()"></select>
+        <label>日期區間：</label>
+        <input type="date" id="purchase-from" onchange="renderPurchase()">
+        <span style="color:var(--gray4);font-size:13px;">～</span>
+        <input type="date" id="purchase-to" onchange="renderPurchase()">
+        <button onclick="setPurchaseMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
+        <button onclick="setPurchaseYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
+        <button onclick="clearPurchase()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
       </div>
       <div class="grid2">
         <div class="card">
@@ -200,6 +209,10 @@ tr:last-child td{border-bottom:none;}
           <div class="card-title">🔋 電池需求數量</div>
           <div id="purchase-battery"></div>
         </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛍 加價購項目統計</div>
+        <div id="purchase-addon"></div>
       </div>
     </div>
 
@@ -212,7 +225,7 @@ tr:last-child td{border-bottom:none;}
           <table id="table-delivery">
             <thead><tr>
               <th>預計交車日</th><th>狀態</th><th>客戶</th><th>手機</th>
-              <th>車款</th><th>顏色</th><th>電池</th><th>Sale</th><th>總金額</th>
+              <th>車款</th><th>顏色</th><th>電池</th><th>Sale</th><th>總金額</th><th>尾款狀態</th>
             </tr></thead>
             <tbody id="tbody-delivery"></tbody>
           </table>
@@ -224,13 +237,27 @@ tr:last-child td{border-bottom:none;}
     <div id="tab-customer" style="display:none;">
       <div class="grid2">
         <div class="card">
-          <div class="card-title">📍 客戶地區分布</div>
+          <div class="card-title">⚧ 性別統計</div>
+          <div id="gender-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎂 年齡分布</div>
+          <div id="age-bars"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📍 客戶地區分布（縣市）</div>
           <div id="city-bars"></div>
         </div>
         <div class="card">
-          <div class="card-title">📣 來源渠道分析</div>
-          <div id="source-bars"></div>
+          <div class="card-title">📍 行政區分布</div>
+          <div id="district-bars"></div>
         </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📣 來源渠道分析</div>
+        <div id="source-bars"></div>
       </div>
     </div>
 
@@ -302,8 +329,8 @@ function getNum(row, key) {
 function getDate(row, key) {
   const v = row[key];
   if (!v) return null;
-  // Google Sheets gviz returns dates as "Date(year,month,day)" format
   if (typeof v === 'string') {
+    // Google Sheets gviz returns Date(year,month,day) where month is 0-based
     const match = v.match(/Date\((\d+),(\d+),(\d+)\)/);
     if (match) return new Date(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
     const d = new Date(v);
@@ -314,16 +341,26 @@ function getDate(row, key) {
 }
 function fmtDate(v) {
   if (!v) return '—';
-  const d = getDate({k:v},'k') || (typeof v === 'string' ? new Date(v) : null);
-  if (!d || isNaN(d.getTime())) return v.toString().slice(0,10) || '—';
+  const d = (typeof v === 'string' || typeof v === 'number') ? getDate({_k:v},'_k') : v;
+  if (!d || isNaN(d.getTime())) return String(v).slice(0,10) || '—';
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function getVal(row, key) {
+  const v = row[key];
+  if (v === null || v === undefined) return '';
+  // Handle Google Sheets Date format
+  if (typeof v === 'string' && v.startsWith('Date(')) {
+    const d = getDate(row, key);
+    return d ? fmtDate(d) : '';
+  }
+  return v.toString().trim();
 }
 function fmtMoney(n) {
   return 'NT$ ' + Math.round(n).toLocaleString();
 }
 function getYM(row) {
   const d = getDate(row, '成交日期');
-  if (!d) return '';
+  if (!d || isNaN(d.getTime())) return '';
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 
@@ -341,8 +378,9 @@ function renderAll() {
 
 function populateFilters() {
   const months = [...new Set(allData.map(r => getYM(r)).filter(Boolean))].sort().reverse();
-  ['purchase-month','filter-month'].forEach(id => {
+  ['filter-month','sales-month'].forEach(id => {
     const sel = document.getElementById(id);
+    if (!sel) return;
     sel.innerHTML = '<option value="">全部月份</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
   });
   const sales = [...new Set(allData.map(r => getVal(r,'Sale')).filter(Boolean))].sort();
@@ -414,11 +452,14 @@ function renderOverview() {
     return d && d.getFullYear()===now.getFullYear();
   }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
+  const pendingBalance = allData.filter(r => !getVal(r,'尾款已收') || getVal(r,'尾款已收') === 'FALSE').reduce((s,r) => s+getNum(r,'尾款'),0);
+
   document.getElementById('metrics-overview').innerHTML = `
     <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
     <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
     <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
     <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
+    <div class="metric" style="border:2px solid #E63946;"><div class="lbl" style="color:#A32D2D;">待收尾款總額</div><div class="val" style="color:#E63946;">${fmtMoney(pendingBalance)}</div><div class="sub">尚未收款金額</div></div>
   `;
 
   // 現金流表格
@@ -465,10 +506,54 @@ function renderOverview() {
 
 // ====== SALES RANKING ======
 function renderSales() {
-  renderBars('model-bars', countBy('車款'), '#2B2D42', v => v+' 筆');
-  renderBars('battery-bars', countBy2('電池規格(V)','電池規格(ah)'), '#1D9E75', v => v+' 筆');
-  renderBars('color-bars', countBy('顏色'), '#534AB7', v => v+' 筆');
-  renderBars('payment-bars', countBy('訂金支付方式'), '#E63946', v => v+' 筆');
+  const ym = document.getElementById('sales-month')?.value;
+  const data = ym ? allData.filter(r => getYM(r)===ym) : allData;
+
+  renderBarsFromData('model-bars', data, '車款', '#2B2D42', v => v+' 筆');
+  renderBarsFromData2('battery-bars', data, '電池規格(V)', '電池規格(ah)', '#1D9E75', v => v+' 筆');
+  renderBarsFromData('color-bars', data, '顏色', '#534AB7', v => v+' 筆');
+
+  // 付款方式：依金額統計
+  const pmMap = {};
+  data.forEach(r => {
+    const dm = getVal(r,'訂金支付方式') || '現金';
+    const bm = getVal(r,'尾款支付方式') || '現金';
+    const dep = getNum(r,'訂金');
+    const bal = getNum(r,'尾款');
+    if (dep > 0) { pmMap[dm] = (pmMap[dm]||0) + dep; }
+    if (bal > 0) { pmMap[bm] = (pmMap[bm]||0) + bal; }
+  });
+  const pmEntries = Object.entries(pmMap).sort((a,b)=>b[1]-a[1]);
+  const pmMax = pmEntries[0]?.[1] || 1;
+  document.getElementById('payment-bars').innerHTML = pmEntries.map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/pmMax*100}%;background:#E63946;"><span>${fmtMoney(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+function renderBarsFromData(id, data, key, color, fmt) {
+  const map = {};
+  data.forEach(r => { const v=getVal(r,key); if(v) map[v]=(map[v]||0)+1; });
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const max = entries[0]?.[1]||1;
+  document.getElementById(id).innerHTML = entries.slice(0,10).map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%;background:${color};"><span>${fmt(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+function renderBarsFromData2(id, data, k1, k2, color, fmt) {
+  const map = {};
+  data.forEach(r => { const v=(getVal(r,k1)+' '+getVal(r,k2)).trim(); if(v) map[v]=(map[v]||0)+1; });
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const max = entries[0]?.[1]||1;
+  document.getElementById(id).innerHTML = entries.slice(0,10).map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%;background:${color};"><span>${fmt(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
 }
 
 function countBy(key) {
@@ -499,26 +584,83 @@ function renderBars(id, entries, color, fmt) {
 }
 
 // ====== PURCHASE ======
+function setPurchaseMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('purchase-from').value = `${y}-${m}-01`;
+  document.getElementById('purchase-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  renderPurchase();
+}
+function setPurchaseYear() {
+  const y = new Date().getFullYear();
+  document.getElementById('purchase-from').value = `${y}-01-01`;
+  document.getElementById('purchase-to').value = `${y}-12-31`;
+  renderPurchase();
+}
+function clearPurchase() {
+  document.getElementById('purchase-from').value = '';
+  document.getElementById('purchase-to').value = '';
+  renderPurchase();
+}
+
 function renderPurchase() {
-  const ym = document.getElementById('purchase-month').value;
-  const filtered = ym ? allData.filter(r => getYM(r)===ym) : allData;
+  const fromVal = document.getElementById('purchase-from').value;
+  const toVal = document.getElementById('purchase-to').value;
+  const fromD = fromVal ? new Date(fromVal) : null;
+  const toD = toVal ? new Date(toVal + 'T23:59:59') : null;
+
+  const filtered = allData.filter(r => {
+    const d = getDate(r, '成交日期');
+    if (!d) return false;
+    if (fromD && d < fromD) return false;
+    if (toD && d > toD) return false;
+    return true;
+  });
+
+  // 車款統計
   const modelMap = {};
-  const batMap = {};
   filtered.forEach(r => {
     const m = getVal(r,'車款'); if(m) modelMap[m]=(modelMap[m]||0)+1;
-    const b = getVal(r,'電池規格(V)')+' '+getVal(r,'電池規格(ah)');
-    if(b.trim()) batMap[b]=(batMap[b]||0)+1;
   });
   const mEntries = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]);
-  const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
   const mMax = mEntries[0]?.[1]||1;
+  document.getElementById('purchase-model').innerHTML = mEntries.length ?
+    mEntries.map(([l,v])=>`
+      <div class="bar-item"><div class="bar-label">${l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:#854F0B;"><span>${v} 台</span></div></div></div>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 電池統計
+  const batMap = {};
+  filtered.forEach(r => {
+    const b = (getVal(r,'電池規格(V)')+' '+getVal(r,'電池規格(ah)')).trim();
+    if(b) batMap[b]=(batMap[b]||0)+1;
+  });
+  const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
   const bMax = bEntries[0]?.[1]||1;
-  document.getElementById('purchase-model').innerHTML = mEntries.map(([l,v])=>`
-    <div class="bar-item"><div class="bar-label">${l}</div>
-    <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:var(--amber);"><span>${v} 台</span></div></div></div>`).join('')||'<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
-  document.getElementById('purchase-battery').innerHTML = bEntries.map(([l,v])=>`
-    <div class="bar-item"><div class="bar-label">${l}</div>
-    <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('')||'<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  document.getElementById('purchase-battery').innerHTML = bEntries.length ?
+    bEntries.map(([l,v])=>`
+      <div class="bar-item"><div class="bar-label">${l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 加價購統計
+  const addonMap = {};
+  filtered.forEach(r => {
+    const items = getVal(r,'加價購項目').split('、');
+    items.forEach(item => {
+      item = item.trim();
+      if (item) addonMap[item] = (addonMap[item]||0)+1;
+    });
+  });
+  const aEntries = Object.entries(addonMap).sort((a,b)=>b[1]-a[1]);
+  const aMax = aEntries[0]?.[1]||1;
+  document.getElementById('purchase-addon').innerHTML = aEntries.length ?
+    aEntries.map(([l,v])=>`
+      <div class="bar-item"><div class="bar-label">${l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/aMax*100}%;background:#534AB7;"><span>${v} 件</span></div></div></div>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無加價購資料</p>';
 }
 
 // ====== DELIVERY ======
@@ -553,13 +695,46 @@ function renderDelivery() {
       <td>${getVal(r,'電池類型')} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
       <td>${getVal(r,'Sale')}</td>
       <td>${fmtMoney(getNum(r,'總金額'))}</td>
+      <td>${getVal(r,'尾款已收')==='TRUE' ? '<span class="status-done">已收款</span>' : '<span class="status-late">未收款</span>'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--gray4);padding:2rem;">尚無待交車資料</td></tr>';
 }
 
 // ====== CUSTOMER ======
 function renderCustomer() {
-  renderBars('city-bars', countBy('縣市'), '#185FA5', v => v+' 人');
+  // 性別統計
+  renderBarsFromData('gender-bars', allData, '性別', '#534AB7', v => v+' 人');
+
+  // 年齡分布
+  const ageMap = {'18歲以下':0,'18-25歲':0,'26-35歲':0,'36-45歲':0,'46-55歲':0,'56歲以上':0,'未填寫':0};
+  allData.forEach(r => {
+    const b = getVal(r,'生日');
+    if (!b) { ageMap['未填寫']++; return; }
+    const birth = new Date(b);
+    if (isNaN(birth.getTime())) { ageMap['未填寫']++; return; }
+    const age = new Date().getFullYear() - birth.getFullYear();
+    if (age < 18) ageMap['18歲以下']++;
+    else if (age <= 25) ageMap['18-25歲']++;
+    else if (age <= 35) ageMap['26-35歲']++;
+    else if (age <= 45) ageMap['36-45歲']++;
+    else if (age <= 55) ageMap['46-55歲']++;
+    else ageMap['56歲以上']++;
+  });
+  const ageEntries = Object.entries(ageMap).filter(([,v]) => v > 0);
+  const ageMax = Math.max(...ageEntries.map(([,v]) => v), 1);
+  document.getElementById('age-bars').innerHTML = ageEntries.map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/ageMax*100}%;background:#1D9E75;"><span>${val} 人</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 縣市統計
+  renderBarsFromData('city-bars', allData, '縣市', '#185FA5', v => v+' 人');
+
+  // 行政區統計
+  renderBarsFromData('district-bars', allData, '行政區', '#378ADD', v => v+' 人');
+
+  // 來源渠道
   const srcMap = {};
   allData.forEach(r => {
     const sources = getVal(r,'從哪裡認識我們').split('、');
