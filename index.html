@@ -1170,32 +1170,18 @@ async function submitForm() {
     sigImg
   };
 
-  // Upload to Google Sheets - 用隱藏 form 送出，完全避開 CORS
+  // Upload to Google Sheets - 用 Image beacon 方式，完全避開重導向問題
   document.getElementById('uploading').classList.add('show');
   if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     try {
       const payload = { ...finalData }; delete payload.sigImg;
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = SCRIPT_URL;
-      form.target = 'hidden_iframe';
-      form.style.display = 'none';
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'data';
-      input.value = JSON.stringify(payload);
-      form.appendChild(input);
-      let iframe = document.getElementById('hidden_iframe');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.name = 'hidden_iframe';
-        iframe.id = 'hidden_iframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-      }
-      document.body.appendChild(form);
-      form.submit();
-      setTimeout(() => { document.body.removeChild(form); }, 1000);
+      const url = SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+      await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = img.onerror = () => resolve();
+        img.src = url;
+        setTimeout(resolve, 3000);
+      });
     } catch (e) { console.warn('Google Sheets 上傳失敗', e); }
   }
   document.getElementById('uploading').classList.remove('show');
