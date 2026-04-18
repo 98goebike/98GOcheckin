@@ -670,6 +670,20 @@
       <div class="field"><label>生日</label><input type="date" id="s1-birthday"></div>
     </div>
     <div class="field" style="margin-top:10px;">
+      <label>性別</label>
+      <div style="display:flex;gap:16px;margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:400;color:var(--text);cursor:pointer;">
+          <input type="radio" name="gender" id="gender-male" value="男" style="width:16px;height:16px;accent-color:var(--brand);"> 男
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:400;color:var(--text);cursor:pointer;">
+          <input type="radio" name="gender" id="gender-female" value="女" style="width:16px;height:16px;accent-color:var(--brand);"> 女
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:400;color:var(--text);cursor:pointer;">
+          <input type="radio" name="gender" id="gender-other" value="不透露" style="width:16px;height:16px;accent-color:var(--brand);"> 不透露
+        </label>
+      </div>
+    </div>
+    <div class="field" style="margin-top:10px;">
       <label>通訊地址<span class="req">*</span></label>
       <div class="grid2" style="margin-top:4px;">
         <select id="s1-city" onchange="updateDistrict()">
@@ -719,9 +733,9 @@
     <div class="info-box">
       <h4>保固範圍（除非另有約定，則交車日起 1 年）</h4>
       <ul>
-        <li>電控系統</li>
+        <li>電控主機（1 年）</li>
         <li>電池模組（鋰電池 1 年，鉛酸電池半年）</li>
-        <li>電機馬達</li>
+        <li>電機馬達（1 年）</li>
         <li class="x">外觀、功能開關、輪胎、煞車皮、鏈條等耗材不在保固範圍</li>
       </ul>
     </div>
@@ -741,7 +755,7 @@
         <li>買方若在合約成立後反悔，需負擔損害店家已支付之一切費用，方可解約</li>
         <li>車輛轉賣前應核對資料並確實登記，自即日起如有變遷等糾紛皆與本公司無關</li>
         <li>因個人因素退貨造成車輛所有權轉換，車主須負責折舊損失車輛售價九成</li>
-        <li>微型電動二輪屬財產登記，購車後無法辦理退換貨</li>
+        <li>微型電動二輪車屬財產登記，購車後無法辦理退換貨</li>
         <li>【電動輔助自行車/微型電動二輪車】屬機慢車，簽署本表即確認交車時限速為 25km/h</li>
       </ul>
     </div>
@@ -764,31 +778,39 @@
     <div class="card-title"><div class="icon">🔋</div>日常保養建議</div>
     <p style="font-size:13px;color:var(--gray5);margin-bottom:1rem;line-height:1.7;">良好的保養習慣可以讓您的愛車使用更久、更安全。</p>
     <div class="info-box">
-      <h4>電池保養</h4>
+      <h4>🔋 電池保養</h4>
       <ul>
         <li>建議有騎乘就充電，避免長期低電量存放</li>
         <li>長時間未使用，每 1～2 週補充充電一次</li>
         <li>避免高溫曝曬與潮濕環境存放</li>
         <li>請使用原廠充電器，避免混用不同規格</li>
+        <li>建議避免過度充電（長時間充電）與過度放電（電量完全耗盡後才充電）</li>
+        <li>建議騎乘後先靜置約 30 分鐘再進行充電，以利電池降溫</li>
+        <li>充電完成後，建議間隔約 30 分鐘再騎乘，避免電池處於高溫狀態立即使用</li>
       </ul>
     </div>
     <div class="info-box">
-      <h4>輪胎保養</h4>
+      <h4>🛠 保養建議</h4>
+      <ul>
+        <li>不建議使用水槍或水管直接沖洗車輛，以避免水分滲入電器元件</li>
+        <li>停車時建議停放於遮蔽處或室內，避免長時間日曬雨淋</li>
+      </ul>
+    </div>
+    <div class="info-box">
+      <h4>🛞 輪胎保養</h4>
       <ul>
         <li>建議定期檢查輪胎胎壓，避免過低或過高</li>
         <li>若發現輪胎變形、龜裂或磨損嚴重，請盡早更換</li>
       </ul>
     </div>
-    <div class="info-box">
-      <h4>日常注意</h4>
+    <div class="warn-box">
+      <h4>⚠️ 特別提醒</h4>
       <ul>
-        <li>雨天騎乘後請擦乾車身，避免長期受潮</li>
-        <li>停車請停於遮蔽處或室內，避免日曬雨淋</li>
-        <li>上坡請勿在坡道催油起步，避免瞬間過大電流損壞控制器</li>
+        <li>電池續航力會受到多種因素影響，包括行駛速度、載重、騎乘習慣及電池使用年限等</li>
+        <li>行駛速度越快、載重越重，耗電量越高</li>
+        <li>電池隨使用時間增加，續航表現可能逐漸下降</li>
+        <li>建議養成良好使用習慣，隨時留意電池狀態，並適時進行充電，以維持最佳使用狀況</li>
       </ul>
-    </div>
-    <div style="padding:.875rem 1rem;background:var(--green-soft);border-radius:var(--radius-sm);border:1px solid #9FE1CB;font-size:12.5px;color:#085041;line-height:1.7;margin-top:.5rem;">
-      ※ 良好的保養可延長車輛使用壽命並提升行車安全
     </div>
     <div class="chk-wrap" id="chk5-wrap" onclick="toggleChk('chk5','chk5-wrap')" style="margin-top:1rem;">
       <input type="checkbox" id="chk5">
@@ -1045,7 +1067,8 @@ function buildSummary() {
   const bal = parseFloat(document.getElementById('p-balance').value) || 0;
   const items = [
     ['車主姓名', v('s1-name')], ['手機號碼', v('s1-phone')],
-    ['身分證字號', v('s1-id')], ['通訊地址', v('s1-addr') || '—'],
+    ['身分證字號', v('s1-id')], ['性別', document.querySelector('input[name="gender"]:checked')?.value || '—'],
+    ['通訊地址', v('s1-addr') || '—'],
     ['車款', document.getElementById('s1-model').value], ['顏色', document.getElementById('s1-color').value],
     ['電池規格', document.getElementById('s1-batv').value + ' ' + document.getElementById('s1-batah').value],
     ['車架號碼', v('s1-frame') || '—'], ['成交日期', v('s1-date')], ['預計交車日', v('s1-delivery') || '—'],
@@ -1100,6 +1123,7 @@ async function submitForm() {
     id: 'EB' + Date.now(),
     timestamp: new Date().toLocaleString('zh-TW'),
     name: v('s1-name'), idNo: v('s1-id'), phone: v('s1-phone'),
+    gender: document.querySelector('input[name="gender"]:checked')?.value || '',
     city: document.getElementById('s1-city').value,
     district: document.getElementById('s1-district').value,
     addr: v('s1-addr'),
@@ -1130,18 +1154,33 @@ async function submitForm() {
     sigImg
   };
 
-  // Upload to Google Sheets
+  // Upload to Google Sheets - 用隱藏 form 送出，完全避開 CORS
   document.getElementById('uploading').classList.add('show');
   if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     try {
       const payload = { ...finalData }; delete payload.sigImg;
-      await fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    } catch (e) { console.warn('Google Sheets 上傳失敗（不影響 PDF 產出）', e); }
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = SCRIPT_URL;
+      form.target = 'hidden_iframe';
+      form.style.display = 'none';
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'data';
+      input.value = JSON.stringify(payload);
+      form.appendChild(input);
+      let iframe = document.getElementById('hidden_iframe');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.name = 'hidden_iframe';
+        iframe.id = 'hidden_iframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+      }
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(() => { document.body.removeChild(form); }, 1000);
+    } catch (e) { console.warn('Google Sheets 上傳失敗', e); }
   }
   document.getElementById('uploading').classList.remove('show');
 
@@ -1240,7 +1279,7 @@ ${addonRows}
 <div class="sec-title">保固條款</div>
 <div class="clause">
 <h4>保固範圍（除非另有約定，則交車日起 1 年）</h4>
-✔ 電控系統　｜　✔ 電池模組（鋰電池 1 年，鉛酸電池半年）　｜　✔ 電機馬達<br>
+✔ 電控主機（1 年）　｜　✔ 電池模組（鋰電池 1 年，鉛酸電池半年）　｜　✔ 電機馬達（1 年）<br>
 ✕ 外觀、功能開關、輪胎、煞車皮、鏈條等耗材不在保固範圍
 </div>
 <div class="clause">
@@ -1256,15 +1295,24 @@ ${addonRows}
 2. 買方若在合約成立後反悔，需負擔損害店家已支付之一切費用，方可解約。<br>
 3. 車輛轉賣前應核對資料並確實登記，自即日起如有變遷等糾紛皆與本公司無關。<br>
 4. 因個人因素退貨造成車輛所有權轉換，車主須負責折舊損失車輛售價九成。<br>
-5. 微型電動二輪屬財產登記，購車後無法辦理退換貨。<br>
+5. 微型電動二輪車屬財產登記，購車後無法辦理退換貨。<br>
 6. 【電動輔助自行車/微型電動二輪車】屬機慢車，簽署本表即確認交車時限速為 25km/h。
 </div>
 <div class="clause">
 <h4>日常保養建議</h4>
-• 建議有騎乘就充電，長時間未使用每 1～2 週補充充電一次<br>
+【電池保養】<br>
+• 建議有騎乘就充電，避免長期低電量存放<br>
+• 長時間未使用，每 1～2 週補充充電一次<br>
 • 避免高溫曝曬與潮濕環境存放，請使用原廠充電器<br>
-• 建議定期檢查輪胎胎壓，若輪胎變形、龜裂請盡早更換<br>
-• 雨天騎乘後請擦乾車身，停車請停於遮蔽處或室內
+• 建議避免過度充電與過度放電（電量完全耗盡後才充電）<br>
+• 建議騎乘後先靜置約 30 分鐘再充電，充電完成後間隔約 30 分鐘再騎乘<br><br>
+【保養建議】<br>
+• 不建議使用水槍或水管直接沖洗車輛，以避免水分滲入電器元件<br>
+• 停車時建議停放於遮蔽處或室內，避免長時間日曬雨淋<br><br>
+【輪胎保養】<br>
+• 建議定期檢查輪胎胎壓，避免過低或過高<br>
+• 若發現輪胎變形、龜裂或磨損嚴重，請盡早更換<br><br>
+【特別提醒】電池續航力會受行駛速度、載重、騎乘習慣及電池使用年限等多種因素影響，建議養成良好使用習慣，隨時留意電池狀態。
 </div>
 </div>
 
