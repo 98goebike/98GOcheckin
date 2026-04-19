@@ -508,6 +508,15 @@
       此區由門市人員協助填寫
     </div>
     <div class="card-title"><div class="icon">車</div>車輛資料</div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>車種類型<span class="req">*</span></label>
+      <select id="s1-vehicle-type">
+        <option value="">請選擇車種類型</option>
+        <option value="電動輔助自行車">電動輔助自行車</option>
+        <option value="微型電動二輪車">微型電動二輪車</option>
+        <option value="電動自行車(三輪車、腳踏車)">電動自行車（三輪車、腳踏車）</option>
+      </select>
+    </div>
     <div class="grid2">
       <div class="field"><label>車款<span class="req">*</span></label><input type="text" id="s1-model" placeholder="請輸入車款名稱"></div>
       <div class="field"><label>顏色</label><input type="text" id="s1-color" placeholder="請輸入顏色"></div>
@@ -1054,6 +1063,8 @@ function validateStep(s) {
   if (errEl) errEl.classList.remove('show');
   const fail = (msg) => { if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); } return false; };
   if (s === 1) {
+    if (!document.getElementById('s1-vehicle-type').value)
+      return fail('請選擇車種類型');
     if (!document.getElementById('s1-model').value.trim() || !v('s1-date'))
       return fail('請填寫必填欄位（車款、成交日期）');
   }
@@ -1151,6 +1162,7 @@ async function submitForm() {
     addr: v('s1-addr'),
     birthday: document.getElementById('s1-birthday').value,
     source: sourceSelected.join('、'),
+    vehicleType: document.getElementById('s1-vehicle-type').value,
     model: document.getElementById('s1-model').value,
     modelNote: v('s1-model-note'),
     color: document.getElementById('s1-color').value,
@@ -1311,8 +1323,9 @@ body::before {
 <div class="section">
 <div class="sec-title">車主基本資料</div>
 <table class="info">
-<tr><td class="lbl">車主姓名</td><td>${r.name}</td><td class="lbl">車款</td><td>${r.model}</td></tr>
-<tr><td class="lbl">身份證字號</td><td>${r.idNo}</td><td class="lbl">車輛備註</td><td>${r.modelNote||'—'}</td></tr>
+<tr><td class="lbl">車主姓名</td><td>${r.name}</td><td class="lbl">車種類型</td><td>${r.vehicleType||'—'}</td></tr>
+<tr><td class="lbl">車款</td><td>${r.model}</td><td class="lbl">車輛備註</td><td>${r.modelNote||'—'}</td></tr>
+<tr><td class="lbl">身份證字號</td><td>${r.idNo}</td><td class="lbl">車架號碼</td><td>${r.frame||'—'}</td></tr>
 <tr><td class="lbl">手機號碼</td><td>${r.phone}</td><td class="lbl">顏色</td><td>${r.color}</td></tr>
 <tr><td class="lbl">生日</td><td>${r.birthday || '—'}</td><td class="lbl">車架號碼</td><td>${r.frame || '—'}</td></tr>
 <tr><td class="lbl">通訊地址</td><td colspan="3" class="info-full">${r.city || ''}${r.district || ''} ${r.addr || '—'}</td></tr>
