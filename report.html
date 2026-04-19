@@ -368,7 +368,7 @@ tr:last-child td{border-bottom:none;}
 
 <script>
 // ====== PASSWORD ======
-const CORRECT_PASSWORD = '9866';
+const CORRECT_PASSWORD = '98GO2025';
 function checkPassword() {
   const input = document.getElementById('lock-input');
   const err = document.getElementById('lock-error');
@@ -445,6 +445,13 @@ function fmtDate(v) {
   if (!d || isNaN(d.getTime())) return String(v).slice(0,10) || '—';
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
+// checkbox 判斷：處理 gviz 回傳 true/false boolean 或 'TRUE'/'FALSE' 字串
+function isChecked(row, key) {
+  const v = row[key];
+  if (v === null || v === undefined || v === '' || v === false || v === 'FALSE' || v === 'false' || v === 0) return false;
+  return true; // true, 'TRUE', 'true', 1, 任何truthy值
+}
+
 function getVal(row, key) {
   const v = row[key];
   if (v === null || v === undefined) return '';
@@ -483,6 +490,11 @@ function getYM(row) {
 
 // ====== RENDER ALL ======
 function renderAll() {
+  // Debug: 印出尾款已收的值看格式
+  allData.slice(0,5).forEach(r => {
+    const v = r['尾款已收'];
+    console.log('尾款已收 raw:', v, 'type:', typeof v, 'isChecked:', isChecked(r,'尾款已收'));
+  });
   populateFilters();
   populateDeliveryMonths();
   renderOverview();
@@ -575,7 +587,7 @@ function renderOverview() {
     return d && d.getFullYear()===now.getFullYear();
   }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
-  const pendingBalance = allData.filter(r => !getVal(r,'尾款已收') || getVal(r,'尾款已收') === 'FALSE').reduce((s,r) => s+getNum(r,'尾款'),0);
+  const pendingBalance = allData.filter(r => !isChecked(r,'尾款已收')).reduce((s,r) => s+getNum(r,'尾款'),0);
 
   document.getElementById('metrics-overview').innerHTML = `
     <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
@@ -867,8 +879,8 @@ function renderDelivery() {
   };
 
   // 全資料（不限區間）用於指標卡
-  const delivered = allData.filter(r => getVal(r,'尾款已收')==='TRUE');
-  const pending = allData.filter(r => getVal(r,'預計交車日') && getVal(r,'尾款已收')!=='TRUE');
+  const delivered = allData.filter(r => isChecked(r,'尾款已收'));
+  const pending = allData.filter(r => getVal(r,'預計交車日') && !isChecked(r,'尾款已收'));
   const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
   const thisWeek = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d>=today && d<=new Date(today.getTime()+7*86400000); });
 
@@ -892,7 +904,7 @@ function renderDelivery() {
     return (da||0)-(db||0);
   }).map(r => {
     const d = getDate(r,'預計交車日');
-    const isDone = getVal(r,'尾款已收')==='TRUE';
+    const isDone = isChecked(r,'尾款已收');
     let status;
     if (isDone) {
       status = '<span class="status-done">✅ 已交車</span>';
