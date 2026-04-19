@@ -185,6 +185,19 @@ tr:last-child td{border-bottom:none;}
     <div id="tab-overview">
       <div class="metrics" id="metrics-overview"></div>
 
+      <div id="missing-baldate-card" class="card" style="display:none;border-left:4px solid #E63946;">
+        <div class="card-title" style="color:#E63946;">⚠️ 尾款收款日期未填寫</div>
+        <p style="font-size:12px;color:#666;margin-bottom:10px;">以下訂單已勾選「尾款已收」但未填寫收款日期，會影響現金流統計準確性：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>成交日期</th><th>客戶</th><th>車款</th><th>尾款金額</th><th>尾款付款</th><th>Sale</th>
+            </tr></thead>
+            <tbody id="tbody-missing-baldate"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">💰 現金流明細</div>
         <div class="filter-row" style="margin-bottom:1rem;">
@@ -219,6 +232,10 @@ tr:last-child td{border-bottom:none;}
       <div class="filter-row">
         <label>篩選月份：</label>
         <select id="sales-month" onchange="renderSales()"></select>
+      </div>
+      <div class="card">
+        <div class="card-title">🛵 車種類型統計</div>
+        <div id="vehicletype-bars"></div>
       </div>
       <div class="grid2">
         <div class="card">
@@ -354,7 +371,7 @@ tr:last-child td{border-bottom:none;}
           <table>
             <thead><tr>
               <th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
-              <th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>訂金付款</th><th>尾款</th><th>尾款付款</th><th>Sale</th>
+              <th>車種</th><th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>訂金付款</th><th>尾款</th><th>尾款付款</th><th>Sale</th>
             </tr></thead>
             <tbody id="tbody-records"></tbody>
           </table>
@@ -368,7 +385,7 @@ tr:last-child td{border-bottom:none;}
 
 <script>
 // ====== PASSWORD ======
-const CORRECT_PASSWORD = '98GO2025';
+const CORRECT_PASSWORD = '9866';
 function checkPassword() {
   const input = document.getElementById('lock-input');
   const err = document.getElementById('lock-error');
@@ -587,14 +604,26 @@ function renderOverview() {
     return d && d.getFullYear()===now.getFullYear();
   }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
-  const pendingBalance = allData.filter(r => !isChecked(r,'尾款已收')).reduce((s,r) => s+getNum(r,'尾款'),0);
+  // 今日現金總額
+  const today2 = new Date();
+  const isToday = d => d && d.getFullYear()===today2.getFullYear() && d.getMonth()===today2.getMonth() && d.getDate()===today2.getDate();
+  const todayCash = allData.reduce((s,r) => {
+    let cash = 0;
+    // 訂金：用成交日期判斷
+    const depDate = getDate(r,'成交日期');
+    if (isToday(depDate) && getVal(r,'訂金支付方式')==='現金') cash += getNum(r,'訂金');
+    // 尾款：用尾款收款日期判斷（AP欄）
+    const balDate = getDate(r,'尾款收款日期');
+    if (isToday(balDate) && getVal(r,'尾款支付方式')==='現金') cash += getNum(r,'尾款');
+    return s + cash;
+  }, 0);
 
   document.getElementById('metrics-overview').innerHTML = `
     <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
     <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
     <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
     <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
-    <div class="metric" style="border:2px solid #E63946;"><div class="lbl" style="color:#A32D2D;">待收尾款總額</div><div class="val" style="color:#E63946;">${fmtMoney(pendingBalance)}</div><div class="sub">尚未收款金額</div></div>
+    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
   `;
 
   // 現金流表格
@@ -628,6 +657,25 @@ function renderOverview() {
   }).join('');
 
   document.getElementById('tbody-cashflow').innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray4);padding:2rem;">此區間無資料</td></tr>`;
+  // 檢查尾款已收但沒填收款日期的訂單
+  const missingBalDate = allData.filter(r =>
+    isChecked(r,'尾款已收') && !getVal(r,'尾款收款日期') && getNum(r,'尾款') > 0
+  );
+  const missingCard = document.getElementById('missing-baldate-card');
+  if (missingBalDate.length > 0) {
+    missingCard.style.display = '';
+    document.getElementById('tbody-missing-baldate').innerHTML = missingBalDate.map(r => `<tr>
+      <td>${getVal(r,'成交日期')}</td>
+      <td>${getVal(r,'姓名')}</td>
+      <td>${getVal(r,'車款')}</td>
+      <td style="color:#E63946;font-weight:600;">${fmtMoney(getNum(r,'尾款'))}</td>
+      <td>${getVal(r,'尾款支付方式')||'—'}</td>
+      <td>${getVal(r,'Sale')||'—'}</td>
+    </tr>`).join('');
+  } else {
+    missingCard.style.display = 'none';
+  }
+
   document.getElementById('tfoot-cashflow').innerHTML = `
     <tr style="background:#f0f2f5;border-top:2px solid var(--gray3);">
       <td style="font-weight:700;padding:10px;color:var(--brand);">合計</td>
@@ -644,6 +692,7 @@ function renderSales() {
   const ym = document.getElementById('sales-month')?.value;
   const data = ym ? allData.filter(r => getYM(r)===ym) : allData;
 
+  renderBarsFromData('vehicletype-bars', data, '車種類型', '#E63946', v => v+' 筆');
   renderBarsFromData('model-bars', data, '車款', '#2B2D42', v => v+' 筆');
   renderBarsFromData2('battery-bars', data, '電池規格(V)', '電池規格(ah)', '#1D9E75', v => v+' 筆');
   renderBarsFromData('color-bars', data, '顏色', '#534AB7', v => v+' 筆');
@@ -879,8 +928,8 @@ function renderDelivery() {
   };
 
   // 全資料（不限區間）用於指標卡
-  const delivered = allData.filter(r => isChecked(r,'尾款已收'));
-  const pending = allData.filter(r => getVal(r,'預計交車日') && !isChecked(r,'尾款已收'));
+  const delivered = allData.filter(r => getVal(r,'訂單狀態')==='已交車');
+  const pending = allData.filter(r => getVal(r,'訂單狀態')!=='已交車');
   const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
   const thisWeek = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d>=today && d<=new Date(today.getTime()+7*86400000); });
 
@@ -892,9 +941,18 @@ function renderDelivery() {
   `;
 
   // 依狀態 + 日期區間篩選顯示清單
+  // 已交車用「成交日期」篩選（因為可能沒有預計交車日）
+  const inRangeByDate = r => {
+    if (!fromVal && !toVal) return true;
+    const d = getDate(r, '成交日期');
+    if (!d) return false;
+    if (fromVal && d < new Date(fromVal)) return false;
+    if (toVal && d > new Date(toVal + 'T23:59:59')) return false;
+    return true;
+  };
   let showData;
-  if (filterVal === 'done') showData = delivered.filter(inRange);
-  else if (filterVal === 'all') showData = [...pending, ...delivered].filter(inRange);
+  if (filterVal === 'done') showData = delivered.filter(inRangeByDate);
+  else if (filterVal === 'all') showData = [...pending, ...delivered].filter(r => inRange(r) || inRangeByDate(r));
   else if (filterVal === 'overdue') showData = overdue.filter(inRange);
   else showData = pending.filter(inRange);
 
@@ -904,7 +962,8 @@ function renderDelivery() {
     return (da||0)-(db||0);
   }).map(r => {
     const d = getDate(r,'預計交車日');
-    const isDone = isChecked(r,'尾款已收');
+    const orderStatus = getVal(r,'訂單狀態');
+    const isDone = orderStatus === '已交車';
     let status;
     if (isDone) {
       status = '<span class="status-done">✅ 已交車</span>';
@@ -997,6 +1056,7 @@ function filterRecords() {
     <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(getVal(r,'單號'))}</td>
     <td>${getVal(r,'姓名')}</td>
     <td>${getVal(r,'手機號碼')}</td>
+    <td style="font-size:11px;">${getVal(r,'車種類型')||'—'}</td>
     <td>${getVal(r,'車款')}</td>
     <td>${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
     <td style="font-weight:600;">${fmtMoney(getNum(r,'總金額'))}</td>
@@ -1005,7 +1065,7 @@ function filterRecords() {
     <td>${fmtMoney(getNum(r,'尾款'))}</td>
     <td><span class="badge ${pmMap[getVal(r,'尾款支付方式')]||'badge-green'}">${getVal(r,'尾款支付方式')||'—'}</span></td>
     <td>${getVal(r,'Sale')||'—'}</td>
-  </tr>`).join('') || '<tr><td colspan="12" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+  </tr>`).join('') || '<tr><td colspan="13" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
