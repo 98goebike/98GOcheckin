@@ -89,6 +89,9 @@ tr:last-child td{border-bottom:none;}
 .filter-row label{font-size:12px;color:var(--gray5);}
 .filter-row select,.filter-row input{padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;}
 .search-input{flex:1;min-width:180px;}
+.filter-btn{padding:5px 14px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray5);transition:all .15s;}
+.filter-btn:hover{background:var(--brand);color:#fff;border-color:var(--brand);}
+.filter-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
 
 /* Error */
 .error-box{background:#fff0f1;border:1px solid #F5C4B3;border-radius:8px;padding:1rem;color:#712B13;font-size:13px;line-height:1.7;}
@@ -269,12 +272,30 @@ tr:last-child td{border-bottom:none;}
     <!-- 出貨進度 -->
     <div id="tab-delivery" style="display:none;">
       <div class="metrics" id="metrics-delivery"></div>
-      <div class="filter-row">
-        <label>顯示：</label>
+      <div class="filter-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
+        <label>狀態：</label>
         <select id="delivery-filter" onchange="renderDelivery()">
           <option value="pending">待交車</option>
           <option value="all">全部（含已交車）</option>
           <option value="done">已交車</option>
+          <option value="overdue">已逾期</option>
+        </select>
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>快速區間：</label>
+        <button onclick="setDeliveryToday()" class="filter-btn">今日</button>
+        <button onclick="setDeliveryWeek()" class="filter-btn">本週</button>
+        <button onclick="setDeliveryMonth()" class="filter-btn">本月</button>
+        <button onclick="clearDeliveryDate()" class="filter-btn">全部</button>
+      </div>
+      <div class="filter-row" style="gap:8px;align-items:center;margin-top:-4px;">
+        <label>自訂區間：</label>
+        <input type="date" id="delivery-from" onchange="renderDelivery()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+        <span style="color:var(--gray4);font-size:13px;">～</span>
+        <input type="date" id="delivery-to" onchange="renderDelivery()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>月份：</label>
+        <select id="delivery-month" onchange="onDeliveryMonthChange()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+          <option value="">不限月份</option>
         </select>
       </div>
       <div class="card">
@@ -333,7 +354,7 @@ tr:last-child td{border-bottom:none;}
           <table>
             <thead><tr>
               <th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
-              <th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>尾款</th><th>付款</th><th>Sale</th>
+              <th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>訂金付款</th><th>尾款</th><th>尾款付款</th><th>Sale</th>
             </tr></thead>
             <tbody id="tbody-records"></tbody>
           </table>
@@ -347,7 +368,7 @@ tr:last-child td{border-bottom:none;}
 
 <script>
 // ====== PASSWORD ======
-const CORRECT_PASSWORD = '9866';
+const CORRECT_PASSWORD = '98GO2025';
 function checkPassword() {
   const input = document.getElementById('lock-input');
   const err = document.getElementById('lock-error');
@@ -434,6 +455,23 @@ function getVal(row, key) {
   }
   return v.toString().trim();
 }
+function fmtOrderId(raw) {
+  // 從原始單號（EB + timestamp ms）轉成 YYMMD-HHmm 格式
+  // 例：EB1776552751604 → 抓時間戳 → 260419-1452
+  if (!raw) return '—';
+  // 嘗試從單號中抽出時間戳（去掉EB前綴後的數字）
+  const ms = parseInt(raw.replace(/^EB/, ''));
+  if (!isNaN(ms) && ms > 1000000000000) {
+    const d = new Date(ms);
+    const yy = String(d.getFullYear()).slice(2);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const min = String(d.getMinutes()).padStart(2,'0');
+    return `${yy}${mm}${dd}-${hh}${min}`;
+  }
+  return raw.slice(-12) || raw;
+}
 function fmtMoney(n) {
   return 'NT$ ' + Math.round(n).toLocaleString();
 }
@@ -446,6 +484,7 @@ function getYM(row) {
 // ====== RENDER ALL ======
 function renderAll() {
   populateFilters();
+  populateDeliveryMonths();
   renderOverview();
   renderSales();
   renderPurchase();
@@ -453,6 +492,7 @@ function renderAll() {
   renderCustomer();
   filterRecords();
   setCFToday();
+  clearDeliveryDate();
 }
 
 function populateFilters() {
@@ -577,13 +617,13 @@ function renderOverview() {
 
   document.getElementById('tbody-cashflow').innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray4);padding:2rem;">此區間無資料</td></tr>`;
   document.getElementById('tfoot-cashflow').innerHTML = `
-    <tr style="background:#2B2D42;color:#fff;">
-      <td style="font-weight:700;padding:10px;border-radius:0;">合計</td>
-      <td style="text-align:right;padding:10px;opacity:.7;">${totalDepCount} 筆</td>
-      <td style="text-align:right;padding:10px;font-weight:700;">${fmtMoney(totalDep)}</td>
-      <td style="text-align:right;padding:10px;opacity:.7;">${totalBalCount} 筆</td>
-      <td style="text-align:right;padding:10px;font-weight:700;">${fmtMoney(totalBal)}</td>
-      <td style="text-align:right;padding:10px;font-weight:700;font-size:15px;">${fmtMoney(totalDep+totalBal)}</td>
+    <tr style="background:#f0f2f5;border-top:2px solid var(--gray3);">
+      <td style="font-weight:700;padding:10px;color:var(--brand);">合計</td>
+      <td style="text-align:right;padding:10px;color:var(--gray5);">${totalDepCount} 筆</td>
+      <td style="text-align:right;padding:10px;font-weight:600;color:var(--brand);">${fmtMoney(totalDep)}</td>
+      <td style="text-align:right;padding:10px;color:var(--gray5);">${totalBalCount} 筆</td>
+      <td style="text-align:right;padding:10px;font-weight:600;color:var(--brand);">${fmtMoney(totalBal)}</td>
+      <td style="text-align:right;padding:10px;font-weight:700;font-size:15px;color:var(--brand);">${fmtMoney(totalDep+totalBal)}</td>
     </tr>`;
 }
 
@@ -746,13 +786,87 @@ function renderPurchase() {
     '<p style="color:var(--gray4);font-size:13px;">尚無加價購資料</p>';
 }
 
+// ====== DELIVERY DATE FILTERS ======
+function setDeliveryToday() {
+  const t = getToday();
+  document.getElementById('delivery-from').value = t;
+  document.getElementById('delivery-to').value = t;
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('今日');
+  renderDelivery();
+}
+function setDeliveryWeek() {
+  const now = new Date();
+  const mon = new Date(now); mon.setDate(now.getDate() - now.getDay() + 1);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const fmt = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  document.getElementById('delivery-from').value = fmt(mon);
+  document.getElementById('delivery-to').value = fmt(sun);
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('本週');
+  renderDelivery();
+}
+function setDeliveryMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('delivery-from').value = `${y}-${m}-01`;
+  document.getElementById('delivery-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('本月');
+  renderDelivery();
+}
+function clearDeliveryDate() {
+  document.getElementById('delivery-from').value = '';
+  document.getElementById('delivery-to').value = '';
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('全部');
+  renderDelivery();
+}
+function onDeliveryMonthChange() {
+  const ym = document.getElementById('delivery-month').value;
+  if (!ym) { clearDeliveryDate(); return; }
+  const [y, m] = ym.split('-');
+  const last = new Date(parseInt(y), parseInt(m), 0).getDate();
+  document.getElementById('delivery-from').value = `${y}-${m}-01`;
+  document.getElementById('delivery-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  setActiveDeliveryBtn('');
+  renderDelivery();
+}
+function setActiveDeliveryBtn(label) {
+  document.querySelectorAll('#tab-delivery .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === label);
+  });
+}
+function populateDeliveryMonths() {
+  const months = [...new Set(allData.map(r => {
+    const d = getDate(r, '預計交車日');
+    if (!d || isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('delivery-month');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">不限月份</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
 // ====== DELIVERY ======
 function renderDelivery() {
   const today = new Date(); today.setHours(0,0,0,0);
   const filterVal = document.getElementById('delivery-filter')?.value || 'pending';
+  const fromVal = document.getElementById('delivery-from')?.value;
+  const toVal = document.getElementById('delivery-to')?.value;
 
-  // 判斷「已交車」：尾款已收 TRUE 且有預計交車日
-  const hasDeliveryDate = allData.filter(r => getVal(r,'預計交車日'));
+  // 日期區間篩選函數（依預計交車日）
+  const inRange = r => {
+    if (!fromVal && !toVal) return true;
+    const d = getDate(r, '預計交車日');
+    if (!d) return false;
+    if (fromVal && d < new Date(fromVal)) return false;
+    if (toVal && d > new Date(toVal + 'T23:59:59')) return false;
+    return true;
+  };
+
+  // 全資料（不限區間）用於指標卡
   const delivered = allData.filter(r => getVal(r,'尾款已收')==='TRUE');
   const pending = allData.filter(r => getVal(r,'預計交車日') && getVal(r,'尾款已收')!=='TRUE');
   const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
@@ -765,10 +879,12 @@ function renderDelivery() {
     <div class="metric" style="background:#E1F5EE;"><div class="lbl" style="color:#085041;">已交車</div><div class="val" style="color:#1D9E75;">${delivered.length} 筆</div></div>
   `;
 
+  // 依狀態 + 日期區間篩選顯示清單
   let showData;
-  if (filterVal === 'done') showData = delivered;
-  else if (filterVal === 'all') showData = [...pending, ...delivered];
-  else showData = pending;
+  if (filterVal === 'done') showData = delivered.filter(inRange);
+  else if (filterVal === 'all') showData = [...pending, ...delivered].filter(inRange);
+  else if (filterVal === 'overdue') showData = overdue.filter(inRange);
+  else showData = pending.filter(inRange);
 
   const tbody = document.getElementById('tbody-delivery');
   tbody.innerHTML = showData.sort((a,b)=>{
@@ -866,17 +982,18 @@ function filterRecords() {
   const pmMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
   document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記'))).map(r => `<tr>
     <td>${getVal(r,'成交日期')}</td>
-    <td style="font-size:11px;color:var(--gray4);">${getVal(r,'單號').slice(-8)}</td>
+    <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(getVal(r,'單號'))}</td>
     <td>${getVal(r,'姓名')}</td>
     <td>${getVal(r,'手機號碼')}</td>
     <td>${getVal(r,'車款')}</td>
     <td>${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
     <td style="font-weight:600;">${fmtMoney(getNum(r,'總金額'))}</td>
     <td>${fmtMoney(getNum(r,'訂金'))}</td>
-    <td>${fmtMoney(getNum(r,'尾款'))}</td>
     <td><span class="badge ${pmMap[getVal(r,'訂金支付方式')]||'badge-green'}">${getVal(r,'訂金支付方式')||'—'}</span></td>
+    <td>${fmtMoney(getNum(r,'尾款'))}</td>
+    <td><span class="badge ${pmMap[getVal(r,'尾款支付方式')]||'badge-green'}">${getVal(r,'尾款支付方式')||'—'}</span></td>
     <td>${getVal(r,'Sale')||'—'}</td>
-  </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+  </tr>`).join('') || '<tr><td colspan="12" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
