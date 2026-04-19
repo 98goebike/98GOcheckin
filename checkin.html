@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>98GO 電動車｜交車保固登記</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+:root{--brand:#2B2D42;--accent:#E63946;--green:#1D9E75;--green-soft:#E1F5EE;--blue:#185FA5;--blue-soft:#E6F1FB;--amber:#854F0B;--amber-soft:#FFF3E5;--gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;--gray4:#aaa;--gray5:#666;--text:#1a1a1a;--radius:10px;--radius-sm:6px;--shadow:0 2px 12px rgba(0,0,0,0.07);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--text);min-height:100vh;padding-bottom:3rem;}
+.header{background:var(--brand);color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.18);}
+.logo-mark{width:40px;height:40px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;flex-shrink:0;}
+.logo-mark span:first-child{font-size:13px;font-weight:900;color:#fff;line-height:1;}
+.logo-mark span:last-child{font-size:8px;color:rgba(255,255,255,.85);letter-spacing:.1em;}
+.header-text h1{font-size:17px;font-weight:700;}
+.header-text p{font-size:12px;opacity:.65;margin-top:1px;}
+.steps{background:#fff;border-bottom:1px solid var(--gray3);padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:center;}
+.step-item{display:flex;align-items:center;gap:6px;}
+.step-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--gray3);background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gray4);flex-shrink:0;transition:all .3s;}
+.step-dot.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+.step-dot.done{background:var(--green);border-color:var(--green);color:#fff;}
+.step-label{font-size:11px;color:var(--gray4);font-weight:500;white-space:nowrap;}
+.step-label.active{color:var(--brand);font-weight:700;}
+.step-label.done{color:var(--green);}
+.step-line{width:32px;height:2px;background:var(--gray3);margin:0 6px;transition:background .3s;}
+.step-line.done{background:var(--green);}
+.container{max-width:480px;margin:1.5rem auto;padding:0 1rem;}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:1.75rem 1.5rem;margin-bottom:1rem;}
+.card-title{font-size:15px;font-weight:700;color:var(--brand);margin-bottom:1.25rem;padding-bottom:.625rem;border-bottom:2px solid var(--gray2);display:flex;align-items:center;gap:8px;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.field label{font-size:12px;font-weight:600;color:var(--gray5);}
+.field label .req{color:var(--accent);margin-left:2px;}
+.field input,.field select{padding:11px 14px;border:1.5px solid var(--gray3);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .2s,box-shadow .2s;width:100%;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(43,45,66,.08);}
+.field .hint{font-size:11px;color:var(--gray4);margin-top:2px;}
+.optional-badge{display:inline-block;font-size:10px;background:var(--gray2);color:var(--gray5);padding:1px 6px;border-radius:99px;margin-left:4px;font-weight:400;}
+.order-card{background:var(--blue-soft);border:1.5px solid #B5D4F4;border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;}
+.order-card-title{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:.875rem;}
+.order-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(24,95,165,0.1);}
+.order-row:last-child{border-bottom:none;}
+.order-row .lbl{color:var(--blue);opacity:.8;}
+.order-row .val{font-weight:600;color:var(--brand);}
+.balance-display{background:var(--amber-soft);border:2px solid #F4A261;border-radius:var(--radius);padding:1.25rem;text-align:center;margin-bottom:1rem;}
+.balance-display .lbl{font-size:12px;color:var(--amber);font-weight:600;margin-bottom:4px;}
+.balance-display .amount{font-size:32px;font-weight:900;color:var(--amber);line-height:1;}
+.balance-display .sub{font-size:11px;color:var(--amber);opacity:.7;margin-top:4px;}
+.balance-zero{background:var(--green-soft);border:2px solid #9FE1CB;border-radius:var(--radius);padding:1rem;text-align:center;margin-bottom:1rem;color:var(--green);font-weight:700;font-size:14px;}
+.btn-primary{width:100%;padding:14px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s;margin-top:.5rem;}
+.btn-primary:hover{background:#1a1c2e;}
+.btn-green{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s;margin-top:.5rem;}
+.btn-green:hover{background:#178a65;}
+.btn-green:disabled{background:var(--gray3);color:var(--gray4);cursor:not-allowed;}
+.btn-back{width:100%;padding:11px;background:#fff;color:var(--gray5);border:1.5px solid var(--gray3);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;cursor:pointer;margin-top:.5rem;}
+.err-msg{background:#fff0f1;border:1px solid #F5C4B3;border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:13px;color:#A32D2D;margin-top:.75rem;display:none;}
+.err-msg.show{display:block;}
+.uploading{display:none;text-align:center;padding:1rem;color:var(--gray5);font-size:13px;}
+.uploading.show{display:block;}
+.spinner{width:28px;height:28px;border:3px solid var(--gray2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto .5rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#done-screen{display:none;text-align:center;padding:1rem 0;}
+.done-icon{width:80px;height:80px;background:var(--green-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 1.25rem;}
+.done-title{font-size:22px;font-weight:700;color:var(--brand);margin-bottom:.5rem;}
+.done-sub{font-size:14px;color:var(--gray5);line-height:1.7;margin-bottom:1.25rem;}
+.done-info{background:var(--green-soft);border-radius:var(--radius);padding:1rem 1.25rem;text-align:left;}
+.done-info-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,0.05);}
+.done-info-row:last-child{border-bottom:none;}
+.done-info-row .lbl{color:var(--gray5);}
+.done-info-row .val{font-weight:600;color:var(--brand);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-mark"><span>98GO</span><span>e-bike</span></div>
+  <div class="header-text"><h1>交車保固登記</h1><p>完成登記即啟動保固服務</p></div>
+</div>
+<div class="steps">
+  <div class="step-item"><div class="step-dot active" id="dot1">1</div><div class="step-label active" id="lbl1">驗證身份</div></div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-item"><div class="step-dot" id="dot2">2</div><div class="step-label" id="lbl2">確認尾款</div></div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-item"><div class="step-dot" id="dot3">3</div><div class="step-label" id="lbl3">登記完成</div></div>
+</div>
+<div class="container">
+
+  <!-- STEP 1 -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-title">🔑 訂單驗證</div>
+      <div style="background:#E6F1FB;border-radius:6px;padding:.6rem 1rem;margin-bottom:1.25rem;font-size:12px;color:#185FA5;line-height:1.6;">
+        📋 請輸入您的訂單單號及訂車時登記的手機號碼
+      </div>
+      <div class="field">
+        <label>訂單單號<span class="req">*</span></label>
+        <input type="text" id="f-id" placeholder="例：260419-1452" autocomplete="off">
+        <span class="hint">請參考訂車確認單右上角的單號</span>
+      </div>
+      <div class="field">
+        <label>車主手機號碼<span class="req">*</span></label>
+        <input type="tel" id="f-phone" placeholder="09XXXXXXXX" maxlength="10" onkeydown="if(event.key==='Enter')queryOrder()">
+      </div>
+      <div class="err-msg" id="err1"></div>
+      <div class="uploading" id="loading1"><div class="spinner"></div>查詢訂單中...</div>
+      <button class="btn-primary" onclick="queryOrder()">🔍 查詢訂單</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="step2" style="display:none;">
+    <div class="order-card" id="order-info"></div>
+    <div id="balance-section"></div>
+    <div class="card">
+      <div class="card-title">🏍 車輛資料登記</div>
+      <div class="field">
+        <label>車架號碼<span class="req">*</span></label>
+        <input type="text" id="f-frame" placeholder="請輸入車架號碼" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>馬達編號<span class="req">*</span></label>
+        <input type="text" id="f-motor" placeholder="請輸入馬達編號" autocomplete="off">
+      </div>
+      <div class="field" id="bal-method-field">
+        <label>尾款支付方式<span class="req">*</span></label>
+        <select id="f-bal-method">
+          <option value="">請選擇支付方式</option>
+          <option value="現金">現金</option>
+          <option value="匯款/轉帳">匯款／轉帳</option>
+          <option value="刷卡">刷卡</option>
+          <option value="無卡分期">無卡分期</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>車牌號碼<span class="optional-badge">選填</span></label>
+        <input type="text" id="f-plate" placeholder="例：ABC-1234" autocomplete="off">
+        <span class="hint">微型電動二輪車請填寫，電動輔助自行車可略</span>
+      </div>
+      <div class="err-msg" id="err2"></div>
+      <div class="uploading" id="loading2"><div class="spinner"></div>登記中，請稍候...</div>
+      <button class="btn-green" id="btn-submit" onclick="submitCheckin()">✅ 完成保固登記</button>
+      <button class="btn-back" onclick="goBack()">← 返回修改</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="done-screen">
+    <div class="card">
+      <div class="done-icon">✅</div>
+      <div class="done-title">保固登記完成！</div>
+      <div class="done-sub">感謝您選購 98GO 電動車<br>您的車輛保固已正式啟動 🎉</div>
+      <div class="done-info" id="done-info"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
+let orderData=null;
+function fmtMoney(n){return 'NT$ '+Math.round(n).toLocaleString();}
+function setStep(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById('dot'+i).className='step-dot'+(i<n?' done':i===n?' active':'');
+    document.getElementById('lbl'+i).className='step-label'+(i<n?' done':i===n?' active':'');
+  });
+  [1,2].forEach(i=>{document.getElementById('line'+i).className='step-line'+(i<n?' done':'');});
+}
+function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('show');}
+function hideErr(id){document.getElementById(id).classList.remove('show');}
+
+function queryOrder(){
+  hideErr('err1');
+  const id=document.getElementById('f-id').value.trim();
+  const phone=document.getElementById('f-phone').value.trim();
+  if(!id) return showErr('err1','請填寫訂單單號');
+  if(!phone||!/^09\d{8}$/.test(phone)) return showErr('err1','請填寫正確的手機號碼（09開頭共10碼）');
+  document.getElementById('loading1').classList.add('show');
+  const cbName='cb_'+Date.now();
+  window[cbName]=function(data){
+    document.getElementById('loading1').classList.remove('show');
+    delete window[cbName]; script.remove();
+    if(data.status==='notfound') return showErr('err1','找不到訂單，請確認單號與手機號碼是否正確');
+    if(data.status==='error') return showErr('err1','查詢失敗，請稍後再試');
+    orderData={...data,id,phone};
+    showStep2(data);
+  };
+  const script=document.createElement('script');
+  script.src=`${SCRIPT_URL}?action=query&id=${encodeURIComponent(id)}&phone=${encodeURIComponent(phone)}&callback=${cbName}`;
+  script.onerror=()=>{document.getElementById('loading1').classList.remove('show');showErr('err1','網路異常，請稍後再試');};
+  document.body.appendChild(script);
+  setTimeout(()=>{if(window[cbName]){document.getElementById('loading1').classList.remove('show');delete window[cbName];script.remove();showErr('err1','查詢逾時，請稍後再試');}},10000);
+}
+
+function showStep2(data){
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+  setStep(2);
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('order-info').innerHTML=`
+    <div class="order-card-title">📋 訂單資料確認</div>
+    <div class="order-row"><span class="lbl">車主姓名</span><span class="val">${data.name}</span></div>
+    <div class="order-row"><span class="lbl">車種類型</span><span class="val">${data.vehicleType||'—'}</span></div>
+    <div class="order-row"><span class="lbl">車款</span><span class="val">${data.model}</span></div>
+    <div class="order-row"><span class="lbl">總金額</span><span class="val">${fmtMoney(data.total)}</span></div>
+    <div class="order-row"><span class="lbl">已付訂金</span><span class="val">${fmtMoney(data.deposit)}</span></div>`;
+  const bal=parseFloat(data.balance)||0;
+  const balSection=document.getElementById('balance-section');
+  const balField=document.getElementById('bal-method-field');
+  if(bal>0){
+    balSection.innerHTML=`<div class="balance-display"><div class="lbl">⚠️ 尚餘尾款金額</div><div class="amount">${fmtMoney(bal)}</div><div class="sub">請於取車時完款</div></div>`;
+    balField.style.display='';
+  } else {
+    balSection.innerHTML=`<div class="balance-zero">✅ 此訂單已完款，無尾款</div>`;
+    balField.style.display='none';
+  }
+}
+
+function goBack(){
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step1').style.display='block';
+  setStep(1);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function submitCheckin(){
+  hideErr('err2');
+  const frame=document.getElementById('f-frame').value.trim();
+  const motor=document.getElementById('f-motor').value.trim();
+  const plate=document.getElementById('f-plate').value.trim();
+  const balMethod=document.getElementById('f-bal-method').value;
+  const bal=parseFloat(orderData.balance)||0;
+  if(!frame) return showErr('err2','請填寫車架號碼');
+  if(!motor) return showErr('err2','請填寫馬達編號');
+  if(bal>0&&!balMethod) return showErr('err2','請選擇尾款支付方式');
+  const btn=document.getElementById('btn-submit');
+  btn.disabled=true;
+  document.getElementById('loading2').classList.add('show');
+  const today=new Date();
+  const dateStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  const payload={action:'checkin',id:orderData.id,phone:orderData.phone,frame,motor,plate,balMethod:bal>0?balMethod:(orderData.balanceMethod||''),checkinDate:dateStr};
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+    await new Promise(r=>setTimeout(r,2000));
+    document.getElementById('step2').style.display='none';
+    document.getElementById('done-screen').style.display='block';
+    setStep(3);
+    document.getElementById('done-info').innerHTML=`
+      <div class="done-info-row"><span class="lbl">車主</span><span class="val">${orderData.name}</span></div>
+      <div class="done-info-row"><span class="lbl">車款</span><span class="val">${orderData.model}</span></div>
+      <div class="done-info-row"><span class="lbl">車架號碼</span><span class="val">${frame}</span></div>
+      <div class="done-info-row"><span class="lbl">馬達編號</span><span class="val">${motor}</span></div>
+      ${plate?`<div class="done-info-row"><span class="lbl">車牌號碼</span><span class="val">${plate}</span></div>`:''}
+      ${bal>0?`<div class="done-info-row"><span class="lbl">尾款支付</span><span class="val">${balMethod}</span></div>`:''}
+      <div class="done-info-row"><span class="lbl">登記日期</span><span class="val">${dateStr}</span></div>`;
+    window.scrollTo({top:0,behavior:'smooth'});
+  } catch(e){
+    showErr('err2','網路異常，請再試一次');
+    btn.disabled=false;
+  }
+  document.getElementById('loading2').classList.remove('show');
+}
+</script>
+</body>
+</html>
