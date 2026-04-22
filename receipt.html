@@ -5,408 +5,326 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>98GO 電動車｜購車收據</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-:root{--brand:#2B2D42;--accent:#E63946;--green:#1D9E75;--green-soft:#E1F5EE;--amber:#F4A261;--amber-soft:#FFF3E5;--blue:#185FA5;--blue-soft:#E6F1FB;--gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;--gray4:#aaa;--gray5:#666;--text:#1a1a1a;--radius:10px;--shadow:0 2px 12px rgba(0,0,0,0.07);}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+:root{--brand:#2B2D42;--accent:#E63946;--green:#1D9E75;--green-soft:#E1F5EE;--amber-soft:#FFF3E5;--blue-soft:#E6F1FB;--blue:#185FA5;--gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;--gray4:#aaa;--gray5:#666;--text:#1a1a1a;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--text);min-height:100vh;padding-bottom:3rem;}
-.header{background:var(--brand);color:#fff;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.18);}
-.logo-mark{width:40px;height:40px;background:var(--accent);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex-shrink:0;}
-.logo-mark span:first-child{font-size:13px;font-weight:900;color:#fff;line-height:1;}
-.logo-mark span:last-child{font-size:8px;color:rgba(255,255,255,.85);letter-spacing:.1em;}
-.header-text h1{font-size:17px;font-weight:700;}
-.header-text p{font-size:12px;opacity:.65;margin-top:1px;}
-.container{max-width:600px;margin:1.5rem auto;padding:0 1rem;}
-.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1rem;}
-.card-title{font-size:15px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:2px solid var(--gray2);}
-.badge{display:inline-block;background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-left:8px;}
-.row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--gray2);font-size:13px;}
-.row:last-child{border-bottom:none;}
-.row .lbl{color:var(--gray5);flex-shrink:0;width:90px;}
-.row .val{color:var(--text);font-weight:500;text-align:right;flex:1;}
-.price-box{background:var(--gray1);border-radius:8px;padding:1rem;margin-top:.5rem;}
-.price-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--gray2);}
-.price-row:last-child{border-bottom:none;}
-.price-total{background:var(--brand);color:#fff;padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin-top:8px;}
-.price-dep{background:var(--blue-soft);color:var(--blue);padding:6px 12px;border-radius:6px;display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-top:4px;}
-.price-bal{background:var(--amber-soft);color:#633806;padding:6px 12px;border-radius:6px;display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-top:4px;}
-.addon-item{font-size:13px;padding:4px 0;border-bottom:1px solid var(--gray2);}
-.addon-item:last-child{border-bottom:none;}
-.loading{text-align:center;padding:4rem 2rem;color:var(--gray4);}
-.loading .spinner{width:40px;height:40px;border:3px solid var(--gray3);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+body{font-family:'Noto Sans TC',sans-serif;background:#e0e0e0;color:var(--text);min-height:100vh;padding:1.5rem 1rem 3rem;}
+.loading{max-width:480px;margin:4rem auto;background:#fff;border-radius:12px;padding:3rem;text-align:center;color:var(--gray4);}
+.spinner{width:40px;height:40px;border:3px solid var(--gray3);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.error-card{background:#fff;border-radius:var(--radius);padding:2rem;text-align:center;border:1.5px solid var(--accent);}
-.error-card h2{color:var(--accent);margin-bottom:.5rem;}
-.warranty-box{background:var(--green-soft);border:1.5px solid #9FE1CB;border-radius:8px;padding:1rem;font-size:12.5px;color:#085041;line-height:1.8;}
-.warranty-box h4{font-size:13px;font-weight:700;margin-bottom:.5rem;}
-.meta-bar{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:var(--gray2);border-radius:8px;margin-bottom:1rem;font-size:12px;color:var(--gray5);}
-.status-badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;}
-.status-pending{background:#FFF3E5;color:#633806;}
-.status-done{background:var(--green-soft);color:var(--green);}
+.error-box{max-width:480px;margin:4rem auto;background:#fff;border-radius:12px;padding:2.5rem;text-align:center;border:2px solid var(--accent);}
+.error-box h2{color:var(--accent);margin-bottom:.5rem;}
+.error-box p{color:var(--gray5);font-size:14px;margin-top:.5rem;}
+
+/* ── 收據 ── */
+.receipt{max-width:640px;margin:0 auto;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.18);}
+.receipt-header{background:var(--brand);color:#fff;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.logo-mark{width:48px;height:48px;background:var(--accent);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
+.logo-mark span:first-child{font-size:15px;font-weight:900;color:#fff;line-height:1;}
+.logo-mark span:last-child{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.1em;}
+.hdr-left{display:flex;align-items:center;gap:14px;}
+.hdr-title{font-size:18px;font-weight:700;}
+.hdr-sub{font-size:12px;opacity:.65;margin-top:2px;}
+.hdr-meta{text-align:right;font-size:12px;opacity:.7;line-height:1.8;}
+.hdr-meta strong{font-size:14px;opacity:1;}
+
+.status-bar{padding:.625rem 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.status-bar.pending{background:var(--amber-soft);color:#633806;}
+.status-bar.done{background:var(--green-soft);color:#085041;}
+
+.body{padding:1.5rem 2rem;}
+
+.sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gray5);border-bottom:2px solid var(--gray2);padding-bottom:5px;margin:1.5rem 0 10px;}
+.sec:first-child{margin-top:0;}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem;}
+table.info{width:100%;border-collapse:collapse;font-size:13px;}
+table.info td{padding:5px 0;vertical-align:top;}
+table.info td.l{color:var(--gray5);width:88px;}
+table.info td.v{font-weight:500;}
+table.info tr{border-bottom:1px solid var(--gray2);}
+table.info tr:last-child{border-bottom:none;}
+
+.addon-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 0;border-bottom:1px solid var(--gray2);}
+.addon-row:last-child{border-bottom:none;}
+.addon-total{display:flex;justify-content:flex-end;font-size:13px;font-weight:700;color:#534AB7;padding-top:8px;border-top:1px solid #C5C2F5;margin-top:4px;}
+
+.price-wrap{background:var(--gray1);border-radius:8px;padding:1rem;}
+.pr{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--gray2);}
+.pr:last-child{border-bottom:none;}
+.pr.red{color:var(--accent);}
+.pt{display:flex;justify-content:space-between;align-items:center;background:var(--brand);color:#fff;padding:10px 14px;border-radius:6px;font-weight:700;font-size:16px;margin-top:10px;}
+.pd{display:flex;justify-content:space-between;align-items:center;background:var(--blue-soft);color:var(--blue);padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;}
+.pb{display:flex;justify-content:space-between;align-items:center;background:var(--amber-soft);color:#633806;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;}
+.pdate{font-size:11px;padding:3px 14px;color:var(--gray5);margin-top:1px;}
+.pfull{display:flex;justify-content:space-between;align-items:center;background:var(--green-soft);color:var(--green);padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;}
+
+.sign-box{background:var(--green-soft);border:1.5px solid #9FE1CB;border-radius:8px;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:12px;margin-top:1.5rem;}
+.sign-chk{width:40px;height:40px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;}
+.sign-title{font-size:14px;font-weight:700;color:var(--green);}
+.sign-date{font-size:12px;color:var(--gray5);margin-top:2px;}
+.sign-note{font-size:12px;color:#085041;margin-top:6px;line-height:1.6;}
+
+.wb{background:var(--gray1);border-radius:8px;padding:1rem;font-size:12.5px;line-height:1.85;margin-bottom:.75rem;}
+.wb h4{font-size:12.5px;font-weight:700;color:var(--brand);margin-bottom:4px;}
+.ww{background:var(--amber-soft);border-radius:8px;padding:1rem;font-size:12.5px;line-height:1.85;color:#633806;margin-bottom:.75rem;}
+.ww h4{font-size:12.5px;font-weight:700;margin-bottom:4px;}
+.wc{background:#f9f9f9;border-radius:8px;padding:1rem;font-size:12px;line-height:1.9;color:#444;margin-bottom:.75rem;}
+.wc h4{font-size:12.5px;font-weight:700;color:var(--brand);margin-bottom:4px;}
+
+.receipt-footer{background:var(--gray1);border-top:1px solid var(--gray2);padding:1rem 2rem;text-align:center;font-size:11px;color:var(--gray4);line-height:1.8;}
+
+@media(max-width:520px){
+  .receipt-header{flex-direction:column;align-items:flex-start;}
+  .hdr-meta{text-align:left;}
+  .two{grid-template-columns:1fr;}
+  .body{padding:1.25rem 1rem;}
+}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo-mark">
-    <span>98GO</span>
-    <span>e-bike</span>
-  </div>
-  <div class="header-text">
-    <h1>購車收據</h1>
-    <p>98GO 電動車｜正式收據</p>
-  </div>
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <p>載入收據中...</p>
 </div>
 
-<div class="container">
-  <!-- 載入中 -->
-  <div id="loading" class="card loading">
-    <div class="spinner"></div>
-    <p>載入收據中...</p>
+<div id="error-box" class="error-box" style="display:none;">
+  <h2>❌ 找不到收據</h2>
+  <p id="error-msg">此連結無效或收據不存在，請聯繫 98GO 門市。</p>
+</div>
+
+<div id="receipt" class="receipt" style="display:none;">
+
+  <div class="receipt-header">
+    <div class="hdr-left">
+      <div class="logo-mark"><span>98GO</span><span>e-bike</span></div>
+      <div>
+        <div class="hdr-title">新車買賣保固收據</div>
+        <div class="hdr-sub">98GO 電動車｜正式收據</div>
+      </div>
+    </div>
+    <div class="hdr-meta">
+      <strong id="r-id">單號：—</strong><br>
+      <span id="r-timestamp">—</span>
+    </div>
   </div>
 
-  <!-- 錯誤 -->
-  <div id="error-card" class="error-card" style="display:none;">
-    <h2>❌ 找不到收據</h2>
-    <p style="color:var(--gray5);margin-top:.5rem;font-size:14px;">此連結無效或收據不存在，請聯繫 98GO 門市。</p>
+  <div id="status-bar" class="status-bar pending">
+    <span id="status-text">⏳ 待交車</span>
+    <span id="status-sub"></span>
   </div>
 
-  <!-- 收據內容 -->
-  <div id="receipt-content" style="display:none;">
+  <div class="body">
 
-    <div class="meta-bar">
-      <span id="meta-id">單號：—</span>
-      <span id="meta-status" class="status-badge status-pending">待交車</span>
+    <div class="sec">車輛資料</div>
+    <div class="two">
+      <table class="info">
+        <tr><td class="l">車種類型</td><td class="v" id="r-vehicleType">—</td></tr>
+        <tr><td class="l">車款</td><td class="v" id="r-model">—</td></tr>
+        <tr><td class="l">顏色</td><td class="v" id="r-color">—</td></tr>
+        <tr id="r-modelNote-row" style="display:none;"><td class="l">車輛備註</td><td class="v" id="r-modelNote">—</td></tr>
+        <tr id="r-frame-row" style="display:none;"><td class="l">車架號碼</td><td class="v" id="r-frame">—</td></tr>
+      </table>
+      <table class="info">
+        <tr><td class="l">電池</td><td class="v" id="r-battery">—</td></tr>
+        <tr id="r-batNote-row" style="display:none;"><td class="l">電池備註</td><td class="v" id="r-batNote">—</td></tr>
+        <tr><td class="l">成交日期</td><td class="v" id="r-date">—</td></tr>
+        <tr><td class="l">預計交車</td><td class="v" id="r-delivery">—</td></tr>
+        <tr id="r-staff-row" style="display:none;"><td class="l">門市人員</td><td class="v" id="r-staff">—</td></tr>
+      </table>
     </div>
 
-    <!-- 車輛資料 -->
-    <div class="card">
-      <div class="card-title">🏍 車輛資料</div>
-      <div class="row"><span class="lbl">車種類型</span><span class="val" id="r-vehicleType">—</span></div>
-      <div class="row"><span class="lbl">車款</span><span class="val" id="r-model">—</span></div>
-      <div class="row"><span class="lbl">顏色</span><span class="val" id="r-color">—</span></div>
-      <div class="row" id="r-modelNote-row" style="display:none;"><span class="lbl">車輛備註</span><span class="val" id="r-modelNote">—</span></div>
-      <div class="row"><span class="lbl">電池</span><span class="val" id="r-battery">—</span></div>
-      <div class="row" id="r-batNote-row" style="display:none;"><span class="lbl">電池備註</span><span class="val" id="r-batNote">—</span></div>
-      <div class="row"><span class="lbl">成交日期</span><span class="val" id="r-date">—</span></div>
-      <div class="row"><span class="lbl">預計交車</span><span class="val" id="r-delivery">—</span></div>
-      <div class="row" id="r-frame-row" style="display:none;"><span class="lbl">車架號碼</span><span class="val" id="r-frame">—</span></div>
-      <div class="row" id="r-staff-row" style="display:none;"><span class="lbl">門市人員</span><span class="val" id="r-staff">—</span></div>
+    <div class="sec">買方資料</div>
+    <div class="two">
+      <table class="info">
+        <tr><td class="l">車主姓名</td><td class="v" id="r-name">—</td></tr>
+        <tr><td class="l">身分證字號</td><td class="v" id="r-idNo">—</td></tr>
+        <tr><td class="l">手機號碼</td><td class="v" id="r-phone">—</td></tr>
+      </table>
+      <table class="info">
+        <tr id="r-gender-row" style="display:none;"><td class="l">性別</td><td class="v" id="r-gender">—</td></tr>
+        <tr id="r-birthday-row" style="display:none;"><td class="l">生日</td><td class="v" id="r-birthday">—</td></tr>
+        <tr><td class="l">通訊地址</td><td class="v" id="r-addr">—</td></tr>
+      </table>
     </div>
 
-    <!-- 買方資料 -->
-    <div class="card">
-      <div class="card-title">👤 買方資料</div>
-      <div class="row"><span class="lbl">車主姓名</span><span class="val" id="r-name">—</span></div>
-      <div class="row"><span class="lbl">身分證字號</span><span class="val" id="r-idNo">—</span></div>
-      <div class="row" id="r-gender-row" style="display:none;"><span class="lbl">性別</span><span class="val" id="r-gender">—</span></div>
-      <div class="row" id="r-birthday-row" style="display:none;"><span class="lbl">生日</span><span class="val" id="r-birthday">—</span></div>
-      <div class="row"><span class="lbl">手機號碼</span><span class="val" id="r-phone">—</span></div>
-      <div class="row"><span class="lbl">通訊地址</span><span class="val" id="r-addr">—</span></div>
-    </div>
-
-    <!-- 加價購 -->
-    <div class="card" id="addon-card" style="display:none;">
-      <div class="card-title">🛍 加價購項目</div>
+    <div id="addon-section" style="display:none;">
+      <div class="sec">加價購明細</div>
       <div id="addon-list"></div>
-      <div id="addon-total-row" style="display:none;text-align:right;font-size:13px;font-weight:700;color:#534AB7;padding-top:8px;border-top:1px solid #C5C2F5;margin-top:4px;">
-        加購合計：<span id="addon-total-val">—</span>
+      <div id="addon-total-row" class="addon-total" style="display:none;">加購合計：<span id="addon-total-val">—</span></div>
+    </div>
+
+    <div class="sec">交易金額</div>
+    <div class="price-wrap">
+      <div class="pr"><span>車輛售價（車＋電池）</span><span id="r-bikePrice">—</span></div>
+      <div class="pr" id="r-addon-row" style="display:none;"><span>加價購小計</span><span id="r-addonTotal">—</span></div>
+      <div class="pr red" id="r-discount-row" style="display:none;"><span>折扣金額</span><span id="r-discount">—</span></div>
+    </div>
+    <div class="pt"><span>總金額</span><span id="r-total">—</span></div>
+    <div class="pd"><span id="r-dep-label">訂金</span><span id="r-deposit">—</span></div>
+    <div id="r-depDate-row" class="pdate" style="display:none;"></div>
+    <div class="pb"><span id="r-bal-label">尾款</span><span id="r-balance">—</span></div>
+    <div id="r-balDate-row" class="pdate" style="display:none;"></div>
+    <div id="r-fullDate-row" class="pfull" style="display:none;"><span id="r-fullDate-label">完款日期</span></div>
+
+    <div class="sign-box">
+      <div class="sign-chk">✓</div>
+      <div>
+        <div class="sign-title">買方已電子簽署確認</div>
+        <div class="sign-date" id="sign-date">簽署日期：—</div>
+        <div class="sign-note">本人確認以上所有資料正確無誤，同意本次買賣合約之所有條款，並以電子方式作為正式確認。</div>
       </div>
     </div>
 
-    <!-- 交易金額 -->
-    <div class="card">
-      <div class="card-title">💰 交易金額</div>
-      <div class="price-box">
-        <div class="price-row"><span>車輛售價</span><span id="r-bikePrice">—</span></div>
-        <div class="price-row" id="r-addon-row" style="display:none;"><span>加價購小計</span><span id="r-addonTotal">—</span></div>
-        <div class="price-row" id="r-discount-row" style="display:none;"><span style="color:var(--accent);">折扣金額</span><span id="r-discount" style="color:var(--accent);">—</span></div>
-      </div>
-      <div class="price-total"><span>總金額</span><span id="r-total">—</span></div>
-      <div class="price-dep"><span id="r-dep-label">訂金</span><span id="r-deposit">—</span></div>
-      <div id="r-depDate-row" style="display:none;padding:4px 12px;font-size:12px;color:var(--blue);background:var(--blue-soft);border-radius:6px;margin-top:2px;display:none;"><span id="r-depDate-label">訂金日期</span></div>
-      <div class="price-bal"><span id="r-bal-label">尾款</span><span id="r-balance">—</span></div>
-      <div id="r-balDate-row" style="padding:4px 12px;font-size:12px;color:#633806;background:var(--amber-soft);border-radius:6px;margin-top:2px;display:none;"><span id="r-balDate-label">尾款日期</span></div>
-      <div id="r-fullDate-row" style="padding:4px 12px;font-size:12px;color:#085041;background:var(--green-soft);border-radius:6px;margin-top:2px;display:none;"><span id="r-fullDate-label">完款日期</span></div>
+    <div class="sec" style="margin-top:2rem;">保固條款與使用責任</div>
+    <div class="wb">
+      <h4>✅ 保固範圍</h4>
+      • 電控主機：1 年｜電池模組：鋰電池 1 年／鉛酸電池半年｜電機馬達：1 年<br>
+      <span style="color:#A32D2D;">✕ 外觀、功能開關、輪胎、煞車皮、鏈條等耗材不在保固範圍</span>
+    </div>
+    <div class="ww">
+      <h4>⚠️ 常見不保固原因</h4>
+      • 人為碰撞、改裝、進水導致之損壞<br>
+      • 非授權店家維修後，保固立即失效<br>
+      • 保固期間如需維修，車馬費、運費由車主自行負擔<br>
+      • 電池僅保固充電、放電功能，恕不保固續航里程
+    </div>
+    <div class="wc">
+      <h4>📋 車輛與使用責任</h4>
+      1. 尾款付清前，不得交車行駛上路。<br>
+      2. 買方若在合約成立後反悔，需負擔損害店家已支付之一切費用，方可解約。<br>
+      3. 車輛轉賣前應核對資料並確實登記，自即日起如有變遷等糾紛皆與本公司無關。<br>
+      4. 因個人因素退貨，車主須負責折舊損失車輛售價九成。<br>
+      5. 微型電動二輪車屬財產登記，購車後無法辦理退換貨。<br>
+      6. 簽署本收據即確認交車時限速為 25km/h。
     </div>
 
-    <!-- 簽署確認 -->
-    <div class="card" style="border:1.5px solid #9FE1CB;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:44px;height:44px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✓</div>
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--green);">買方已電子簽署確認</div>
-          <div id="sign-date" style="font-size:12px;color:var(--gray5);margin-top:2px;">簽署日期：—</div>
-        </div>
-      </div>
-      <div style="margin-top:.875rem;padding:.75rem;background:var(--green-soft);border-radius:6px;font-size:12px;color:#085041;line-height:1.7;">
-        本人確認以上所有資料正確無誤，同意本次買賣合約之所有條款，並以電子方式作為正式確認。
-      </div>
+    <div class="sec">日常保養建議</div>
+    <div class="wb">
+      <h4>🔋 電池保養</h4>
+      • 建議有騎乘就充電，避免長期低電量存放<br>
+      • 長時間未使用，每 1～2 週補充充電一次<br>
+      • 避免高溫曝曬與潮濕環境，請使用原廠充電器<br>
+      • 騎乘後靜置約 30 分鐘再充電；充電完成後間隔 30 分鐘再騎乘
+    </div>
+    <div class="wb" style="margin-bottom:0;">
+      <h4>🛠 車輛 ／ 🛞 輪胎保養</h4>
+      • 不建議使用水槍直沖，避免水分滲入電器元件<br>
+      • 停車建議放置遮蔽處，避免長時間日曬雨淋<br>
+      • 定期檢查胎壓，輪胎若有龜裂或磨損嚴重請盡早更換
     </div>
 
-    <!-- 保固說明 -->
-    <div class="card">
-      <div class="card-title">🛡 保固條款與使用責任</div>
+  </div>
 
-      <div class="warranty-box" style="margin-bottom:.75rem;">
-        <h4>✅ 保固範圍</h4>
-        • 電控主機：1 年<br>
-        • 電池模組：鋰電池 1 年／鉛酸電池半年<br>
-        • 電機馬達：1 年<br>
-        <span style="color:#A32D2D;">✕ 外觀、功能開關、輪胎、煞車皮、鏈條等耗材不在保固範圍</span>
-      </div>
-
-      <div style="background:#fff3e5;border:1px solid #EF9F27;border-radius:8px;padding:1rem;margin-bottom:.75rem;font-size:12.5px;color:#633806;line-height:1.8;">
-        <h4 style="font-size:13px;font-weight:700;margin-bottom:.4rem;">⚠️ 常見不保固原因</h4>
-        • 人為碰撞、改裝、進水導致之損壞<br>
-        • 非授權店家維修後，保固立即失效<br>
-        • 保固期間如需維修，車馬費、運費由車主自行負擔<br>
-        • 電池僅保固充電、放電功能，恕不保固續航里程
-      </div>
-
-      <div style="background:#f9f9f9;border:1px solid var(--gray3);border-radius:8px;padding:1rem;font-size:12.5px;color:#444;line-height:1.9;">
-        <h4 style="font-size:13px;font-weight:700;color:var(--brand);margin-bottom:.4rem;">📋 車輛與使用責任</h4>
-        1. 尾款付清前，不得交車行駛上路。<br>
-        2. 買方若在合約成立後反悔，需負擔損害店家已支付之一切費用，方可解約。<br>
-        3. 車輛轉賣前應核對資料並確實登記，自即日起如有變遷等糾紛皆與本公司無關。<br>
-        4. 因個人因素退貨造成車輛所有權轉換，車主須負責折舊損失車輛售價九成。<br>
-        5. 微型電動二輪車屬財產登記，購車後無法辦理退換貨。<br>
-        6. 【電動輔助自行車／微型電動二輪車】屬機慢車，簽署本表即確認交車時限速為 25km/h。
-      </div>
-    </div>
-
-    <!-- 保養建議 -->
-    <div class="card">
-      <div class="card-title">🔋 日常保養建議</div>
-
-      <div class="warranty-box" style="margin-bottom:.75rem;">
-        <h4>🔋 電池保養</h4>
-        • 建議有騎乘就充電，避免長期低電量存放<br>
-        • 長時間未使用，每 1～2 週補充充電一次<br>
-        • 避免高溫曝曬與潮濕環境存放<br>
-        • 請使用原廠充電器，避免混用不同規格<br>
-        • 建議騎乘後靜置約 30 分鐘再充電，充電完成後間隔 30 分鐘再騎乘
-      </div>
-
-      <div class="warranty-box" style="margin-bottom:.75rem;">
-        <h4>🛠 車輛保養</h4>
-        • 不建議使用水槍或水管直接沖洗，避免水分滲入電器元件<br>
-        • 停車建議放置遮蔽處，避免長時間日曬雨淋
-      </div>
-
-      <div style="background:#fff3e5;border:1px solid #EF9F27;border-radius:8px;padding:1rem;font-size:12.5px;color:#633806;line-height:1.8;">
-        <h4 style="font-size:13px;font-weight:700;margin-bottom:.4rem;">⚠️ 特別提醒</h4>
-        電池續航力會受到行駛速度、載重、騎乘習慣及電池使用年限等多種因素影響。<br>
-        建議養成良好使用習慣，隨時留意電池狀態，適時進行充電以維持最佳狀況。
-      </div>
-    </div>
-
-    <p style="text-align:center;font-size:11px;color:var(--gray4);margin-top:1rem;">
-      98GO 電動車｜本收據由系統自動產生<br>
-      如有任何問題請聯繫門市 😊
-    </p>
+  <div class="receipt-footer">
+    98GO 電動車｜本收據由系統自動產生<br>
+    單號 <span id="footer-id">—</span>｜如有疑問請聯繫門市 😊
   </div>
 </div>
 
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 
-function fmtMoney(n) {
-  const num = parseFloat(n) || 0;
-  return 'NT$ ' + num.toLocaleString();
+function fmtMoney(n){const num=parseFloat(n)||0;return 'NT$ '+num.toLocaleString();}
+function fmtDate(val){
+  if(!val)return '—';
+  try{const d=new Date(val);if(!isNaN(d.getTime())){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}}catch(e){}
+  return val.toString().split('T')[0]||val;
 }
+function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val||'—';}
 
-function fmtDate(val) {
-  if (!val) return '—';
-  // 處理各種格式：Date物件、ISO字串、YYYY-MM-DD、中文日期等
-  try {
-    const d = new Date(val);
-    if (!isNaN(d.getTime())) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return y + '-' + m + '-' + day;
-    }
-  } catch(e) {}
-  // 直接回傳原始值
-  return val.toString().split('T')[0] || val;
-}
+async function loadReceipt(){
+  const params=new URLSearchParams(window.location.search);
+  const orderId=params.get('id');
+  if(!orderId){document.getElementById('loading').style.display='none';document.getElementById('error-box').style.display='';return;}
 
-function set(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val || '—';
-}
-
-async function loadReceipt() {
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get('id');
-
-  if (!orderId) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error-card').style.display = '';
-    return;
-  }
-
-  try {
-    // 用 JSONP 查詢訂單（跟 checkin.html 同樣方式）
-    const cbName = 'cb_' + Date.now();
-    const url = `${SCRIPT_URL}?action=receipt&orderId=${encodeURIComponent(orderId)}&callback=${cbName}`;
-
-    await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('timeout')), 15000);
-      window[cbName] = function(data) {
-        clearTimeout(timeout);
-        delete window[cbName];
-        script.remove();
-        resolve(data);
-      };
-      const script = document.createElement('script');
-      script.src = url;
-      script.onerror = () => { clearTimeout(timeout); reject(new Error('load error')); };
+  try{
+    const cbName='cb_'+Date.now();
+    const url=`${SCRIPT_URL}?action=receipt&orderId=${encodeURIComponent(orderId)}&callback=${cbName}`;
+    await new Promise((resolve,reject)=>{
+      const timeout=setTimeout(()=>reject(new Error('timeout')),15000);
+      window[cbName]=function(data){clearTimeout(timeout);delete window[cbName];script.remove();resolve(data);};
+      const script=document.createElement('script');
+      script.src=url;
+      script.onerror=()=>{clearTimeout(timeout);reject(new Error('load error'));};
       document.head.appendChild(script);
-    }).then(data => {
-      document.getElementById('loading').style.display = 'none';
+    }).then(data=>{
+      document.getElementById('loading').style.display='none';
+      if(!data||data.status==='not_found'){document.getElementById('error-box').style.display='';return;}
 
-      if (!data || data.status === 'not_found') {
-        document.getElementById('error-card').style.display = '';
-        return;
-      }
+      set('r-id','單號：'+orderId);
+      set('footer-id',orderId);
+      set('r-timestamp',fmtDate(data.date));
 
-      // 填入資料
-      document.getElementById('meta-id').textContent = '單號：' + orderId;
-
-      // 訂單狀態
-      const statusEl = document.getElementById('meta-status');
-      if (data.status === '已交車' || data.orderStatus === '已交車') {
-        statusEl.textContent = '✅ 已交車';
-        statusEl.className = 'status-badge status-done';
-        // 顯示車架號碼
-        if (data.frame) {
-          document.getElementById('r-frame-row').style.display = 'flex';
-          set('r-frame', data.frame);
-        }
-      } else {
-        statusEl.textContent = '⏳ 待交車';
-        statusEl.className = 'status-badge status-pending';
-      }
+      const isDone=data.orderStatus==='已交車';
+      const bar=document.getElementById('status-bar');
+      bar.className='status-bar '+(isDone?'done':'pending');
+      set('status-text',isDone?'✅ 已交車':'⏳ 待交車');
+      if(isDone&&data.frame)set('status-sub','車架號碼：'+data.frame);
 
       // 車輛
-      set('r-vehicleType', data.vehicleType);
-      set('r-model', data.model);
-      set('r-color', data.color);
-      set('r-battery', (data.batType||'') + ' ' + (data.batV||'') + ' ' + (data.batAh||''));
-      set('r-date', fmtDate(data.date));
-      set('r-delivery', data.delivery ? fmtDate(data.delivery) : '待確認');
+      set('r-vehicleType',data.vehicleType);
+      set('r-model',data.model);
+      set('r-color',data.color);
+      set('r-battery',[data.batType,data.batV,data.batAh].filter(Boolean).join(' '));
+      set('r-date',fmtDate(data.date));
+      set('r-delivery',data.delivery?fmtDate(data.delivery):'待確認');
+      if(data.modelNote){document.getElementById('r-modelNote-row').style.display='';set('r-modelNote',data.modelNote);}
+      if(data.batNote){document.getElementById('r-batNote-row').style.display='';set('r-batNote',data.batNote);}
+      if(data.staff){document.getElementById('r-staff-row').style.display='';set('r-staff',data.staff);}
+      if(isDone&&data.frame){document.getElementById('r-frame-row').style.display='';set('r-frame',data.frame);}
 
       // 買方
-      set('r-name', data.name);
-      set('r-idNo', data.idNo || '—');
-      // 手機號碼隱藏中間4碼保護隱私
-      const phone = data.phone || '';
-      const maskedPhone = phone.length >= 8
-        ? phone.slice(0, 4) + '****' + phone.slice(-3)
-        : phone;
-      set('r-phone', maskedPhone);
-      set('r-addr', (data.city||'') + (data.district||'') + ' ' + (data.addr||''));
+      set('r-name',data.name);
+      set('r-idNo',data.idNo||'—');
+      set('r-phone', data.phone || '—');
+      set('r-addr',[data.city,data.district,data.addr].filter(Boolean).join(' '));
+      if(data.gender){document.getElementById('r-gender-row').style.display='';set('r-gender',data.gender);}
+      if(data.birthday){document.getElementById('r-birthday-row').style.display='';set('r-birthday',fmtDate(data.birthday));}
 
-      // 加價購
-      if (data.addonItems) {
-        const items = data.addonItems.split('、').filter(Boolean);
-        if (items.length > 0) {
-          document.getElementById('addon-card').style.display = '';
-          const list = document.getElementById('addon-list');
-          // 嘗試拆解名稱與金額（格式：名稱，金額用 addonTotal 平均不準，直接顯示項目名稱）
-          list.innerHTML = items.map(i => `<div class="addon-item" style="display:flex;justify-content:space-between;"><span>✓ ${i}</span></div>`).join('');
-          // 顯示加購合計
-          if (parseFloat(data.addonTotal) > 0) {
-            document.getElementById('addon-total-row').style.display = 'block';
-            document.getElementById('addon-total-val').textContent = fmtMoney(data.addonTotal);
-          }
+      // 加購
+      if(data.addonItems){
+        const items=data.addonItems.split('、').filter(Boolean);
+        if(items.length>0){
+          document.getElementById('addon-section').style.display='';
+          document.getElementById('addon-list').innerHTML=items.map(i=>{
+            const parts=i.split(':');const name=parts[0].trim();const price=parts[1]?parseFloat(parts[1]):null;
+            return `<div class="addon-row"><span>✓ ${name}</span>${price?`<span style="color:#534AB7;font-weight:600;">${fmtMoney(price)}</span>`:''}</div>`;
+          }).join('');
+          if(parseFloat(data.addonTotal)>0){document.getElementById('addon-total-row').style.display='flex';set('addon-total-val',fmtMoney(data.addonTotal));}
         }
       }
 
       // 金額
-      set('r-bikePrice', fmtMoney(data.bikePrice));
-      if (parseFloat(data.addonTotal) > 0) {
-        document.getElementById('r-addon-row').style.display = 'flex';
-        set('r-addonTotal', fmtMoney(data.addonTotal));
-      }
-      if (parseFloat(data.discount) > 0) {
-        document.getElementById('r-discount-row').style.display = 'flex';
-        set('r-discount', '- ' + fmtMoney(data.discount));
-      }
-      set('r-total', fmtMoney(data.total));
-      set('r-deposit', fmtMoney(data.deposit));
-      set('r-balance', fmtMoney(data.balance));
+      set('r-bikePrice',fmtMoney(data.bikePrice));
+      if(parseFloat(data.addonTotal)>0){document.getElementById('r-addon-row').style.display='flex';set('r-addonTotal',fmtMoney(data.addonTotal));}
+      if(parseFloat(data.discount)>0){document.getElementById('r-discount-row').style.display='flex';set('r-discount','- '+fmtMoney(data.discount));}
+      set('r-total',fmtMoney(data.total));
 
-      // 訂金/尾款日期與分期
-      const depMethod = data.depositMethod || '';
-      const depPeriod = data.depositPeriod ? `（${data.depositPeriod}）` : '';
-      const depLabel = depMethod ? `訂金（${depMethod}${depPeriod}）` : '訂金';
-      set('r-dep-label', depLabel);
+      const depMethod=data.depositMethod||'';
+      const depPeriod=data.depositPeriod?`（${data.depositPeriod}）`:'';
+      set('r-dep-label',depMethod?`訂金（${depMethod}${depPeriod}）`:'訂金');
+      set('r-deposit',fmtMoney(data.deposit));
+      if(data.depDate){const el=document.getElementById('r-depDate-row');el.style.display='block';el.textContent='訂金日期：'+fmtDate(data.depDate);}
 
-      const balMethod = data.balanceMethod || '';
-      const balPeriod = data.balancePeriod ? `（${data.balancePeriod}）` : '';
-      const balLabel = balMethod ? `尾款（${balMethod}${balPeriod}）` : '尾款';
-      set('r-bal-label', balLabel);
+      const balMethod=data.balanceMethod||'';
+      const balPeriod=data.balancePeriod?`（${data.balancePeriod}）`:'';
+      set('r-bal-label',balMethod?`尾款（${balMethod}${balPeriod}）`:'尾款');
+      set('r-balance',fmtMoney(data.balance));
+      if(data.balDate){const el=document.getElementById('r-balDate-row');el.style.display='block';el.textContent='尾款日期：'+fmtDate(data.balDate);}
+      if(data.fullDate){document.getElementById('r-fullDate-row').style.display='flex';set('r-fullDate-label','✅ 完款日期：'+fmtDate(data.fullDate));}
 
-      if (data.depDate) {
-        const el = document.getElementById('r-depDate-row');
-        el.style.display = 'block';
-        document.getElementById('r-depDate-label').textContent = '訂金日期：' + fmtDate(data.depDate);
-      }
-      if (data.balDate) {
-        const el = document.getElementById('r-balDate-row');
-        el.style.display = 'block';
-        document.getElementById('r-balDate-label').textContent = '尾款日期：' + fmtDate(data.balDate);
-      }
-      if (data.fullDate) {
-        const el = document.getElementById('r-fullDate-row');
-        el.style.display = 'block';
-        document.getElementById('r-fullDate-label').textContent = '完款日期：' + fmtDate(data.fullDate);
-      }
+      if(data.date)set('sign-date','簽署日期：'+fmtDate(data.date));
 
-      // 車輛備註、電池備註、門市人員
-      if (data.modelNote) {
-        document.getElementById('r-modelNote-row').style.display = 'flex';
-        set('r-modelNote', data.modelNote);
-      }
-      if (data.batNote) {
-        document.getElementById('r-batNote-row').style.display = 'flex';
-        set('r-batNote', data.batNote);
-      }
-      if (data.staff) {
-        document.getElementById('r-staff-row').style.display = 'flex';
-        set('r-staff', data.staff);
-      }
-
-      // 性別、生日
-      if (data.gender) {
-        document.getElementById('r-gender-row').style.display = 'flex';
-        set('r-gender', data.gender);
-      }
-      if (data.birthday) {
-        document.getElementById('r-birthday-row').style.display = 'flex';
-        set('r-birthday', fmtDate(data.birthday));
-      }
-
-      // 簽署日期（用成交日期）
-      const signDateEl = document.getElementById('sign-date');
-      if (signDateEl && data.date) {
-        signDateEl.textContent = '簽署日期：' + fmtDate(data.date);
-      }
-
-      document.getElementById('receipt-content').style.display = '';
+      document.getElementById('receipt').style.display='';
     });
-
-  } catch (e) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('error-card').style.display = '';
-    document.getElementById('error-card').querySelector('p').textContent = '載入失敗，請稍後再試或聯繫門市。';
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error-box').style.display='';
+    document.getElementById('error-msg').textContent='載入失敗，請稍後再試或聯繫門市。';
   }
 }
-
-// 查詢需要 Apps Script 回傳更多欄位，先嘗試用現有 doQuery
-// 若查不到部分欄位，顯示有的部分即可
 loadReceipt();
 </script>
 </body>
