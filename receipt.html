@@ -335,8 +335,6 @@ async function loadReceipt() {
         set('r-discount', '- ' + fmtMoney(data.discount));
       }
       set('r-total', fmtMoney(data.total));
-      const depLabel = data.depositMethod ? `訂金（${data.depositMethod}）` : '訂金';
-      set('r-dep-label', depLabel);
       set('r-deposit', fmtMoney(data.deposit));
       set('r-balance', fmtMoney(data.balance));
 
