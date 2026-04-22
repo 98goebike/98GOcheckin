@@ -84,16 +84,22 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
       <div class="row"><span class="lbl">車種類型</span><span class="val" id="r-vehicleType">—</span></div>
       <div class="row"><span class="lbl">車款</span><span class="val" id="r-model">—</span></div>
       <div class="row"><span class="lbl">顏色</span><span class="val" id="r-color">—</span></div>
+      <div class="row" id="r-modelNote-row" style="display:none;"><span class="lbl">車輛備註</span><span class="val" id="r-modelNote">—</span></div>
       <div class="row"><span class="lbl">電池</span><span class="val" id="r-battery">—</span></div>
+      <div class="row" id="r-batNote-row" style="display:none;"><span class="lbl">電池備註</span><span class="val" id="r-batNote">—</span></div>
       <div class="row"><span class="lbl">成交日期</span><span class="val" id="r-date">—</span></div>
       <div class="row"><span class="lbl">預計交車</span><span class="val" id="r-delivery">—</span></div>
       <div class="row" id="r-frame-row" style="display:none;"><span class="lbl">車架號碼</span><span class="val" id="r-frame">—</span></div>
+      <div class="row" id="r-staff-row" style="display:none;"><span class="lbl">門市人員</span><span class="val" id="r-staff">—</span></div>
     </div>
 
     <!-- 買方資料 -->
     <div class="card">
       <div class="card-title">👤 買方資料</div>
       <div class="row"><span class="lbl">車主姓名</span><span class="val" id="r-name">—</span></div>
+      <div class="row"><span class="lbl">身分證字號</span><span class="val" id="r-idNo">—</span></div>
+      <div class="row" id="r-gender-row" style="display:none;"><span class="lbl">性別</span><span class="val" id="r-gender">—</span></div>
+      <div class="row" id="r-birthday-row" style="display:none;"><span class="lbl">生日</span><span class="val" id="r-birthday">—</span></div>
       <div class="row"><span class="lbl">手機號碼</span><span class="val" id="r-phone">—</span></div>
       <div class="row"><span class="lbl">通訊地址</span><span class="val" id="r-addr">—</span></div>
     </div>
@@ -102,6 +108,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
     <div class="card" id="addon-card" style="display:none;">
       <div class="card-title">🛍 加價購項目</div>
       <div id="addon-list"></div>
+      <div id="addon-total-row" style="display:none;text-align:right;font-size:13px;font-weight:700;color:#534AB7;padding-top:8px;border-top:1px solid #C5C2F5;margin-top:4px;">
+        加購合計：<span id="addon-total-val">—</span>
+      </div>
     </div>
 
     <!-- 交易金額 -->
@@ -114,7 +123,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
       </div>
       <div class="price-total"><span>總金額</span><span id="r-total">—</span></div>
       <div class="price-dep"><span id="r-dep-label">訂金</span><span id="r-deposit">—</span></div>
-      <div class="price-bal"><span>尾款</span><span id="r-balance">—</span></div>
+      <div id="r-depDate-row" style="display:none;padding:4px 12px;font-size:12px;color:var(--blue);background:var(--blue-soft);border-radius:6px;margin-top:2px;display:none;"><span id="r-depDate-label">訂金日期</span></div>
+      <div class="price-bal"><span id="r-bal-label">尾款</span><span id="r-balance">—</span></div>
+      <div id="r-balDate-row" style="padding:4px 12px;font-size:12px;color:#633806;background:var(--amber-soft);border-radius:6px;margin-top:2px;display:none;"><span id="r-balDate-label">尾款日期</span></div>
+      <div id="r-fullDate-row" style="padding:4px 12px;font-size:12px;color:#085041;background:var(--green-soft);border-radius:6px;margin-top:2px;display:none;"><span id="r-fullDate-label">完款日期</span></div>
     </div>
 
     <!-- 簽署確認 -->
@@ -287,6 +299,7 @@ async function loadReceipt() {
 
       // 買方
       set('r-name', data.name);
+      set('r-idNo', data.idNo || '—');
       // 手機號碼隱藏中間4碼保護隱私
       const phone = data.phone || '';
       const maskedPhone = phone.length >= 8
@@ -301,7 +314,13 @@ async function loadReceipt() {
         if (items.length > 0) {
           document.getElementById('addon-card').style.display = '';
           const list = document.getElementById('addon-list');
-          list.innerHTML = items.map(i => `<div class="addon-item">✓ ${i}</div>`).join('');
+          // 嘗試拆解名稱與金額（格式：名稱，金額用 addonTotal 平均不準，直接顯示項目名稱）
+          list.innerHTML = items.map(i => `<div class="addon-item" style="display:flex;justify-content:space-between;"><span>✓ ${i}</span></div>`).join('');
+          // 顯示加購合計
+          if (parseFloat(data.addonTotal) > 0) {
+            document.getElementById('addon-total-row').style.display = 'block';
+            document.getElementById('addon-total-val').textContent = fmtMoney(data.addonTotal);
+          }
         }
       }
 
@@ -320,6 +339,57 @@ async function loadReceipt() {
       set('r-dep-label', depLabel);
       set('r-deposit', fmtMoney(data.deposit));
       set('r-balance', fmtMoney(data.balance));
+
+      // 訂金/尾款日期與分期
+      const depMethod = data.depositMethod || '';
+      const depPeriod = data.depositPeriod ? `（${data.depositPeriod}）` : '';
+      const depLabel = depMethod ? `訂金（${depMethod}${depPeriod}）` : '訂金';
+      set('r-dep-label', depLabel);
+
+      const balMethod = data.balanceMethod || '';
+      const balPeriod = data.balancePeriod ? `（${data.balancePeriod}）` : '';
+      const balLabel = balMethod ? `尾款（${balMethod}${balPeriod}）` : '尾款';
+      set('r-bal-label', balLabel);
+
+      if (data.depDate) {
+        const el = document.getElementById('r-depDate-row');
+        el.style.display = 'block';
+        document.getElementById('r-depDate-label').textContent = '訂金日期：' + fmtDate(data.depDate);
+      }
+      if (data.balDate) {
+        const el = document.getElementById('r-balDate-row');
+        el.style.display = 'block';
+        document.getElementById('r-balDate-label').textContent = '尾款日期：' + fmtDate(data.balDate);
+      }
+      if (data.fullDate) {
+        const el = document.getElementById('r-fullDate-row');
+        el.style.display = 'block';
+        document.getElementById('r-fullDate-label').textContent = '完款日期：' + fmtDate(data.fullDate);
+      }
+
+      // 車輛備註、電池備註、門市人員
+      if (data.modelNote) {
+        document.getElementById('r-modelNote-row').style.display = 'flex';
+        set('r-modelNote', data.modelNote);
+      }
+      if (data.batNote) {
+        document.getElementById('r-batNote-row').style.display = 'flex';
+        set('r-batNote', data.batNote);
+      }
+      if (data.staff) {
+        document.getElementById('r-staff-row').style.display = 'flex';
+        set('r-staff', data.staff);
+      }
+
+      // 性別、生日
+      if (data.gender) {
+        document.getElementById('r-gender-row').style.display = 'flex';
+        set('r-gender', data.gender);
+      }
+      if (data.birthday) {
+        document.getElementById('r-birthday-row').style.display = 'flex';
+        set('r-birthday', fmtDate(data.birthday));
+      }
 
       // 簽署日期（用成交日期）
       const signDateEl = document.getElementById('sign-date');
