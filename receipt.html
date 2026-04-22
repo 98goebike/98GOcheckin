@@ -117,6 +117,20 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
       <div class="price-bal"><span>尾款</span><span id="r-balance">—</span></div>
     </div>
 
+    <!-- 簽署確認 -->
+    <div class="card" style="border:1.5px solid #9FE1CB;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✓</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--green);">買方已電子簽署確認</div>
+          <div id="sign-date" style="font-size:12px;color:var(--gray5);margin-top:2px;">簽署日期：—</div>
+        </div>
+      </div>
+      <div style="margin-top:.875rem;padding:.75rem;background:var(--green-soft);border-radius:6px;font-size:12px;color:#085041;line-height:1.7;">
+        本人確認以上所有資料正確無誤，同意本次買賣合約之所有條款，並以電子方式作為正式確認。
+      </div>
+    </div>
+
     <!-- 保固說明 -->
     <div class="card">
       <div class="card-title">🛡 保固條款與使用責任</div>
@@ -189,6 +203,22 @@ function fmtMoney(n) {
   return 'NT$ ' + num.toLocaleString();
 }
 
+function fmtDate(val) {
+  if (!val) return '—';
+  // 處理各種格式：Date物件、ISO字串、YYYY-MM-DD、中文日期等
+  try {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    }
+  } catch(e) {}
+  // 直接回傳原始值
+  return val.toString().split('T')[0] || val;
+}
+
 function set(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val || '—';
@@ -252,8 +282,8 @@ async function loadReceipt() {
       set('r-model', data.model);
       set('r-color', data.color);
       set('r-battery', (data.batType||'') + ' ' + (data.batV||'') + ' ' + (data.batAh||''));
-      set('r-date', data.date);
-      set('r-delivery', data.delivery || '待確認');
+      set('r-date', fmtDate(data.date));
+      set('r-delivery', data.delivery ? fmtDate(data.delivery) : '待確認');
 
       // 買方
       set('r-name', data.name);
@@ -290,6 +320,12 @@ async function loadReceipt() {
       set('r-dep-label', depLabel);
       set('r-deposit', fmtMoney(data.deposit));
       set('r-balance', fmtMoney(data.balance));
+
+      // 簽署日期（用成交日期）
+      const signDateEl = document.getElementById('sign-date');
+      if (signDateEl && data.date) {
+        signDateEl.textContent = '簽署日期：' + fmtDate(data.date);
+      }
 
       document.getElementById('receipt-content').style.display = '';
     });
