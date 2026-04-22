@@ -888,8 +888,16 @@
       <div class="done-circle">✓</div>
       <h2>保固收據已完成！</h2>
       <p>資料已同步至 98GO 銷售系統<br>保固收據已自動下載，請交由客戶留存。</p>
+      <div id="receipt-link-wrap" style="background:#E1F5EE;border:1.5px solid #9FE1CB;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;text-align:left;">
+        <div style="font-size:12px;color:#0F6E56;font-weight:600;margin-bottom:6px;">📎 客人收據連結</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input id="receipt-url" type="text" readonly style="flex:1;padding:8px 10px;border:1.5px solid #9FE1CB;border-radius:6px;font-size:12px;background:#fff;color:#1a1a1a;font-family:monospace;" value="">
+          <button onclick="copyReceiptUrl()" style="padding:8px 12px;background:#1D9E75;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">複製</button>
+        </div>
+      </div>
       <div class="done-actions">
         <button class="btn" onclick="regenPDF()">重新下載收據</button>
+        <button id="line-share-btn" class="btn" onclick="shareToLine()" style="background:#06C755;color:#fff;border-color:#06C755;">📲 LINE 分享給客人</button>
         <button class="btn btn-primary" onclick="location.reload()">建立新表單</button>
       </div>
     </div>
@@ -1211,10 +1219,52 @@ async function submitForm() {
   generatePDF(finalData);
   [1, 2, 3, 4, 5, 6].forEach(i => { const el = document.getElementById('step' + i); if (el) el.style.display = 'none'; });
   document.getElementById('step-done').style.display = '';
+  // 設定收據連結
+  setTimeout(() => {
+    const url = getReceiptUrl();
+    const el = document.getElementById('receipt-url');
+    if (el) el.value = url;
+  }, 100);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function regenPDF() { if (finalData) generatePDF(finalData); }
+
+function getReceiptUrl() {
+  if (!finalData) return '';
+  // 產生收據網址（指向同目錄下的 receipt.html）
+  const base = window.location.href.replace(/\/[^/]*$/, '/');
+  return base + 'receipt.html?id=' + finalData.id;
+}
+
+function copyReceiptUrl() {
+  const url = document.getElementById('receipt-url').value;
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ 已複製';
+    btn.style.background = '#0F6E56';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = '#1D9E75'; }, 2000);
+  }).catch(() => {
+    // fallback
+    const el = document.getElementById('receipt-url');
+    el.select();
+    document.execCommand('copy');
+  });
+}
+
+function shareToLine() {
+  const url = getReceiptUrl();
+  if (!url || !finalData) return;
+  const msg = `您好 ${finalData.name}！感謝您選購 98GO 電動車 🛵
+
+您的購車收據如下，請點開查看：
+${url}
+
+如有任何問題請隨時聯繫我們 😊`;
+  window.open('https://social-plugins.line.me/lineit/share?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(msg), '_blank');
+}
 
 // ====== PDF GENERATION ======
 function generatePDF(r) {
