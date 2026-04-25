@@ -131,6 +131,32 @@ tr:last-child td{border-bottom:none;}
 }
 .lock-btn:hover{background:#1a1c2e;}
 .lock-error{font-size:12px;color:var(--accent);margin-top:.5rem;height:16px;}
+
+/* ── 登記收款 Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.2);overflow:hidden;}
+.modal-header{background:var(--brand);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.7;line-height:1;}
+.modal-close:hover{opacity:1;}
+.modal-body{padding:1.25rem 1.5rem;}
+.modal-order-info{background:#f8f8f8;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:13px;}
+.modal-order-info .name{font-weight:700;color:var(--brand);font-size:15px;}
+.modal-order-info .sub{color:var(--gray5);margin-top:2px;}
+.modal-amount{background:#FFF3E5;border:2px solid #F4A261;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;text-align:center;}
+.modal-amount .lbl{font-size:11px;color:#854F0B;font-weight:600;margin-bottom:2px;}
+.modal-amount .val{font-size:24px;font-weight:900;color:#854F0B;}
+.modal-field{margin-bottom:12px;}
+.modal-field label{font-size:12px;font-weight:600;color:var(--gray5);display:block;margin-bottom:4px;}
+.modal-field select,.modal-field input{width:100%;padding:9px 12px;border:1.5px solid var(--gray3);border-radius:6px;font-size:14px;font-family:inherit;color:var(--text);}
+.modal-field select:focus,.modal-field input:focus{outline:none;border-color:var(--brand);}
+.modal-footer{padding:.75rem 1.5rem 1.25rem;display:flex;gap:.75rem;}
+.modal-btn-cancel{flex:1;padding:11px;background:#fff;border:1.5px solid var(--gray3);border-radius:6px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--gray5);}
+.modal-btn-submit{flex:2;padding:11px;background:var(--green);border:none;border-radius:6px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff;}
+.modal-btn-submit:hover{background:#178a65;}
+.modal-btn-submit:disabled{background:var(--gray3);color:var(--gray4);cursor:not-allowed;}
+.modal-err{background:#fff0f1;border:1px solid #F5C4B3;border-radius:6px;padding:.6rem 1rem;font-size:12px;color:#A32D2D;margin-bottom:.75rem;display:none;}
+.modal-err.show{display:block;}
 </style>
 </head>
 <body>
@@ -321,7 +347,7 @@ tr:last-child td{border-bottom:none;}
           <table id="table-delivery">
             <thead><tr>
               <th>預計交車日</th><th>狀態</th><th>客戶</th><th>手機</th>
-              <th>車款</th><th>顏色</th><th>電池</th><th>Sale</th><th>總金額</th><th>尾款狀態</th>
+              <th>車款</th><th>顏色</th><th>電池</th><th>Sale</th><th>總金額</th><th>應收／已收</th><th>操作</th>
             </tr></thead>
             <tbody id="tbody-delivery"></tbody>
           </table>
@@ -411,6 +437,8 @@ if (sessionStorage.getItem('98go_auth') === '1') {
 const SHEET_ID = '1eLlGkJ2hvk_XJvJYtVGqGgQ8pCrQolfSkUlGnDhXO8k';
 const SHEET_NAME = '購車保固資料表';
 const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
+window._SCRIPT_URL = APPS_SCRIPT_URL;
 
 let allData = [];
 let currentTab = 'overview';
@@ -638,7 +666,8 @@ function renderOverview() {
     if (!cfMap[dm]) cfMap[dm] = {depCount:0,dep:0,balCount:0,bal:0};
     if (!cfMap[bm]) cfMap[bm] = {depCount:0,dep:0,balCount:0,bal:0};
     if (dep > 0) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
-    if (bal > 0) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
+    // 尾款只有「尾款已收✅」才計入現金流
+    if (bal > 0 && isChecked(r,'尾款已收')) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
   });
 
   const colorMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
@@ -911,6 +940,13 @@ function populateDeliveryMonths() {
 }
 
 // ====== DELIVERY ======
+function renderBalanceCell(r, isDone) {
+  const bal = getNum(r, '尾款');
+  if (isDone) return '<span class="status-done">✅ 已收款</span>';
+  if (bal <= 0) return '<span style="color:var(--green);font-size:12px;font-weight:600;">全額付清</span>';
+  return `<span style="color:#854F0B;font-weight:600;font-size:13px;">應收 ${fmtMoney(bal)}</span>`;
+}
+
 function renderDelivery() {
   const today = new Date(); today.setHours(0,0,0,0);
   const filterVal = document.getElementById('delivery-filter')?.value || 'pending';
@@ -933,11 +969,12 @@ function renderDelivery() {
   const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
   const thisWeek = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d>=today && d<=new Date(today.getTime()+7*86400000); });
 
+  const totalPendingBal = pending.reduce((s,r) => s + getNum(r,'尾款'), 0);
   document.getElementById('metrics-delivery').innerHTML = `
     <div class="metric"><div class="lbl">待交車總數</div><div class="val">${pending.length} 筆</div></div>
     <div class="metric accent"><div class="lbl">本週待交車</div><div class="val">${thisWeek.length} 筆</div></div>
     <div class="metric"><div class="lbl">逾期未交車</div><div class="val" style="color:#E63946;">${overdue.length} 筆</div></div>
-    <div class="metric" style="background:#E1F5EE;"><div class="lbl" style="color:#085041;">已交車</div><div class="val" style="color:#1D9E75;">${delivered.length} 筆</div></div>
+    <div class="metric" style="background:#FFF3E5;border:2px solid #F4A261;"><div class="lbl" style="color:#854F0B;">應收尾款總計</div><div class="val" style="color:#854F0B;">${fmtMoney(totalPendingBal)}</div><div class="sub" style="color:#854F0B;">待交車訂單合計</div></div>
   `;
 
   // 依狀態 + 日期區間篩選顯示清單
@@ -984,7 +1021,8 @@ function renderDelivery() {
       <td>${getVal(r,'電池類型')} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
       <td>${getVal(r,'Sale')}</td>
       <td>${fmtMoney(getNum(r,'總金額'))}</td>
-      <td>${isDone ? '<span class="status-done">已收款</span>' : '<span class="status-late">未收款</span>'}</td>
+      <td>${renderBalanceCell(r, isDone)}</td>
+      <td>${!isDone ? `<button onclick="openDeliveryModal('${getVal(r,'單號')}')" style="padding:5px 12px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">登記收款</button>` : '<span style="color:var(--gray4);font-size:12px;">—</span>'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">尚無資料</td></tr>';
 }
@@ -1085,5 +1123,155 @@ function switchTab(tab) {
 // 若已在 session 中驗證過，直接載入
 if (sessionStorage.getItem('98go_auth') === '1') loadData();
 </script>
+
+<!-- 登記收款 Modal -->
+<div id="delivery-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeliveryModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>💰 登記交車收款</h3>
+      <button class="modal-close" onclick="closeDeliveryModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-order-info">
+        <div class="name" id="modal-name">—</div>
+        <div class="sub" id="modal-sub">—</div>
+      </div>
+      <div class="modal-amount">
+        <div class="lbl">應收尾款</div>
+        <div class="val" id="modal-balance">—</div>
+      </div>
+      <div class="modal-err" id="modal-err"></div>
+      <div class="modal-field">
+        <label>實際支付方式</label>
+        <select id="modal-method">
+          <option value="">請選擇</option>
+          <option value="現金">現金</option>
+          <option value="匯款/轉帳">匯款／轉帳</option>
+          <option value="刷卡">刷卡</option>
+          <option value="無卡分期">無卡分期</option>
+        </select>
+      </div>
+      <div class="modal-field" id="modal-period-wrap" style="display:none;">
+        <label>分期期數</label>
+        <select id="modal-period">
+          <option value="一次付清">一次付清</option>
+          <option value="3 期">3 期</option>
+          <option value="6 期">6 期</option>
+          <option value="12 期">12 期</option>
+          <option value="24 期">24 期</option>
+          <option value="30 期">30 期</option>
+          <option value="36 期">36 期</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>收款日期</label>
+        <input type="date" id="modal-date">
+      </div>
+      <div class="modal-field">
+        <label>車架號碼</label>
+        <input type="text" id="modal-frame" placeholder="請輸入車架號碼">
+      </div>
+      <div class="modal-field">
+        <label>馬達編號 <span style="font-size:11px;color:var(--gray4);font-weight:400;">（選填）</span></label>
+        <input type="text" id="modal-motor" placeholder="請輸入馬達編號">
+      </div>
+      <div class="modal-field">
+        <label>車牌號碼 <span style="font-size:11px;color:var(--gray4);font-weight:400;">（選填）</span></label>
+        <input type="text" id="modal-plate" placeholder="例：ABC-1234">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closeDeliveryModal()">取消</button>
+      <button class="modal-btn-submit" id="modal-submit-btn" onclick="submitDelivery()">✅ 確認收款完成交車</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let modalOrderId = null;
+
+function openDeliveryModal(orderId) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  modalOrderId = orderId;
+
+  document.getElementById('modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
+  document.getElementById('modal-sub').textContent = getVal(r,'車款') + '　' + getVal(r,'車種類型');
+  document.getElementById('modal-balance').textContent = fmtMoney(getNum(r,'尾款'));
+
+  // 預填今天日期
+  const today = new Date();
+  document.getElementById('modal-date').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  // 清空欄位
+  document.getElementById('modal-method').value = '';
+  document.getElementById('modal-period').value = '一次付清';
+  document.getElementById('modal-period-wrap').style.display = 'none';
+  document.getElementById('modal-frame').value = '';
+  document.getElementById('modal-motor').value = '';
+  document.getElementById('modal-plate').value = '';
+  document.getElementById('modal-err').classList.remove('show');
+  document.getElementById('modal-submit-btn').disabled = false;
+  document.getElementById('delivery-modal').style.display = 'flex';
+}
+
+document.getElementById('modal-method')?.addEventListener('change', function(){
+  const wrap = document.getElementById('modal-period-wrap');
+  wrap.style.display = (this.value === '無卡分期' || this.value === '刷卡') ? '' : 'none';
+});
+
+function closeDeliveryModal() {
+  document.getElementById('delivery-modal').style.display = 'none';
+  modalOrderId = null;
+}
+
+function showModalErr(msg) {
+  const el = document.getElementById('modal-err');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function submitDelivery() {
+  const method = document.getElementById('modal-method').value;
+  const period = document.getElementById('modal-period').value;
+  const date = document.getElementById('modal-date').value;
+  const frame = document.getElementById('modal-frame').value.trim();
+  const motor = document.getElementById('modal-motor').value.trim();
+  const plate = document.getElementById('modal-plate').value.trim();
+
+  document.getElementById('modal-err').classList.remove('show');
+  if (!method) return showModalErr('請選擇支付方式');
+  if (!date) return showModalErr('請填寫收款日期');
+  if (!frame) return showModalErr('請填寫車架號碼');
+
+  const btn = document.getElementById('modal-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送出中...';
+
+  const cbName = 'cb_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=delivery&orderId=${encodeURIComponent(modalOrderId)}&balMethod=${encodeURIComponent(method)}&balPeriod=${encodeURIComponent(period)}&balDate=${encodeURIComponent(date)}&frame=${encodeURIComponent(frame)}&motor=${encodeURIComponent(motor)}&plate=${encodeURIComponent(plate)}&callback=${cbName}`;
+
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      closeDeliveryModal();
+      alert('✅ 收款登記完成！資料已更新。');
+      loadData(); // 重新載入報表
+    } else {
+      showModalErr('送出失敗：' + (data.message || '請稍後再試'));
+      btn.disabled = false;
+      btn.textContent = '✅ 確認收款完成交車';
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => { showModalErr('網路異常，請再試一次'); btn.disabled=false; btn.textContent='✅ 確認收款完成交車'; };
+  document.body.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) { delete window[cbName]; script.remove(); showModalErr('送出逾時，請再試一次'); btn.disabled=false; btn.textContent='✅ 確認收款完成交車'; }
+  }, 15000);
+}
+</script>
+
 </body>
 </html>
