@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>98GO 電動車｜交車保固登記</title>
+<title>98GO 電動車｜交車確認</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 :root{--brand:#2B2D42;--accent:#E63946;--green:#1D9E75;--green-soft:#E1F5EE;--blue:#185FA5;--blue-soft:#E6F1FB;--amber:#854F0B;--amber-soft:#FFF3E5;--gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;--gray4:#aaa;--gray5:#666;--text:#1a1a1a;--radius:10px;--radius-sm:6px;--shadow:0 2px 12px rgba(0,0,0,0.07);}
@@ -30,27 +30,30 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
 .card-title{font-size:15px;font-weight:700;color:var(--brand);margin-bottom:1.25rem;padding-bottom:.625rem;border-bottom:2px solid var(--gray2);display:flex;align-items:center;gap:8px;}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field label{font-size:12px;font-weight:600;color:var(--gray5);}
-.field label .req{color:var(--accent);margin-left:2px;}
-.field input,.field select{padding:11px 14px;border:1.5px solid var(--gray3);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .2s,box-shadow .2s;width:100%;}
-.field input:focus,.field select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(43,45,66,.08);}
+.field input{padding:11px 14px;border:1.5px solid var(--gray3);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .2s;width:100%;}
+.field input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(43,45,66,.08);}
 .field .hint{font-size:11px;color:var(--gray4);margin-top:2px;}
-.optional-badge{display:inline-block;font-size:10px;background:var(--gray2);color:var(--gray5);padding:1px 6px;border-radius:99px;margin-left:4px;font-weight:400;}
-.order-card{background:var(--blue-soft);border:1.5px solid #B5D4F4;border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;}
-.order-card-title{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:.875rem;}
-.order-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(24,95,165,0.1);}
+.order-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--gray2);}
 .order-row:last-child{border-bottom:none;}
-.order-row .lbl{color:var(--blue);opacity:.8;}
+.order-row .lbl{color:var(--gray5);}
 .order-row .val{font-weight:600;color:var(--brand);}
+/* 應收尾款大字 */
 .balance-display{background:var(--amber-soft);border:2px solid #F4A261;border-radius:var(--radius);padding:1.25rem;text-align:center;margin-bottom:1rem;}
 .balance-display .lbl{font-size:12px;color:var(--amber);font-weight:600;margin-bottom:4px;}
-.balance-display .amount{font-size:32px;font-weight:900;color:var(--amber);line-height:1;}
-.balance-display .sub{font-size:11px;color:var(--amber);opacity:.7;margin-top:4px;}
+.balance-display .amount{font-size:36px;font-weight:900;color:var(--amber);line-height:1;}
+.balance-display .sub{font-size:11px;color:var(--amber);opacity:.8;margin-top:6px;}
 .balance-zero{background:var(--green-soft);border:2px solid #9FE1CB;border-radius:var(--radius);padding:1rem;text-align:center;margin-bottom:1rem;color:var(--green);font-weight:700;font-size:14px;}
+/* 加購清單 */
+.addon-list{background:var(--blue-soft);border:1.5px solid #B5D4F4;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;}
+.addon-list-title{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:.75rem;}
+.addon-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(24,95,165,0.1);}
+.addon-item:last-child{border-bottom:none;}
+.addon-item .name{color:var(--brand);}
+.addon-item .price{font-weight:600;color:var(--blue);}
+.addon-total{display:flex;justify-content:flex-end;font-size:13px;font-weight:700;color:var(--blue);padding-top:8px;margin-top:4px;border-top:1px solid #B5D4F4;}
+/* 按鈕 */
 .btn-primary{width:100%;padding:14px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s;margin-top:.5rem;}
 .btn-primary:hover{background:#1a1c2e;}
-.btn-green{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s;margin-top:.5rem;}
-.btn-green:hover{background:#178a65;}
-.btn-green:disabled{background:var(--gray3);color:var(--gray4);cursor:not-allowed;}
 .btn-back{width:100%;padding:11px;background:#fff;color:var(--gray5);border:1.5px solid var(--gray3);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;cursor:pointer;margin-top:.5rem;}
 .err-msg{background:#fff0f1;border:1px solid #F5C4B3;border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:13px;color:#A32D2D;margin-top:.75rem;display:none;}
 .err-msg.show{display:block;}
@@ -72,82 +75,68 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
 <body>
 <div class="header">
   <div class="logo-mark"><span>98GO</span><span>e-bike</span></div>
-  <div class="header-text"><h1>交車保固登記</h1><p>完成登記即啟動保固服務</p></div>
+  <div class="header-text"><h1>交車前確認</h1><p>門市人員操作｜交車前最後確認</p></div>
 </div>
 <div class="steps">
-  <div class="step-item"><div class="step-dot active" id="dot1">1</div><div class="step-label active" id="lbl1">驗證身份</div></div>
+  <div class="step-item"><div class="step-dot active" id="dot1">1</div><div class="step-label active" id="lbl1">查詢訂單</div></div>
   <div class="step-line" id="line1"></div>
-  <div class="step-item"><div class="step-dot" id="dot2">2</div><div class="step-label" id="lbl2">確認尾款</div></div>
+  <div class="step-item"><div class="step-dot" id="dot2">2</div><div class="step-label" id="lbl2">確認清單</div></div>
   <div class="step-line" id="line2"></div>
-  <div class="step-item"><div class="step-dot" id="dot3">3</div><div class="step-label" id="lbl3">登記完成</div></div>
+  <div class="step-item"><div class="step-dot" id="dot3">3</div><div class="step-label" id="lbl3">確認完成</div></div>
 </div>
 <div class="container">
 
-  <!-- STEP 1 -->
+  <!-- STEP 1：查詢訂單（只需單號）-->
   <div id="step1">
     <div class="card">
-      <div class="card-title">🔑 訂單驗證</div>
+      <div class="card-title">🔍 查詢訂單</div>
       <div style="background:#E6F1FB;border-radius:6px;padding:.6rem 1rem;margin-bottom:1.25rem;font-size:12px;color:#185FA5;line-height:1.6;">
-        📋 請輸入您的訂單單號及訂車時登記的手機號碼
+        📋 輸入訂單單號查詢交車資料
       </div>
       <div class="field">
-        <label>訂單單號<span class="req">*</span></label>
-        <input type="text" id="f-id" placeholder="例：260419-1452" autocomplete="off">
-        <span class="hint">請參考訂車確認單右上角的單號</span>
-      </div>
-      <div class="field">
-        <label>車主手機號碼<span class="req">*</span></label>
-        <input type="tel" id="f-phone" placeholder="09XXXXXXXX" maxlength="10" onkeydown="if(event.key==='Enter')queryOrder()">
+        <label>訂單單號</label>
+        <input type="text" id="f-id" placeholder="例：260419-1452" autocomplete="off" onkeydown="if(event.key==='Enter')queryOrder()">
       </div>
       <div class="err-msg" id="err1"></div>
-      <div class="uploading" id="loading1"><div class="spinner"></div>查詢訂單中...</div>
+      <div class="uploading" id="loading1"><div class="spinner"></div>查詢中...</div>
       <button class="btn-primary" onclick="queryOrder()">🔍 查詢訂單</button>
     </div>
   </div>
 
-  <!-- STEP 2 -->
+  <!-- STEP 2：確認清單 -->
   <div id="step2" style="display:none;">
-    <div class="order-card" id="order-info"></div>
+
+    <!-- 應收尾款（最重要，放最上面）-->
     <div id="balance-section"></div>
-    <div class="card">
-      <div class="card-title">🏍 車輛資料登記</div>
-      <div class="field">
-        <label>車架號碼<span class="req">*</span></label>
-        <input type="text" id="f-frame" placeholder="請輸入車架號碼" autocomplete="off">
+
+    <!-- 加購項目清單 -->
+    <div id="addon-section" style="display:none;">
+      <div class="addon-list">
+        <div class="addon-list-title">🛍 加購項目確認清單</div>
+        <div id="addon-list"></div>
+        <div id="addon-total-row" class="addon-total" style="display:none;">加購合計：<span id="addon-total-val"></span></div>
       </div>
-      <div class="field">
-        <label>馬達編號<span class="req">*</span></label>
-        <input type="text" id="f-motor" placeholder="請輸入馬達編號" autocomplete="off">
-      </div>
-      <div class="field" id="bal-method-field">
-        <label>尾款支付方式<span class="req">*</span></label>
-        <select id="f-bal-method">
-          <option value="">請選擇支付方式</option>
-          <option value="現金">現金</option>
-          <option value="匯款/轉帳">匯款／轉帳</option>
-          <option value="刷卡">刷卡</option>
-          <option value="無卡分期">無卡分期</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>車牌號碼<span class="optional-badge">選填</span></label>
-        <input type="text" id="f-plate" placeholder="例：ABC-1234" autocomplete="off">
-        <span class="hint">微型電動二輪車請填寫，電動輔助自行車可略</span>
-      </div>
-      <div class="err-msg" id="err2"></div>
-      <div class="uploading" id="loading2"><div class="spinner"></div>登記中，請稍候...</div>
-      <button class="btn-green" id="btn-submit" onclick="submitCheckin()">✅ 完成保固登記</button>
-      <button class="btn-back" onclick="goBack()">← 返回修改</button>
     </div>
+
+    <!-- 訂單資料 -->
+    <div class="card">
+      <div class="card-title">📋 訂單資料</div>
+      <div id="order-info"></div>
+    </div>
+
+    <div class="err-msg" id="err2"></div>
+    <button class="btn-primary" style="background:var(--green);" onclick="confirmDelivery()">✅ 確認交車完成</button>
+    <button class="btn-back" onclick="goBack()">← 返回查詢</button>
   </div>
 
-  <!-- STEP 3 -->
+  <!-- STEP 3：完成 -->
   <div id="done-screen">
     <div class="card">
       <div class="done-icon">✅</div>
-      <div class="done-title">保固登記完成！</div>
-      <div class="done-sub">感謝您選購 98GO 電動車<br>您的車輛保固已正式啟動 🎉</div>
+      <div class="done-title">交車確認完成！</div>
+      <div class="done-sub">訂單狀態已更新為「已交車」<br>請至報表登記實際收款資料 💰</div>
       <div class="done-info" id="done-info"></div>
+      <button class="btn-back" style="margin-top:1rem;" onclick="location.reload()">← 查詢下一筆</button>
     </div>
   </div>
 
@@ -155,7 +144,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 let orderData=null;
-function fmtMoney(n){return 'NT$ '+Math.round(n).toLocaleString();}
+
+function fmtMoney(n){return 'NT$ '+Math.round(parseFloat(n)||0).toLocaleString();}
 function setStep(n){
   [1,2,3].forEach(i=>{
     document.getElementById('dot'+i).className='step-dot'+(i<n?' done':i===n?' active':'');
@@ -169,21 +159,20 @@ function hideErr(id){document.getElementById(id).classList.remove('show');}
 function queryOrder(){
   hideErr('err1');
   const id=document.getElementById('f-id').value.trim();
-  const phone=document.getElementById('f-phone').value.trim();
   if(!id) return showErr('err1','請填寫訂單單號');
-  if(!phone||!/^09\d{8}$/.test(phone)) return showErr('err1','請填寫正確的手機號碼（09開頭共10碼）');
   document.getElementById('loading1').classList.add('show');
   const cbName='cb_'+Date.now();
   window[cbName]=function(data){
     document.getElementById('loading1').classList.remove('show');
     delete window[cbName]; script.remove();
-    if(data.status==='notfound') return showErr('err1','找不到訂單，請確認單號與手機號碼是否正確');
+    if(data.status==='notfound') return showErr('err1','找不到訂單，請確認單號是否正確');
     if(data.status==='error') return showErr('err1','查詢失敗，請稍後再試');
-    orderData={...data,id,phone};
+    orderData={...data, id};
     showStep2(data);
   };
   const script=document.createElement('script');
-  script.src=`${SCRIPT_URL}?action=query&id=${encodeURIComponent(id)}&phone=${encodeURIComponent(phone)}&callback=${cbName}`;
+  // 用 receipt action 查詢（不需要手機驗證）
+  script.src=`${SCRIPT_URL}?action=receipt&orderId=${encodeURIComponent(id)}&callback=${cbName}`;
   script.onerror=()=>{document.getElementById('loading1').classList.remove('show');showErr('err1','網路異常，請稍後再試');};
   document.body.appendChild(script);
   setTimeout(()=>{if(window[cbName]){document.getElementById('loading1').classList.remove('show');delete window[cbName];script.remove();showErr('err1','查詢逾時，請稍後再試');}},10000);
@@ -194,23 +183,53 @@ function showStep2(data){
   document.getElementById('step2').style.display='block';
   setStep(2);
   window.scrollTo({top:0,behavior:'smooth'});
-  document.getElementById('order-info').innerHTML=`
-    <div class="order-card-title">📋 訂單資料確認</div>
-    <div class="order-row"><span class="lbl">車主姓名</span><span class="val">${data.name}</span></div>
-    <div class="order-row"><span class="lbl">車種類型</span><span class="val">${data.vehicleType||'—'}</span></div>
-    <div class="order-row"><span class="lbl">車款</span><span class="val">${data.model}</span></div>
-    <div class="order-row"><span class="lbl">總金額</span><span class="val">${fmtMoney(data.total)}</span></div>
-    <div class="order-row"><span class="lbl">已付訂金</span><span class="val">${fmtMoney(data.deposit)}</span></div>`;
+
+  // 應收尾款
   const bal=parseFloat(data.balance)||0;
   const balSection=document.getElementById('balance-section');
-  const balField=document.getElementById('bal-method-field');
   if(bal>0){
-    balSection.innerHTML=`<div class="balance-display"><div class="lbl">⚠️ 尚餘尾款金額</div><div class="amount">${fmtMoney(bal)}</div><div class="sub">請於取車時完款</div></div>`;
-    balField.style.display='';
+    balSection.innerHTML=`<div class="balance-display">
+      <div class="lbl">⚠️ 應收尾款金額</div>
+      <div class="amount">${fmtMoney(bal)}</div>
+      <div class="sub">請確認收款後再完成交車</div>
+    </div>`;
   } else {
-    balSection.innerHTML=`<div class="balance-zero">✅ 此訂單已完款，無尾款</div>`;
-    balField.style.display='none';
+    balSection.innerHTML=`<div class="balance-zero">✅ 此訂單已完款，無需收取尾款</div>`;
   }
+
+  // 加購項目
+  if(data.addonItems){
+    const items=data.addonItems.split('、').filter(Boolean);
+    if(items.length>0){
+      document.getElementById('addon-section').style.display='';
+      let addonHtml='';
+      let calcTotal=0;
+      items.forEach(i=>{
+        const parts=i.split(':');
+        const name=parts[0].trim();
+        const price=parts[1]?parseFloat(parts[1]):null;
+        if(price) calcTotal+=price;
+        addonHtml+=`<div class="addon-item"><span class="name">✓ ${name}</span>${price?`<span class="price">${fmtMoney(price)}</span>`:''}</div>`;
+      });
+      document.getElementById('addon-list').innerHTML=addonHtml;
+      if(parseFloat(data.addonTotal)>0){
+        document.getElementById('addon-total-row').style.display='flex';
+        document.getElementById('addon-total-val').textContent=fmtMoney(data.addonTotal);
+      }
+    }
+  }
+
+  // 訂單資料
+  document.getElementById('order-info').innerHTML=`
+    <div class="order-row"><span class="lbl">車主姓名</span><span class="val">${data.name||'—'}</span></div>
+    <div class="order-row"><span class="lbl">手機號碼</span><span class="val">${data.phone||'—'}</span></div>
+    <div class="order-row"><span class="lbl">車種類型</span><span class="val">${data.vehicleType||'—'}</span></div>
+    <div class="order-row"><span class="lbl">車款</span><span class="val">${data.model||'—'}</span></div>
+    <div class="order-row"><span class="lbl">顏色</span><span class="val">${data.color||'—'}</span></div>
+    <div class="order-row"><span class="lbl">電池</span><span class="val">${[data.batType,data.batV,data.batAh].filter(Boolean).join(' ')||'—'}</span></div>
+    <div class="order-row"><span class="lbl">總金額</span><span class="val">${fmtMoney(data.total)}</span></div>
+    <div class="order-row"><span class="lbl">已付訂金</span><span class="val">${fmtMoney(data.deposit)}</span></div>
+    ${data.modelNote?`<div class="order-row"><span class="lbl">車輛備註</span><span class="val">${data.modelNote}</span></div>`:''}`;
 }
 
 function goBack(){
@@ -220,42 +239,49 @@ function goBack(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-async function submitCheckin(){
+function confirmDelivery(){
   hideErr('err2');
-  const frame=document.getElementById('f-frame').value.trim();
-  const motor=document.getElementById('f-motor').value.trim();
-  const plate=document.getElementById('f-plate').value.trim();
-  const balMethod=document.getElementById('f-bal-method').value;
+  if(!orderData) return;
+
+  // 確認視窗
   const bal=parseFloat(orderData.balance)||0;
-  if(!frame) return showErr('err2','請填寫車架號碼');
-  if(!motor) return showErr('err2','請填寫馬達編號');
-  if(bal>0&&!balMethod) return showErr('err2','請選擇尾款支付方式');
-  const btn=document.getElementById('btn-submit');
-  btn.disabled=true;
-  document.getElementById('loading2').classList.add('show');
+  const msg=bal>0
+    ? `確認交車？\n\n應收尾款：${fmtMoney(bal)}\n\n請確認已向客人收取尾款後再送出。`
+    : `確認交車？\n\n此訂單已完款，確認送出交車確認？`;
+  if(!confirm(msg)) return;
+
+  document.getElementById('err2').classList.remove('show');
+  document.querySelector('#step2 .btn-primary').disabled=true;
+
   const today=new Date();
   const dateStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  const payload={action:'checkin',id:orderData.id,phone:orderData.phone,frame,motor,plate,balMethod:bal>0?balMethod:(orderData.balanceMethod||''),checkinDate:dateStr};
-  try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
-    await new Promise(r=>setTimeout(r,2000));
-    document.getElementById('step2').style.display='none';
-    document.getElementById('done-screen').style.display='block';
-    setStep(3);
-    document.getElementById('done-info').innerHTML=`
-      <div class="done-info-row"><span class="lbl">車主</span><span class="val">${orderData.name}</span></div>
-      <div class="done-info-row"><span class="lbl">車款</span><span class="val">${orderData.model}</span></div>
-      <div class="done-info-row"><span class="lbl">車架號碼</span><span class="val">${frame}</span></div>
-      <div class="done-info-row"><span class="lbl">馬達編號</span><span class="val">${motor}</span></div>
-      ${plate?`<div class="done-info-row"><span class="lbl">車牌號碼</span><span class="val">${plate}</span></div>`:''}
-      ${bal>0?`<div class="done-info-row"><span class="lbl">尾款支付</span><span class="val">${balMethod}</span></div>`:''}
-      <div class="done-info-row"><span class="lbl">登記日期</span><span class="val">${dateStr}</span></div>`;
-    window.scrollTo({top:0,behavior:'smooth'});
-  } catch(e){
-    showErr('err2','網路異常，請再試一次');
-    btn.disabled=false;
-  }
-  document.getElementById('loading2').classList.remove('show');
+
+  // 只更新訂單狀態為已交車（收款資料由報表登記）
+  const cbName='cb_'+Date.now();
+  window[cbName]=function(data){
+    delete window[cbName]; script.remove();
+    if(data.status==='ok'){
+      document.getElementById('step2').style.display='none';
+      document.getElementById('done-screen').style.display='block';
+      setStep(3);
+      document.getElementById('done-info').innerHTML=`
+        <div class="done-info-row"><span class="lbl">車主</span><span class="val">${orderData.name}</span></div>
+        <div class="done-info-row"><span class="lbl">車款</span><span class="val">${orderData.model}</span></div>
+        <div class="done-info-row"><span class="lbl">應收尾款</span><span class="val">${fmtMoney(orderData.balance)}</span></div>
+        <div class="done-info-row"><span class="lbl">確認日期</span><span class="val">${dateStr}</span></div>`;
+      window.scrollTo({top:0,behavior:'smooth'});
+    } else {
+      showErr('err2','送出失敗，請稍後再試');
+      document.querySelector('#step2 .btn-primary').disabled=false;
+    }
+  };
+  const script=document.createElement('script');
+  script.src=`${SCRIPT_URL}?action=delivery&orderId=${encodeURIComponent(orderData.id)}&confirmOnly=1&callback=${cbName}`;
+  script.onerror=()=>{showErr('err2','網路異常，請再試一次');document.querySelector('#step2 .btn-primary').disabled=false;};
+  document.body.appendChild(script);
+  setTimeout(()=>{
+    if(window[cbName]){delete window[cbName];script.remove();showErr('err2','送出逾時，請再試一次');document.querySelector('#step2 .btn-primary').disabled=false;}
+  },10000);
 }
 </script>
 </body>
