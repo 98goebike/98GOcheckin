@@ -157,6 +157,62 @@ tr:last-child td{border-bottom:none;}
 .modal-btn-submit:disabled{background:var(--gray3);color:var(--gray4);cursor:not-allowed;}
 .modal-err{background:#fff0f1;border:1px solid #F5C4B3;border-radius:6px;padding:.6rem 1rem;font-size:12px;color:#A32D2D;margin-bottom:.75rem;display:none;}
 .modal-err.show{display:block;}
+
+/* ── 任務清單 ── */
+.task-grid { display:flex; flex-direction:column; gap:10px; }
+.task-card {
+  background:#fff; border-radius:10px; border:1.5px solid var(--gray3);
+  overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.05);
+  transition:box-shadow .2s;
+}
+.task-card:hover { box-shadow:0 3px 14px rgba(0,0,0,0.1); }
+.task-card.today  { border-color:#185FA5; border-left:4px solid #185FA5; }
+.task-card.overdue{ border-color:#C0392B; border-left:4px solid #C0392B; }
+.task-card.done   { border-color:#1D9E75; border-left:4px solid #1D9E75; opacity:.75; }
+.task-card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.625rem 1rem; background:var(--gray1);
+  border-bottom:1px solid var(--gray2);
+}
+.task-card-id { font-size:12px; font-weight:700; color:var(--brand); font-family:monospace; }
+.task-card-date { font-size:12px; font-weight:600; }
+.task-card-date.today-date  { color:#185FA5; }
+.task-card-date.overdue-date{ color:#C0392B; }
+.task-card-date.future-date { color:var(--gray5); }
+.task-card-body { display:grid; grid-template-columns:200px 1fr; gap:0; }
+.task-vehicle {
+  padding:.75rem 1rem; border-right:1px solid var(--gray2);
+  background:#fff;
+}
+.task-vehicle-model { font-size:15px; font-weight:700; color:var(--brand); margin-bottom:4px; }
+.task-vehicle-sub   { font-size:12px; color:var(--gray5); line-height:1.7; }
+.task-addons { padding:.75rem 1rem; background:#fff; }
+.task-addons-title { font-size:11px; font-weight:600; color:var(--gray5); margin-bottom:6px; letter-spacing:.05em; }
+.task-addon-item {
+  display:flex; align-items:baseline; gap:6px;
+  font-size:13px; color:var(--text); padding:2px 0;
+}
+.task-addon-item::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; }
+.task-addon-price { font-size:12px; color:#534AB7; font-weight:600; margin-left:auto; }
+.task-no-addon { font-size:12px; color:var(--gray4); font-style:italic; }
+.task-card-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.5rem 1rem; border-top:1px solid var(--gray2);
+  background:var(--gray1); gap:1rem; flex-wrap:wrap;
+}
+.task-customer { font-size:12px; color:var(--gray5); }
+.task-customer strong { color:var(--brand); margin-right:6px; }
+.task-checks { display:flex; align-items:center; gap:12px; }
+.task-check-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--gray5); cursor:pointer; user-select:none; }
+.task-check-item input[type=checkbox] { width:15px; height:15px; cursor:pointer; accent-color:var(--green); }
+.task-status-badge {
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px;
+  white-space:nowrap;
+}
+.task-status-badge.s-none    { background:#EEEEEE; color:#888888; }
+.task-status-badge.s-working { background:#CCE5FF; color:#004085; }
+.task-status-badge.s-ready   { background:#C6EFCE; color:#1D6B3E; }
+.task-filter-bar { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
 </style>
 </head>
 <body>
@@ -197,6 +253,7 @@ tr:last-child td{border-bottom:none;}
   <button class="nav-tab" onclick="switchTab('delivery')">出貨進度</button>
   <button class="nav-tab" onclick="switchTab('customer')">客戶分析</button>
   <button class="nav-tab" onclick="switchTab('records')">所有記錄</button>
+  <button class="nav-tab" onclick="switchTab('tasks')">🔧 任務清單</button>
 </div>
 
 <div class="main">
@@ -403,6 +460,19 @@ tr:last-child td{border-bottom:none;}
           </table>
         </div>
       </div>
+    </div>
+
+    <!-- 任務清單 -->
+    <div id="tab-tasks" style="display:none;">
+      <div class="task-filter-bar">
+        <span style="font-size:13px;font-weight:600;color:var(--brand);">篩選：</span>
+        <button class="filter-btn active" onclick="setTaskFilter('pending')" id="tf-pending">待處理</button>
+        <button class="filter-btn" onclick="setTaskFilter('today')" id="tf-today">今日交車</button>
+        <button class="filter-btn" onclick="setTaskFilter('overdue')" id="tf-overdue">逾期</button>
+        <button class="filter-btn" onclick="setTaskFilter('all')" id="tf-all">全部</button>
+        <span style="margin-left:auto;font-size:12px;color:var(--gray5);" id="task-count"></span>
+      </div>
+      <div id="task-grid" class="task-grid"></div>
     </div>
 
   </div>
@@ -1110,15 +1180,199 @@ function filterRecords() {
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.nav-tab').forEach((t,i) => {
-    const tabs = ['overview','sales','purchase','delivery','customer','records'];
+    const tabs = ['overview','sales','purchase','delivery','customer','records','tasks'];
     t.classList.toggle('active', tabs[i]===tab);
   });
-  ['overview','sales','purchase','delivery','customer','records'].forEach(t => {
+  ['overview','sales','purchase','delivery','customer','records','tasks'].forEach(t => {
     document.getElementById('tab-'+t).style.display = t===tab?'':'none';
   });
+  if (tab === 'tasks') renderTasks();
 }
 
 // ====== INIT ======
+
+// ====== 任務清單 ======
+let taskFilter = 'pending';
+
+function setTaskFilter(f) {
+  taskFilter = f;
+  ['pending','today','overdue','all'].forEach(k => {
+    const el = document.getElementById('tf-'+k);
+    if (el) el.classList.toggle('active', k===f);
+  });
+  renderTasks();
+}
+
+function renderTasks() {
+  if (!allData.length) return;
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  const filtered = allData.filter(r => {
+    const status = getVal(r,'訂單狀態');
+    if (status === '已交車' || status === '已取消') return false;
+    const raw = getVal(r,'預計交車日');
+    const d = raw ? new Date(raw) : null;
+    if (d) d.setHours(0,0,0,0);
+
+    if (taskFilter === 'today')   return d && d.getTime() === now.getTime();
+    if (taskFilter === 'overdue') return d && d < now;
+    if (taskFilter === 'pending') return true; // 全部待處理
+    return true; // all
+  }).sort((a,b) => {
+    const da = getDate(a,'預計交車日'), db = getDate(b,'預計交車日');
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da - db;
+  });
+
+  document.getElementById('task-count').textContent = `共 ${filtered.length} 筆`;
+
+  const grid = document.getElementById('task-grid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--gray4);">目前沒有符合條件的任務 😊</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(r => renderTaskCard(r, now)).join('');
+}
+
+function renderTaskCard(r, now) {
+  const id       = getVal(r,'單號');
+  const model    = getVal(r,'車款');
+  const color    = getVal(r,'顏色');
+  const note     = getVal(r,'車輛備註');
+  const batType  = getVal(r,'電池類型');
+  const batV     = getVal(r,'電池規格(V)');
+  const batAh    = getVal(r,'電池規格(ah)');
+  const batNote  = getVal(r,'電池備註');
+  const addons   = getVal(r,'加價購項目');
+  const name     = getVal(r,'姓名');
+  const phone    = getVal(r,'手機號碼');
+  const city     = getVal(r,'縣市');
+  const dist     = getVal(r,'行政區');
+  const addr     = getVal(r,'地址');
+  const idNo     = getVal(r,'身分證字號');
+  const raw      = getVal(r,'預計交車日');
+  const balAmt   = getNum(r,'尾款');
+  const isInstalled  = isChecked(r,'已安裝') || false;
+  const isRegistered = isChecked(r,'已掛牌') || false;
+
+  // 日期判斷
+  let cardClass = '', dateClass = 'future-date', dateLabel = '';
+  if (raw) {
+    const d = new Date(raw); d.setHours(0,0,0,0);
+    if (d.getTime() === now.getTime()) {
+      cardClass = 'today'; dateClass = 'today-date';
+      dateLabel = '📅 今日交車 ' + fmtDate(raw);
+    } else if (d < now) {
+      cardClass = 'overdue'; dateClass = 'overdue-date';
+      dateLabel = '⚠️ 逾期 ' + fmtDate(raw);
+    } else {
+      dateLabel = '🗓 ' + fmtDate(raw);
+    }
+  } else {
+    dateLabel = '📅 未定交車日';
+  }
+
+  // 狀態
+  let statusClass = 's-none', statusLabel = '未開始';
+  if (isInstalled && isRegistered) { statusClass = 's-ready'; statusLabel = '✅ 可交車'; }
+  else if (isInstalled || isRegistered) { statusClass = 's-working'; statusLabel = '🔧 施工中'; }
+
+  // 電池
+  const battery = [batType, batV, batAh, batNote].filter(Boolean).join(' ');
+
+  // 加購項目
+  let addonHtml = '';
+  if (addons) {
+    const items = addons.split('、').filter(Boolean);
+    addonHtml = items.map(i => {
+      const parts = i.split(':');
+      const aName = parts[0].trim();
+      const aPrice = parts[1] ? '<span class="task-addon-price">NT$ ' + parseFloat(parts[1]).toLocaleString() + '</span>' : '';
+      return `<div class="task-addon-item"><span>${aName}</span>${aPrice}</div>`;
+    }).join('');
+  } else {
+    addonHtml = '<div class="task-no-addon">無加購項目</div>';
+  }
+
+  // 地址
+  const fullAddr = [city, dist, addr].filter(Boolean).join('');
+
+  // 尾款
+  const balHtml = balAmt > 0
+    ? `<span style="font-size:12px;font-weight:700;color:#854F0B;">應收尾款：NT$ ${balAmt.toLocaleString()}</span>`
+    : `<span style="font-size:12px;color:var(--green);font-weight:600;">✅ 已全額付清</span>`;
+
+  return `
+  <div class="task-card ${cardClass}" id="tcard-${id}">
+    <div class="task-card-header">
+      <span class="task-card-id">${id}</span>
+      <span class="task-card-date ${dateClass}">${dateLabel}</span>
+      <span class="task-status-badge ${statusClass}">${statusLabel}</span>
+    </div>
+    <div class="task-card-body">
+      <div class="task-vehicle">
+        <div class="task-vehicle-model">${model || '—'}</div>
+        <div class="task-vehicle-sub">
+          ${color || ''}${note ? ' · '+note : ''}<br>
+          ${battery || '—'}
+        </div>
+      </div>
+      <div class="task-addons">
+        <div class="task-addons-title">加購項目</div>
+        ${addonHtml}
+      </div>
+    </div>
+    <div class="task-card-footer">
+      <div class="task-customer">
+        <strong>${name}</strong>${phone}
+        ${fullAddr ? '<br>' + fullAddr : ''}
+        ${idNo ? ' · <span style="color:var(--gray4);">'+idNo+'</span>' : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        ${balHtml}
+        <div class="task-checks">
+          <label class="task-check-item">
+            <input type="checkbox" ${isInstalled?'checked':''} onchange="toggleTaskCheck('${id}','已安裝',this.checked)">
+            已安裝
+          </label>
+          <label class="task-check-item">
+            <input type="checkbox" ${isRegistered?'checked':''} onchange="toggleTaskCheck('${id}','已掛牌',this.checked)">
+            已掛牌
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleTaskCheck(orderId, field, checked) {
+  // 找到 allData 對應列更新本地狀態
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+
+  // 呼叫 Apps Script 寫回 Sheets
+  const cbName = 'cb_' + Date.now();
+  const fieldParam = field === '已安裝' ? 'installed' : 'registered';
+  const url = `${APPS_SCRIPT_URL}?action=updateCheck&orderId=${encodeURIComponent(orderId)}&field=${fieldParam}&value=${checked}&callback=${cbName}`;
+
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      // 更新本地資料
+      const idx = allData.indexOf(r);
+      const headers = Object.keys(allData[0] || {});
+      // 重新渲染這張卡片
+      renderTasks();
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  document.head.appendChild(script);
+}
+
 // loadData() 由密碼驗證通過後呼叫
 // 若已在 session 中驗證過，直接載入
 if (sessionStorage.getItem('98go_auth') === '1') loadData();
