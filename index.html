@@ -588,14 +588,14 @@
       <button class="addon-preset-btn" onclick="addPresetAddon(this,'代辦驗車+領牌+三年強制險',2800)">
         代辦驗車+領牌+三年強制險 <span class="preset-price">NT$2,800</span>
       </button>
-      <button class="addon-preset-btn" onclick="addPresetAddon(this,'防水車頭罩',500)">
-        防水車頭罩 <span class="preset-price">NT$500</span>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'防水車頭罩+$200',500)">
+        防水車頭罩 <span class="preset-price">NT$0</span>
       </button>
-      <button class="addon-preset-btn" onclick="addPresetAddon(this,'電壓表',300)">
-        電壓表 <span class="preset-price">NT$300</span>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'電壓表+$600',300)">
+        電壓表 <span class="preset-price">NT$0</span>
       </button>
-      <button class="addon-preset-btn" onclick="addPresetAddon(this,'後照鏡',200)">
-        後照鏡 <span class="preset-price">NT$200</span>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'後照鏡+$200',200)">
+        後照鏡 <span class="preset-price">NT$0</span>
       </button>
     </div>
     <div id="addon-list"></div>
@@ -603,6 +603,7 @@
   </div>
 
   <div class="err-msg" id="err1">請填寫必填欄位（車款、成交日期）</div>
+
   <div class="btn-row">
     <button class="btn" onclick="goStep(0)">← 上一步</button>
     <div class="spacer"></div>
@@ -702,9 +703,24 @@
   </div>
 
   <div class="err-msg" id="err2">請填寫車輛售價</div>
+
+  <!-- 遠距訂購：產生客戶連結 -->
+  <div id="remote-link-box" style="display:none;margin-top:1rem;">
+    <div style="background:#E1F5EE;border:1.5px solid #9FE1CB;border-radius:10px;padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:.5rem;">✅ 客戶填寫連結已產生</div>
+      <div style="font-size:12px;color:#085041;margin-bottom:.75rem;">複製以下連結傳給客戶，客戶點開後直接填寫個人資料、閱讀條款並完成簽名送出。車輛與金額資料已鎖定，客戶無法修改。</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="remote-link-input" readonly style="flex:1;padding:8px 12px;border:1.5px solid #9FE1CB;border-radius:6px;font-size:12px;font-family:monospace;background:#fff;color:var(--brand);">
+        <button onclick="copyRemoteLink()" style="padding:8px 14px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;">複製連結</button>
+      </div>
+      <div style="margin-top:.75rem;font-size:11px;color:#085041;opacity:.8;">📱 傳送後，客戶點開連結直接從「個人資料」步驟開始填寫</div>
+    </div>
+  </div>
+
   <div class="btn-row">
     <button class="btn" onclick="goStep(1)">← 上一步</button>
     <div class="spacer"></div>
+    <button class="btn" style="background:#E1F5EE;color:var(--green);border-color:#9FE1CB;font-weight:600;" onclick="generateRemoteLink()">📤 產生客戶填寫連結</button>
     <button class="btn btn-primary" onclick="goStep(3)">下一步：基本資料 →</button>
   </div>
 </div>
@@ -954,6 +970,128 @@ document.getElementById('s1-date').value = new Date().toISOString().split('T')[0
 document.getElementById('step1').style.display = 'none';
 calcAll();
 
+// ====== 遠距模式：URL 參數解析 ======
+(function initRemoteMode() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get('order');
+  if (!encoded) return;
+
+  try {
+    const data = JSON.parse(decodeURIComponent(atob(encoded)));
+
+    // 鎖定模式標記
+    window._remoteMode = true;
+    window._remoteData = data;
+
+    // 填入並鎖定 step1 欄位
+    const setLocked = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el || !val) return;
+      el.value = val;
+      el.readOnly = true;
+      el.style.background = '#f8f8f8';
+      el.style.color = '#666';
+    };
+    setLocked('s1-model', data.model || '');
+    setLocked('s1-color', data.color || '');
+    setLocked('s1-batType', data.batType || '');
+    setLocked('s1-batV', data.batV || '');
+    setLocked('s1-batAh', data.batAh || '');
+    setLocked('s1-batNote', data.batNote || '');
+    setLocked('s1-modelNote', data.modelNote || '');
+    setLocked('s1-date', data.date || '');
+    setLocked('s1-delivery', data.delivery || '');
+    setLocked('s1-staff', data.staff || '');
+    // vehicleType 是 select，遠距模式設定 disabled
+    if (data.vehicleType) {
+      const vtEl = document.getElementById('s1-vehicle-type');
+      if (vtEl) {
+        vtEl.value = data.vehicleType;
+        vtEl.disabled = true;
+        vtEl.style.background = '#f8f8f8';
+        vtEl.style.color = '#666';
+      }
+    }
+
+    // 鎖定 step2 金額欄位
+    const setLockedNum = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el || val === undefined) return;
+      el.value = val;
+      el.readOnly = true;
+      el.style.background = '#f8f8f8';
+      el.style.color = '#666';
+    };
+    setLockedNum('p-bike', data.bikePrice || 0);
+    setLockedNum('p-discount', data.discount || 0);
+    setLockedNum('p-deposit', data.deposit || 0);
+
+    // 鎖定訂金付款方式
+    if (data.depositMethod) {
+      const depSel = document.getElementById('p-dep-method');
+      if (depSel) { depSel.value = data.depositMethod; depSel.disabled = true; depSel.style.background = '#f8f8f8'; }
+    }
+    if (data.balanceMethod) {
+      const balSel = document.getElementById('p-bal-method');
+      if (balSel) { balSel.value = data.balanceMethod; balSel.disabled = true; balSel.style.background = '#f8f8f8'; }
+    }
+
+    // 填入加購項目（唯讀）
+    if (data.addonItems) {
+      const items = data.addonItems.split('、').filter(Boolean);
+      items.forEach(item => {
+        const parts = item.split(':');
+        const name = parts[0].trim();
+        const price = parts[1] ? parseFloat(parts[1]) : 0;
+        addonCount++;
+        const id2 = addonCount;
+        const div = document.createElement('div');
+        div.className = 'addon-row'; div.id = 'addon-' + id2;
+        div.innerHTML = `<input type="text" class="addon-name" value="${name}" readonly style="background:#f8f8f8;color:#666;"><input type="number" class="addon-price" value="${price}" readonly style="background:#f8f8f8;color:#666;width:120px;text-align:right;"><span style="width:32px;"></span>`;
+        document.getElementById('addon-list').appendChild(div);
+      });
+    }
+
+    // 鎖定訂金日期、尾款日期、完款日期
+    setLocked('p-dep-date', data.depDate || '');
+    setLocked('p-bal-date', data.balDate || '');
+    setLocked('p-full-date', data.fullDate || '');
+
+    // 鎖定分期
+    if (data.depositPeriod) {
+      const depPEl = document.getElementById('p-dep-period');
+      if (depPEl) { depPEl.value = data.depositPeriod; depPEl.disabled = true; depPEl.style.background = '#f8f8f8'; }
+    }
+
+    calcAll();
+
+    // 修改 header 提示文字
+    document.querySelector('.header-sub') && (document.querySelector('.header-sub').textContent = '請填寫您的個人資料並完成簽名');
+
+    // 跳過 step0, step1, step2，直接從 step3 開始（客人填寫區）
+    // 先顯示客製化歡迎頁，然後直接跳到 step3
+    document.getElementById('step0').innerHTML = `
+      <div class="card" style="text-align:center;padding:2rem 1.5rem 1.5rem;">
+        <div style="width:64px;height:64px;border-radius:14px;background:#1D9E75;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+          <span style="font-size:17px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;">98GO</span>
+          <span style="font-size:9px;color:rgba(255,255,255,.85);letter-spacing:.1em;">e-bike</span>
+        </div>
+        <h2 style="font-size:18px;font-weight:800;color:var(--brand);margin-bottom:.375rem;">您的訂單資料已備妥 🎉</h2>
+        <p style="font-size:14px;color:var(--gray5);line-height:1.7;margin-bottom:1rem;">98GO 門市已為您建立訂單。<br>請填寫您的個人資料、閱讀保固條款並完成電子簽名。</p>
+        <div style="background:#E1F5EE;border-radius:8px;padding:1rem;margin-bottom:1.25rem;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:.5rem;">📋 您的訂購車輛</div>
+          <div style="font-size:14px;font-weight:700;color:var(--brand);">${data.model || '—'}</div>
+          <div style="font-size:12px;color:var(--gray5);margin-top:2px;">${data.vehicleType || ''} ${data.color || ''} ${[data.batType,data.batV,data.batAh].filter(Boolean).join(' ')}</div>
+          <div style="font-size:13px;color:var(--brand);font-weight:600;margin-top:6px;">總金額：NT$ ${Math.round(parseFloat(data.bikePrice||0)+parseFloat(data.addonTotal||0)-parseFloat(data.discount||0)).toLocaleString()}</div>
+        </div>
+        <button class="btn btn-primary" onclick="goStep(3)" style="width:100%;">開始填寫個人資料 →</button>
+      </div>`;
+
+  } catch(e) {
+    console.warn('遠距模式解析失敗', e);
+  }
+})();
+
 // ====== CHIP TOGGLE ======
 function toggleChip(el, val) {
   el.classList.toggle('selected');
@@ -972,6 +1110,65 @@ function toggleChk(id, wrapId) {
 }
 
 // ====== ADDON ======
+// ====== 遠距訂購：產生客戶連結 ======
+function generateRemoteLink() {
+  // 先驗證 step2 是否填寫完整
+  if (!document.getElementById('s1-model').value.trim()) {
+    showErr('err1', '請先填寫車款才能產生連結');
+    return;
+  }
+  hideErr('err1');
+
+  // 先跑到 step2 讓 calcAll 算好，再回來
+  const addons = getAddons();
+
+  const data = {
+    model:      v('s1-model'),
+    vehicleType: window._remoteMode && window._remoteData?.vehicleType ? window._remoteData.vehicleType : document.getElementById('s1-vehicle-type').value,
+    color:      v('s1-color'),
+    batType:    v('s1-batType'),
+    batV:       v('s1-batV'),
+    batAh:      v('s1-batAh'),
+    batNote:    v('s1-batNote'),
+    modelNote:  v('s1-modelNote'),
+    date:       v('s1-date'),
+    delivery:   v('s1-delivery'),
+    staff:      v('s1-staff'),
+    bikePrice:  parseFloat(document.getElementById('p-bike')?.value || 0),
+    discount:   parseFloat(document.getElementById('p-discount')?.value || 0),
+    deposit:    parseFloat(document.getElementById('p-deposit')?.value || 0),
+    depositMethod: document.getElementById('p-dep-method')?.value || '',
+    balanceMethod: document.getElementById('p-bal-method')?.value || '',
+    depositPeriod: document.getElementById('p-dep-period')?.value || '',
+    depDate:      document.getElementById('p-dep-date')?.value || '',
+    balDate:      document.getElementById('p-bal-date')?.value || '',
+    fullDate:     document.getElementById('p-full-date')?.value || '',
+    addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
+    addonTotal: addons.reduce((s,a) => s+a.price, 0),
+  };
+
+  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+  const url = window.location.origin + window.location.pathname + '?order=' + encoded;
+
+  document.getElementById('remote-link-input').value = url;
+  document.getElementById('remote-link-box').style.display = 'block';
+  document.getElementById('remote-link-box').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function copyRemoteLink() {
+  const input = document.getElementById('remote-link-input');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✅ 已複製！';
+    btn.style.background = '#178a65';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 2000);
+  }).catch(() => {
+    input.select();
+    document.execCommand('copy');
+  });
+}
+
 function addPresetAddon(btn, name, price) {
   // 切換：已選則移除，未選則新增
   if (btn.classList.contains('selected')) {
