@@ -322,6 +322,20 @@
   .btn-danger { border-color: #F09595; color: #A32D2D; background: #fff; padding: 8px 14px; font-size: 13px; }
   .btn-danger:hover { background: #FCEBEB; }
 
+  /* Addon 快速選項 */
+  .addon-presets { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+  .addon-preset-btn {
+    padding: 6px 12px; border-radius: 99px;
+    border: 1.5px solid #B5D4F4; background: #E6F1FB;
+    color: #185FA5; font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .addon-preset-btn:hover { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .addon-preset-btn.selected { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .addon-preset-btn .preset-price { opacity: .75; font-weight: 400; }
+  .addon-presets-title { font-size: 11px; font-weight: 600; color: var(--gray5); margin-bottom: 8px; letter-spacing: .04em; }
+
   /* Addon rows */
   .addon-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .addon-row input[type=text] {
@@ -569,8 +583,23 @@
       此區由門市人員協助填寫
     </div>
     <div class="card-title"><div class="icon">+</div>加價購項目</div>
+    <div class="addon-presets-title">⚡ 常用項目快速新增</div>
+    <div class="addon-presets" id="addon-presets">
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'代辦驗車+領牌+三年強制險',2800)">
+        代辦驗車+領牌+三年強制險 <span class="preset-price">NT$2,800</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'防水車頭罩',500)">
+        防水車頭罩 <span class="preset-price">NT$500</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'電壓表',300)">
+        電壓表 <span class="preset-price">NT$300</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'後照鏡',200)">
+        後照鏡 <span class="preset-price">NT$200</span>
+      </button>
+    </div>
     <div id="addon-list"></div>
-    <button class="btn-add" onclick="addAddon()">＋ 新增加價購項目</button>
+    <button class="btn-add" onclick="addAddon()">＋ 新增其他加價購項目</button>
   </div>
 
   <div class="err-msg" id="err1">請填寫必填欄位（車款、成交日期）</div>
@@ -642,6 +671,7 @@
       <div class="price-row">
         <label>尾款支付方式</label>
         <select id="p-bal-method" onchange="toggleInstallment('bal')">
+          <option value="">（交車時確認）</option>
           <option value="現金">現金</option>
           <option value="匯款/轉帳">匯款／轉帳</option>
           <option value="刷卡">刷卡</option>
@@ -942,6 +972,49 @@ function toggleChk(id, wrapId) {
 }
 
 // ====== ADDON ======
+function addPresetAddon(btn, name, price) {
+  // 切換：已選則移除，未選則新增
+  if (btn.classList.contains('selected')) {
+    // 找到對應的 addon row 並移除
+    const rows = document.querySelectorAll('.addon-row');
+    for (const row of rows) {
+      const nameEl = row.querySelector('.addon-name');
+      const priceEl = row.querySelector('.addon-price');
+      if (nameEl && nameEl.value === name && priceEl && parseFloat(priceEl.value) === price) {
+        row.remove();
+        break;
+      }
+    }
+    btn.classList.remove('selected');
+  } else {
+    // 新增這個項目
+    addonCount++;
+    const id = addonCount;
+    const div = document.createElement('div');
+    div.className = 'addon-row'; div.id = 'addon-' + id;
+    div.innerHTML = `<input type="text" placeholder="項目名稱" class="addon-name" value="${name}"><input type="number" placeholder="輸入金額" class="addon-price" value="${price}" oninput="calcAll()"><button class="btn-icon" onclick="removePresetAddon(${id}, '${name}', ${price})">×</button>`;
+    document.getElementById('addon-list').appendChild(div);
+    btn.classList.add('selected');
+  }
+  calcAll();
+}
+
+function removePresetAddon(id, name, price) {
+  // 移除 row 並取消對應按鈕的選取狀態
+  const row = document.getElementById('addon-' + id);
+  if (row) row.remove();
+  // 找到對應的快速按鈕並取消選取
+  const btns = document.querySelectorAll('.addon-preset-btn');
+  for (const btn of btns) {
+    const nameEl = btn.querySelector('.preset-price');
+    if (btn.textContent.includes(name)) {
+      btn.classList.remove('selected');
+      break;
+    }
+  }
+  calcAll();
+}
+
 function addAddon() {
   addonCount++;
   const id = addonCount;
