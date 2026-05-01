@@ -1180,7 +1180,7 @@ async function submitForm() {
     batNote: v('s1-bat-note'),
     frame: v('s1-frame'), motor: v('s1-motor'),
     date: v('s1-date'), delivery: v('s1-delivery'), staff: v('s1-staff'),
-    addons, addonItems: addons.map(a => a.name).join('、'),
+    addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
     addonTotal: addons.reduce((s, a) => s + a.price, 0),
     bikePrice: parseFloat(document.getElementById('p-bike').value) || 0,
     discount: parseFloat(document.getElementById('p-discount').value) || 0,
@@ -1198,20 +1198,51 @@ async function submitForm() {
     sigImg
   };
 
-  // Upload to Google Sheets
+  // Upload to Google Sheets（使用 JSONP，確保資料寫入 Sheets）
   document.getElementById('uploading').classList.add('show');
   if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     try {
-      const payload = { ...finalData }; delete payload.sigImg;
-      // 用 no-cors fetch POST 送出
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
+      const payload = { ...finalData };
+      delete payload.sigImg;   // 不送簽名圖（檔案太大）
+      delete payload.addons;   // 不送原始 addons 陣列
+
+      await new Promise((resolve) => {
+        const cbName = 'cb_' + Date.now();
+        const params = new URLSearchParams();
+        params.set('data', encodeURIComponent(JSON.stringify(payload)));
+        params.set('callback', cbName);
+
+        let scriptEl;
+        window[cbName] = function(result) {
+          delete window[cbName];
+          if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+          if (result && result.status === 'success') {
+            console.log('✅ 資料已寫入 Google Sheets，單號：' + (result.id || ''));
+          } else {
+            console.warn('⚠️ Sheets 回應異常：', result);
+          }
+          resolve(result);
+        };
+
+        scriptEl = document.createElement('script');
+        scriptEl.src = SCRIPT_URL + '?' + params.toString();
+        scriptEl.onerror = () => {
+          delete window[cbName];
+          console.warn('⚠️ JSONP 請求失敗');
+          resolve(null);
+        };
+        document.body.appendChild(scriptEl);
+
+        // 10 秒 timeout
+        setTimeout(() => {
+          if (window[cbName]) {
+            delete window[cbName];
+            if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+            console.warn('⚠️ 上傳逾時');
+            resolve(null);
+          }
+        }, 10000);
       });
-      // 等待 2 秒讓請求完成
-      await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (e) { console.warn('Google Sheets 上傳失敗', e); }
   }
   document.getElementById('uploading').classList.remove('show');
