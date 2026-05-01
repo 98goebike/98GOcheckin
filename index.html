@@ -1208,9 +1208,9 @@ async function submitForm() {
 
       await new Promise((resolve) => {
         const cbName = 'cb_' + Date.now();
-        const params = new URLSearchParams();
-        params.set('data', encodeURIComponent(JSON.stringify(payload)));
-        params.set('callback', cbName);
+        // 直接串接 URL，不透過 URLSearchParams（避免雙重 encode）
+        const dataStr = encodeURIComponent(JSON.stringify(payload));
+        const url = SCRIPT_URL + '?data=' + dataStr + '&callback=' + cbName;
 
         let scriptEl;
         window[cbName] = function(result) {
@@ -1225,7 +1225,7 @@ async function submitForm() {
         };
 
         scriptEl = document.createElement('script');
-        scriptEl.src = SCRIPT_URL + '?' + params.toString();
+        scriptEl.src = url;
         scriptEl.onerror = () => {
           delete window[cbName];
           console.warn('⚠️ JSONP 請求失敗');
