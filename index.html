@@ -1180,6 +1180,7 @@ async function submitForm() {
     batNote: v('s1-bat-note'),
     frame: v('s1-frame'), motor: v('s1-motor'),
     date: v('s1-date'), delivery: v('s1-delivery'), staff: v('s1-staff'),
+    addons,
     addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
     addonTotal: addons.reduce((s, a) => s + a.price, 0),
     bikePrice: parseFloat(document.getElementById('p-bike').value) || 0,
@@ -1299,7 +1300,9 @@ ${url}
 
 // ====== PDF GENERATION ======
 function generatePDF(r) {
-  const addonRows = r.addons.map(a =>
+  // addons 陣列可能因為 payload 清理而不存在，用 addonItems 字串備援
+  const addonsArr = (r.addons && Array.isArray(r.addons)) ? r.addons : [];
+  const addonRows = addonsArr.map(a =>
     `<tr><td style="padding:5px 10px;color:#555;font-size:13px;">加購：${a.name}</td><td style="text-align:right;padding:5px 10px;font-size:13px;">NT$ ${a.price.toLocaleString()}</td></tr>`
   ).join('');
 
