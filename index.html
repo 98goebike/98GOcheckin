@@ -994,11 +994,11 @@ calcAll();
     };
     setLocked('s1-model', data.model || '');
     setLocked('s1-color', data.color || '');
-    setLocked('s1-batType', data.batType || '');
-    setLocked('s1-batV', data.batV || '');
-    setLocked('s1-batAh', data.batAh || '');
-    setLocked('s1-batNote', data.batNote || '');
-    setLocked('s1-modelNote', data.modelNote || '');
+    setLocked('s1-battype', data.batType || '');
+    setLocked('s1-batv', data.batV || '');
+    setLocked('s1-batah', data.batAh || '');
+    setLocked('s1-bat-note', data.batNote || '');
+    setLocked('s1-model-note', data.modelNote || '');
     setLocked('s1-date', data.date || '');
     setLocked('s1-delivery', data.delivery || '');
     setLocked('s1-staff', data.staff || '');
@@ -1126,27 +1126,28 @@ function generateRemoteLink() {
   // 先跑到 step2 讓 calcAll 算好，再回來
   const addons = getAddons();
 
+  const ge = id => document.getElementById(id)?.value || '';
   const data = {
-    model:      v('s1-model'),
-    vehicleType: window._remoteMode && window._remoteData?.vehicleType ? window._remoteData.vehicleType : document.getElementById('s1-vehicle-type').value,
-    color:      v('s1-color'),
-    batType:    v('s1-batType'),
-    batV:       v('s1-batV'),
-    batAh:      v('s1-batAh'),
-    batNote:    v('s1-batNote'),
-    modelNote:  v('s1-modelNote'),
-    date:       v('s1-date'),
-    delivery:   v('s1-delivery'),
-    staff:      v('s1-staff'),
-    bikePrice:  parseFloat(document.getElementById('p-bike')?.value || 0),
-    discount:   parseFloat(document.getElementById('p-discount')?.value || 0),
-    deposit:    parseFloat(document.getElementById('p-deposit')?.value || 0),
-    depositMethod: document.getElementById('p-dep-method')?.value || '',
-    balanceMethod: document.getElementById('p-bal-method')?.value || '',
-    depositPeriod: document.getElementById('p-dep-period')?.value || '',
-    depDate:      document.getElementById('p-dep-date')?.value || '',
-    balDate:      document.getElementById('p-bal-date')?.value || '',
-    fullDate:     document.getElementById('p-full-date')?.value || '',
+    model:        ge('s1-model'),
+    vehicleType:  ge('s1-vehicle-type'),
+    color:        ge('s1-color'),
+    batType:      ge('s1-battype'),
+    batV:         ge('s1-batv'),
+    batAh:        ge('s1-batah'),
+    batNote:      ge('s1-bat-note'),
+    modelNote:    ge('s1-model-note'),
+    date:         ge('s1-date'),
+    delivery:     ge('s1-delivery'),
+    staff:        ge('s1-staff'),
+    bikePrice:    parseFloat(ge('p-bike') || 0),
+    discount:     parseFloat(ge('p-discount') || 0),
+    deposit:      parseFloat(ge('p-deposit') || 0),
+    depositMethod: ge('p-dep-method'),
+    balanceMethod: ge('p-bal-method'),
+    depositPeriod: ge('p-dep-period'),
+    depDate:       ge('p-dep-date'),
+    balDate:       ge('p-bal-date'),
+    fullDate:      ge('p-full-date'),
     addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
     addonTotal: addons.reduce((s,a) => s+a.price, 0),
   };
