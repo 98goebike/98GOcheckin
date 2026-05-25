@@ -132,6 +132,15 @@ tr:last-child td{border-bottom:none;}
 .lock-btn:hover{background:#1a1c2e;}
 .lock-error{font-size:12px;color:var(--accent);margin-top:.5rem;height:16px;}
 
+/* ── 編輯訂單 Modal ── */
+.edit-modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+@media(max-width:480px) { .edit-modal-grid { grid-template-columns: 1fr; } }
+.edit-section-title { font-size: 11px; font-weight: 700; color: var(--gray4); letter-spacing: .05em; text-transform: uppercase; grid-column: 1/-1; border-bottom: 1px solid var(--gray2); padding-bottom: 4px; margin-top: 8px; }
+.edit-field { display: flex; flex-direction: column; gap: 4px; }
+.edit-field label { font-size: 11px; font-weight: 600; color: var(--gray5); }
+.edit-field input, .edit-field select { padding: 8px 10px; border: 1.5px solid var(--gray3); border-radius: 6px; font-size: 13px; font-family: inherit; color: var(--text); }
+.edit-field input:focus, .edit-field select:focus { outline: none; border-color: var(--brand); }
+
 /* ── 登記收款 Modal ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;}
 .modal-box{background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.2);overflow:hidden;}
@@ -1382,6 +1391,7 @@ function filterRecords() {
           <div class="rec-detail-actions">
             <button class="rec-action-btn" onclick="window.open('https://98goebike.github.io/98GOcheckin/receipt.html?id=${id}','_blank')">🔗 查看收據</button>
             ${!isDone ? `<button class="rec-action-btn green" onclick="openDeliveryModal('${id}')">💰 登記收款</button>` : ''}
+            ${!isDone ? `<button class="rec-action-btn" onclick="openEditModal('${id}')" style="border-color:#B5D4F4;color:#185FA5;">✏️ 編輯訂單</button>` : ''}
           </div>
         </div>
       </div>`;
@@ -1595,6 +1605,115 @@ function toggleTaskCheck(orderId, field, checked) {
 if (sessionStorage.getItem('98go_auth') === '1') loadData();
 </script>
 
+<!-- 編輯訂單 Modal -->
+<div id="edit-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-header">
+      <h3>✏️ 編輯訂單資料</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+      <div class="modal-order-info">
+        <div class="name" id="edit-modal-name">—</div>
+        <div class="sub" id="edit-modal-sub" style="font-size:11px;font-family:monospace;color:var(--gray4);"></div>
+      </div>
+      <div class="modal-err" id="edit-err"></div>
+      <div class="edit-modal-grid">
+
+        <div class="edit-section-title">🏍 車輛資料</div>
+
+        <div class="edit-field">
+          <label>車種類型</label>
+          <select id="edit-vehicleType">
+            <option value="">請選擇</option>
+            <option value="微型電動二輪車">微型電動二輪車</option>
+            <option value="電動輔助自行車">電動輔助自行車</option>
+            <option value="電動自行車">電動自行車</option>
+            <option value="電動機車">電動機車</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
+          <label>車款</label>
+          <input type="text" id="edit-model" placeholder="車款名稱">
+        </div>
+
+        <div class="edit-field">
+          <label>顏色</label>
+          <input type="text" id="edit-color" placeholder="顏色">
+        </div>
+
+        <div class="edit-field">
+          <label>車輛備註</label>
+          <input type="text" id="edit-modelNote" placeholder="選配、特殊規格等">
+        </div>
+
+        <div class="edit-section-title">🔋 電池規格</div>
+
+        <div class="edit-field">
+          <label>電池類型</label>
+          <select id="edit-batType">
+            <option value="">請選擇</option>
+            <option value="鋰電池">鋰電池</option>
+            <option value="鉛酸電池">鉛酸電池</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
+          <label>電壓（V）</label>
+          <select id="edit-batV">
+            <option value="">請選擇</option>
+            <option value="48V">48V</option>
+            <option value="60V">60V</option>
+            <option value="72V">72V</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
+          <label>容量（Ah）</label>
+          <input type="text" id="edit-batAh" placeholder="例：20ah">
+        </div>
+
+        <div class="edit-field">
+          <label>電池備註</label>
+          <input type="text" id="edit-batNote" placeholder="電池備註">
+        </div>
+
+        <div class="edit-section-title">📅 訂單日期</div>
+
+        <div class="edit-field">
+          <label>成交日期</label>
+          <input type="date" id="edit-date">
+        </div>
+
+        <div class="edit-field">
+          <label>預計交車日</label>
+          <input type="date" id="edit-delivery">
+        </div>
+
+        <div class="edit-section-title">🛍 加購項目</div>
+
+        <div style="grid-column:1/-1;">
+          <div id="edit-addon-list" style="margin-bottom:8px;"></div>
+          <button onclick="addEditAddon()" style="padding:5px 14px;border-radius:6px;border:1.5px dashed var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray5);">＋ 新增加購項目</button>
+        </div>
+
+        <div class="edit-section-title">👤 Sale</div>
+
+        <div class="edit-field">
+          <label>Sale</label>
+          <input type="text" id="edit-staff" placeholder="Sale 姓名">
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
+      <button class="modal-btn-submit" id="edit-submit-btn" onclick="submitEditOrder()">✅ 儲存修改</button>
+    </div>
+  </div>
+</div>
+
 <!-- 登記收款 Modal -->
 <div id="delivery-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeliveryModal()">
   <div class="modal-box">
@@ -1740,6 +1859,135 @@ function submitDelivery() {
   document.body.appendChild(script);
   setTimeout(() => {
     if (window[cbName]) { delete window[cbName]; script.remove(); showModalErr('送出逾時，請再試一次'); btn.disabled=false; btn.textContent='✅ 確認收款完成交車'; }
+  }, 15000);
+}
+
+// ====== 編輯訂單 ======
+let editOrderId = null;
+let editAddonCount = 0;
+
+function openEditModal(orderId) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  editOrderId = orderId;
+  editAddonCount = 0;
+
+  document.getElementById('edit-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
+  document.getElementById('edit-modal-sub').textContent = fmtOrderId(orderId);
+
+  // 填入現有資料
+  document.getElementById('edit-vehicleType').value = getVal(r,'車種類型') || '';
+  document.getElementById('edit-model').value = getVal(r,'車款') || '';
+  document.getElementById('edit-color').value = getVal(r,'顏色') || '';
+  document.getElementById('edit-modelNote').value = getVal(r,'車輛備註') || '';
+  document.getElementById('edit-batType').value = getVal(r,'電池類型') || '';
+  document.getElementById('edit-batV').value = getVal(r,'電池規格(V)') || '';
+  document.getElementById('edit-batAh').value = getVal(r,'電池規格(ah)') || '';
+  document.getElementById('edit-batNote').value = getVal(r,'電池備註') || '';
+  document.getElementById('edit-date').value = fmtDate(getVal(r,'成交日期'));
+  document.getElementById('edit-delivery').value = fmtDate(getVal(r,'預計交車日'));
+  document.getElementById('edit-staff').value = getVal(r,'Sale') || '';
+
+  // 填入加購項目
+  const addonList = document.getElementById('edit-addon-list');
+  addonList.innerHTML = '';
+  const addonItems = getVal(r,'加價購項目');
+  if (addonItems) {
+    addonItems.split('、').filter(Boolean).forEach(item => {
+      const parts = item.split(':');
+      addEditAddonRow(parts[0].trim(), parts[1] ? parseFloat(parts[1]) : '');
+    });
+  }
+
+  document.getElementById('edit-err').classList.remove('show');
+  document.getElementById('edit-submit-btn').disabled = false;
+  document.getElementById('edit-submit-btn').textContent = '✅ 儲存修改';
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function addEditAddonRow(name, price) {
+  editAddonCount++;
+  const id = editAddonCount;
+  const div = document.createElement('div');
+  div.id = 'edit-addon-' + id;
+  div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px;';
+  div.innerHTML = `
+    <input type="text" placeholder="項目名稱" value="${name||''}" style="flex:1;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+    <input type="number" placeholder="金額" value="${price||''}" style="width:110px;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;text-align:right;">
+    <button onclick="document.getElementById('edit-addon-${id}').remove()" style="width:28px;height:28px;border:1px solid var(--gray3);border-radius:6px;background:#fff;cursor:pointer;font-size:14px;color:var(--gray4);flex-shrink:0;">×</button>`;
+  document.getElementById('edit-addon-list').appendChild(div);
+}
+
+function addEditAddon() { addEditAddonRow('', ''); }
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editOrderId = null;
+}
+
+function submitEditOrder() {
+  if (!editOrderId) return;
+  const btn = document.getElementById('edit-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '儲存中...';
+
+  // 收集加購項目
+  const addonRows = document.querySelectorAll('#edit-addon-list > div');
+  const addonItems = Array.from(addonRows).map(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    const price = inputs[1].value.trim();
+    if (!name) return null;
+    return price ? name + ':' + price : name;
+  }).filter(Boolean).join('、');
+
+  const addonTotal = Array.from(addonRows).reduce((s, row) => {
+    const p = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+    return s + p;
+  }, 0);
+
+  const payload = {
+    action: 'editOrder',
+    orderId: editOrderId,
+    vehicleType: document.getElementById('edit-vehicleType').value,
+    model:       document.getElementById('edit-model').value.trim(),
+    color:       document.getElementById('edit-color').value.trim(),
+    modelNote:   document.getElementById('edit-modelNote').value.trim(),
+    batType:     document.getElementById('edit-batType').value,
+    batV:        document.getElementById('edit-batV').value,
+    batAh:       document.getElementById('edit-batAh').value.trim(),
+    batNote:     document.getElementById('edit-batNote').value.trim(),
+    date:        document.getElementById('edit-date').value,
+    delivery:    document.getElementById('edit-delivery').value,
+    staff:       document.getElementById('edit-staff').value.trim(),
+    addonItems,
+    addonTotal,
+  };
+
+  const cbName = 'cb_' + Date.now();
+  const url = window._SCRIPT_URL + '?action=editOrder&orderId=' + encodeURIComponent(editOrderId)
+    + '&data=' + encodeURIComponent(JSON.stringify(payload)) + '&callback=' + cbName;
+
+  window[cbName] = function(res) {
+    delete window[cbName]; script.remove();
+    if (res.status === 'ok') {
+      closeEditModal();
+      alert('✅ 訂單已更新！');
+      loadData();
+    } else {
+      const errEl = document.getElementById('edit-err');
+      errEl.textContent = '儲存失敗：' + (res.message || '請稍後再試');
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '✅ 儲存修改';
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => { btn.disabled=false; btn.textContent='✅ 儲存修改'; };
+  document.body.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) { delete window[cbName]; script.remove(); btn.disabled=false; btn.textContent='✅ 儲存修改'; }
   }, 15000);
 }
 </script>
