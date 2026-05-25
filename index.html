@@ -1118,10 +1118,12 @@ function generateRemoteLink() {
     return;
   }
   if (!document.getElementById('p-bike').value) {
-    showErr('err2', '請先填寫車輛售價再產生連結');
+    const e2 = document.getElementById('err2');
+    if (e2) { e2.textContent = '請先填寫車輛售價再產生連結'; e2.classList.add('show'); }
     return;
   }
-  hideErr('err2');
+  const e2 = document.getElementById('err2');
+  if (e2) e2.classList.remove('show');
 
   // 先跑到 step2 讓 calcAll 算好，再回來
   const addons = getAddons();
