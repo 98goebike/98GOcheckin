@@ -588,14 +588,14 @@
       <button class="addon-preset-btn" onclick="addPresetAddon(this,'代辦驗車+領牌+三年強制險',2800)">
         代辦驗車+領牌+三年強制險 <span class="preset-price">NT$2,800</span>
       </button>
-      <button class="addon-preset-btn" onclick="addPresetAddon(this,'防水車頭罩+$200',500)">
-        防水車頭罩 <span class="preset-price">NT$0</span>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'防水車頭罩',500)">
+        防水車頭罩 <span class="preset-price">NT$500</span>
       </button>
-      <button class="addon-preset-btn" onclick="addPresetAddon(this,'電壓表+$600',300)">
-        電壓表 <span class="preset-price">NT$0</span>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'電壓表',300)">
+        電壓表 <span class="preset-price">NT$300</span>
       </button>
-      <button class="addon-preset-btn" onclick="addPresetAddon(this,'後照鏡+$200',200)">
-        後照鏡 <span class="preset-price">NT$0</span>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'後照鏡',200)">
+        後照鏡 <span class="preset-price">NT$200</span>
       </button>
     </div>
     <div id="addon-list"></div>
@@ -977,7 +977,7 @@ calcAll();
   if (!encoded) return;
 
   try {
-    const data = JSON.parse(decodeURIComponent(atob(encoded)));
+    const data = JSON.parse(decodeURIComponent(encoded));
 
     // 鎖定模式標記
     window._remoteMode = true;
@@ -1112,12 +1112,16 @@ function toggleChk(id, wrapId) {
 // ====== ADDON ======
 // ====== 遠距訂購：產生客戶連結 ======
 function generateRemoteLink() {
-  // 先驗證 step2 是否填寫完整
+  // 驗證車款和金額必填
   if (!document.getElementById('s1-model').value.trim()) {
-    showErr('err1', '請先填寫車款才能產生連結');
+    alert('請先填寫車款再產生連結');
     return;
   }
-  hideErr('err1');
+  if (!document.getElementById('p-bike').value) {
+    showErr('err2', '請先填寫車輛售價再產生連結');
+    return;
+  }
+  hideErr('err2');
 
   // 先跑到 step2 讓 calcAll 算好，再回來
   const addons = getAddons();
@@ -1147,7 +1151,8 @@ function generateRemoteLink() {
     addonTotal: addons.reduce((s,a) => s+a.price, 0),
   };
 
-  const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+  // 直接用 encodeURIComponent 編碼，相容中文字元
+  const encoded = encodeURIComponent(JSON.stringify(data));
   const url = window.location.origin + window.location.pathname + '?order=' + encoded;
 
   document.getElementById('remote-link-input').value = url;
