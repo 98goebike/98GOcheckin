@@ -669,6 +669,20 @@ function getDate(row, key) {
   if (typeof v === 'number') return new Date((v - 25569) * 86400000);
   return null;
 }
+
+// gviz 日期字串解析（統一入口，處理 Date(y,m,d) 格式）
+function parseGvizDate(v) {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  const s = String(v);
+  const m = s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if (m) return new Date(Number(m[1]), Number(m[2]), Number(m[3]));
+  // ISO 格式 "2026-05-01"
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return new Date(Number(iso[1]), Number(iso[2])-1, Number(iso[3]));
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
 function fmtDate(v) {
   if (!v) return '—';
   const d = (typeof v === 'string' || typeof v === 'number') ? getDate({_k:v},'_k') : v;
@@ -872,11 +886,11 @@ function renderOverview() {
   const todayCash = allData.reduce((s,r) => {
     let cash = 0;
     getDepDetailList(r).forEach(d => {
-      const dd = d.date ? new Date(d.date) : getDate(r,'成交日期');
+      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'成交日期');
       if (isToday(dd) && d.method==='現金') cash += d.amount;
     });
     getBalDetailList(r).forEach(d => {
-      const dd = d.date ? new Date(d.date) : getDate(r,'尾款收款日期');
+      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'尾款收款日期');
       if (isToday(dd) && d.method==='現金') cash += d.amount;
     });
     return s + cash;
@@ -910,7 +924,7 @@ function renderOverview() {
     </div>
   `;
 
-  // 現金流表格（支援多筆明細、信用卡、歷史刷卡相容）
+  // 現金流表格：訂金依訂金日期篩選，尾款依尾款收款日期篩選（各自獨立，不用 filtered）
   const cfMap = {};
   const addCF = (method, amount, isbal) => {
     const m = normMethod(method) || '（未填）';
@@ -919,9 +933,24 @@ function renderOverview() {
     else        { cfMap[m].balCount++; cfMap[m].bal += amount; }
   };
 
-  filtered.forEach(r => {
-    getDepDetailList(r).forEach(d => addCF(d.method, d.amount, false));
-    getBalDetailList(r).forEach(d => addCF(d.method, d.amount, true));
+  const inRange = date => {
+    if (!date || isNaN(date.getTime())) return false;
+    if (fromVal) { const from = parseLocalDate(fromVal); if (date < from) return false; }
+    if (toVal)   { const to   = parseLocalDate(toVal, true); if (date > to) return false; }
+    return true;
+  };
+
+  allData.forEach(r => {
+    // 訂金：依各筆訂金日期判斷是否在區間內
+    getDepDetailList(r).forEach(d => {
+      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'成交日期');
+      if (inRange(dd)) addCF(d.method, d.amount, false);
+    });
+    // 尾款：依各筆尾款收款日期判斷是否在區間內
+    getBalDetailList(r).forEach(d => {
+      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'尾款收款日期');
+      if (inRange(dd)) addCF(d.method, d.amount, true);
+    });
   });
 
   const colorMap = {
