@@ -1024,7 +1024,8 @@ async function loadProductData() {
     // 解析 gviz JSON
     const parseGviz = text => {
       const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-      const cols = json.table.cols.map(c => c.label || c.id);
+      // 把欄位 label 的換行符號移除（Sheets 多行標題會有 \n）
+      const cols = json.table.cols.map(c => (c.label || c.id).replace(/\s+/g, ''));
       return (json.table.rows || []).map(row => {
         const obj = {};
         cols.forEach((col, i) => {
