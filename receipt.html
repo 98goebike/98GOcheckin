@@ -3,421 +3,2355 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>98GO 電動車｜購車收據</title>
+<title>98GO e-bike｜銷售報表</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-:root{--brand:#2B2D42;--accent:#E63946;--green:#1D9E75;--green-soft:#E1F5EE;--amber-soft:#FFF3E5;--blue-soft:#E6F1FB;--blue:#185FA5;--gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;--gray4:#aaa;--gray5:#666;--text:#1a1a1a;}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans TC',sans-serif;background:#e0e0e0;color:var(--text);min-height:100vh;padding:1.5rem 1rem 3rem;}
-.loading{max-width:480px;margin:4rem auto;background:#fff;border-radius:12px;padding:3rem;text-align:center;color:var(--gray4);}
-.spinner{width:40px;height:40px;border:3px solid var(--gray3);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.error-box{max-width:480px;margin:4rem auto;background:#fff;border-radius:12px;padding:2.5rem;text-align:center;border:2px solid var(--accent);}
-.error-box h2{color:var(--accent);margin-bottom:.5rem;}
-.error-box p{color:var(--gray5);font-size:14px;margin-top:.5rem;}
-
-/* ── 收據 ── */
-.receipt{max-width:640px;margin:0 auto;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.18);}
-.receipt-header{background:var(--brand);color:#fff;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
-.logo-mark{width:48px;height:48px;background:var(--accent);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;}
-.logo-mark span:first-child{font-size:15px;font-weight:900;color:#fff;line-height:1;}
-.logo-mark span:last-child{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.1em;}
-.hdr-left{display:flex;align-items:center;gap:14px;}
-.hdr-title{font-size:18px;font-weight:700;}
-.hdr-sub{font-size:12px;opacity:.65;margin-top:2px;}
-.hdr-meta{text-align:right;font-size:12px;opacity:.7;line-height:1.8;}
-.hdr-meta strong{font-size:14px;opacity:1;}
-
-.status-bar{padding:.625rem 2rem;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
-.status-bar.pending{background:var(--amber-soft);color:#633806;}
-.status-bar.done{background:var(--green-soft);color:#085041;}
-
-.body{padding:1.5rem 2rem;}
-
-.sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gray5);border-bottom:2px solid var(--gray2);padding-bottom:5px;margin:1.5rem 0 10px;}
-.sec:first-child{margin-top:0;}
-
-.two{display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem;}
-table.info{width:100%;border-collapse:collapse;font-size:13px;}
-table.info td{padding:5px 0;vertical-align:top;}
-table.info td.l{color:var(--gray5);width:88px;}
-table.info td.v{font-weight:500;}
-table.info tr{border-bottom:1px solid var(--gray2);}
-table.info tr:last-child{border-bottom:none;}
-
-.addon-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 0;border-bottom:1px solid var(--gray2);}
-.addon-row:last-child{border-bottom:none;}
-.addon-total{display:flex;justify-content:flex-end;font-size:13px;font-weight:700;color:#534AB7;padding-top:8px;border-top:1px solid #C5C2F5;margin-top:4px;}
-
-.price-wrap{background:var(--gray1);border-radius:8px;padding:1rem;}
-.pr{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--gray2);}
-.pr:last-child{border-bottom:none;}
-.pr.red{color:var(--accent);}
-.pt{display:flex;justify-content:space-between;align-items:center;background:var(--brand);color:#fff;padding:10px 14px;border-radius:6px;font-weight:700;font-size:16px;margin-top:10px;}
-.pd{display:flex;justify-content:space-between;align-items:center;background:var(--blue-soft);color:var(--blue);padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;}
-.pb{display:flex;justify-content:space-between;align-items:center;background:var(--amber-soft);color:#633806;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;}
-.pdate{font-size:11px;padding:3px 14px;color:var(--gray5);margin-top:1px;}
-.pfull{display:flex;justify-content:space-between;align-items:center;background:var(--green-soft);color:var(--green);padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;margin-top:4px;}
-
-.sign-box{background:var(--green-soft);border:1.5px solid #9FE1CB;border-radius:8px;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:12px;margin-top:1.5rem;}
-.sign-chk{width:40px;height:40px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;}
-.sign-title{font-size:14px;font-weight:700;color:var(--green);}
-.sign-date{font-size:12px;color:var(--gray5);margin-top:2px;}
-.sign-note{font-size:12px;color:#085041;margin-top:6px;line-height:1.6;}
-
-.wb{background:var(--gray1);border-radius:8px;padding:1rem;font-size:12.5px;line-height:1.85;margin-bottom:.75rem;}
-.wb h4{font-size:12.5px;font-weight:700;color:var(--brand);margin-bottom:4px;}
-.ww{background:var(--amber-soft);border-radius:8px;padding:1rem;font-size:12.5px;line-height:1.85;color:#633806;margin-bottom:.75rem;}
-.ww h4{font-size:12.5px;font-weight:700;margin-bottom:4px;}
-.wc{background:#f9f9f9;border-radius:8px;padding:1rem;font-size:12px;line-height:1.9;color:#444;margin-bottom:.75rem;}
-.wc h4{font-size:12.5px;font-weight:700;color:var(--brand);margin-bottom:4px;}
-
-.receipt-footer{background:var(--gray1);border-top:1px solid var(--gray2);padding:1rem 2rem;text-align:center;font-size:11px;color:var(--gray4);line-height:1.8;}
-
-@media(max-width:520px){
-  .receipt-header{flex-direction:column;align-items:flex-start;}
-  .hdr-meta{text-align:left;}
-  .two{grid-template-columns:1fr;}
-  .body{padding:1.25rem 1rem;}
+:root{
+  --brand:#2B2D42;--accent:#E63946;--green:#1D9E75;
+  --blue:#185FA5;--amber:#854F0B;--purple:#534AB7;
+  --gray1:#f8f8f8;--gray2:#f0f0f0;--gray3:#e0e0e0;
+  --gray4:#aaa;--gray5:#666;--text:#1a1a1a;
 }
+body{font-family:'Noto Sans TC',sans-serif;background:#f0f2f5;color:var(--text);min-height:100vh;}
 
-/* 多筆付款明細 */
-.pay-detail-list{margin-top:4px;padding:6px 14px;background:rgba(0,0,0,.03);border-radius:6px;}
-.pay-detail-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.05);}
-.pay-detail-item:last-child{border-bottom:none;}
-.pay-detail-item .pm{color:var(--gray5);}
-.pay-detail-item .pa{font-weight:600;}
-.pay-detail-item .pd-date{color:var(--gray4);font-size:11px;margin-left:8px;}
+/* Header */
+.header{background:var(--brand);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.2);}
+.logo{display:flex;flex-direction:column;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:var(--accent);flex-shrink:0;}
+.logo span:first-child{font-size:14px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;}
+.logo span:last-child{font-size:8px;color:rgba(255,255,255,.8);letter-spacing:.1em;}
+.header h1{font-size:17px;font-weight:700;}
+.header p{font-size:11px;opacity:.6;margin-top:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.refresh-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;}
+.refresh-btn:hover{background:rgba(255,255,255,.2);}
+.last-update{font-size:11px;opacity:.5;}
+
+/* Nav tabs */
+.nav{background:#fff;border-bottom:1px solid var(--gray3);padding:0 1.5rem;display:flex;gap:0;overflow-x:auto;}
+.nav-tab{padding:.75rem 1.25rem;border:none;background:none;font-size:13px;font-family:inherit;color:var(--gray5);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.nav-tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600;}
+.nav-tab:hover{color:var(--text);}
+
+/* Main */
+.main{max-width:1200px;margin:0 auto;padding:1.5rem;}
+
+/* Loading */
+.loading{text-align:center;padding:4rem 0;color:var(--gray4);}
+.spinner{width:36px;height:36px;border:3px solid var(--gray2);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Metric cards */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:1.5rem;}
+.metric{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.metric .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+.metric .val{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.metric .sub{font-size:11px;color:var(--gray4);margin-top:4px;}
+.metric.accent{background:var(--brand);}
+.metric.accent .lbl,.metric.accent .val,.metric.accent .sub{color:#fff;}
+.metric.accent .lbl{opacity:.6;}
+.metric.accent .sub{opacity:.5;}
+
+/* Cards */
+.card{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:1rem;}
+.card-title{font-size:14px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 10px;color:var(--gray5);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--gray3);white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid var(--gray2);color:var(--text);white-space:nowrap;}
+tr:hover td{background:var(--gray1);}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;}
+.badge-green{background:#E1F5EE;color:#085041;}
+.badge-blue{background:#E6F1FB;color:#185FA5;}
+.badge-amber{background:#FFF3E5;color:#633806;}
+.badge-red{background:#fff0f1;color:#A32D2D;}
+.badge-purple{background:#EEEDFE;color:#534AB7;}
+
+/* Bar chart manual */
+.bar-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bar-label{font-size:12px;color:var(--gray5);width:100px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:22px;background:var(--gray2);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding:0 8px;}
+.bar-fill span{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;}
+
+/* Status pills */
+.status-pending{background:#FFF3E5;color:#633806;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
+.status-done{background:#E1F5EE;color:#085041;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
+.status-late{background:#fff0f1;color:#A32D2D;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
+
+/* Section filter */
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
+.filter-row label{font-size:12px;color:var(--gray5);}
+.filter-row select,.filter-row input{padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;}
+.search-input{flex:1;min-width:180px;}
+.filter-btn{padding:5px 14px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray5);transition:all .15s;}
+.filter-btn:hover{background:var(--brand);color:#fff;border-color:var(--brand);}
+.filter-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+/* Error */
+.error-box{background:#fff0f1;border:1px solid #F5C4B3;border-radius:8px;padding:1rem;color:#712B13;font-size:13px;line-height:1.7;}
+
+/* ===== 密碼保護 ===== */
+#lock-screen {
+  position:fixed;inset:0;background:#f0f2f5;
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;
+}
+.lock-box {
+  background:#fff;border-radius:16px;padding:2.5rem 2rem;
+  box-shadow:0 8px 40px rgba(0,0,0,0.13);
+  width:100%;max-width:360px;text-align:center;
+}
+.lock-logo {
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  width:60px;height:60px;background:#E63946;border-radius:14px;
+  margin-bottom:1.25rem;
+}
+.lock-logo span:first-child{font-size:18px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;}
+.lock-logo span:last-child{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.1em;}
+.lock-box h2{font-size:18px;font-weight:700;color:var(--brand);margin-bottom:.4rem;}
+.lock-box p{font-size:12px;color:var(--gray4);margin-bottom:1.5rem;}
+.lock-input {
+  width:100%;padding:12px 14px;border:2px solid var(--gray3);border-radius:10px;
+  font-size:16px;font-family:inherit;text-align:center;letter-spacing:.15em;
+  color:var(--brand);transition:border-color .2s;margin-bottom:.75rem;
+}
+.lock-input:focus{outline:none;border-color:var(--brand);}
+.lock-input.error{border-color:var(--accent);animation:shake .3s;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.lock-btn {
+  width:100%;padding:12px;background:var(--brand);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:background .2s;
+}
+.lock-btn:hover{background:#1a1c2e;}
+.lock-error{font-size:12px;color:var(--accent);margin-top:.5rem;height:16px;}
+
+/* ── 編輯訂單 Modal ── */
+.edit-modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+@media(max-width:480px) { .edit-modal-grid { grid-template-columns: 1fr; } }
+.edit-section-title { font-size: 11px; font-weight: 700; color: var(--gray4); letter-spacing: .05em; text-transform: uppercase; grid-column: 1/-1; border-bottom: 1px solid var(--gray2); padding-bottom: 4px; margin-top: 8px; }
+.edit-field { display: flex; flex-direction: column; gap: 4px; }
+.edit-field label { font-size: 11px; font-weight: 600; color: var(--gray5); }
+.edit-field input, .edit-field select { padding: 8px 10px; border: 1.5px solid var(--gray3); border-radius: 6px; font-size: 13px; font-family: inherit; color: var(--text); }
+.edit-field input:focus, .edit-field select:focus { outline: none; border-color: var(--brand); }
+
+/* ── 登記收款 Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.2);overflow:hidden;}
+.modal-header{background:var(--brand);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.7;line-height:1;}
+.modal-close:hover{opacity:1;}
+.modal-body{padding:1.25rem 1.5rem;}
+.modal-order-info{background:#f8f8f8;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:13px;}
+.modal-order-info .name{font-weight:700;color:var(--brand);font-size:15px;}
+.modal-order-info .sub{color:var(--gray5);margin-top:2px;}
+.modal-amount{background:#FFF3E5;border:2px solid #F4A261;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;text-align:center;}
+.modal-amount .lbl{font-size:11px;color:#854F0B;font-weight:600;margin-bottom:2px;}
+.modal-amount .val{font-size:24px;font-weight:900;color:#854F0B;}
+.modal-field{margin-bottom:12px;}
+.modal-field label{font-size:12px;font-weight:600;color:var(--gray5);display:block;margin-bottom:4px;}
+.modal-field select,.modal-field input{width:100%;padding:9px 12px;border:1.5px solid var(--gray3);border-radius:6px;font-size:14px;font-family:inherit;color:var(--text);}
+.modal-field select:focus,.modal-field input:focus{outline:none;border-color:var(--brand);}
+.modal-footer{padding:.75rem 1.5rem 1.25rem;display:flex;gap:.75rem;}
+.modal-btn-cancel{flex:1;padding:11px;background:#fff;border:1.5px solid var(--gray3);border-radius:6px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--gray5);}
+.modal-btn-submit{flex:2;padding:11px;background:var(--green);border:none;border-radius:6px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;color:#fff;}
+.modal-btn-submit:hover{background:#178a65;}
+.modal-btn-submit:disabled{background:var(--gray3);color:var(--gray4);cursor:not-allowed;}
+.modal-err{background:#fff0f1;border:1px solid #F5C4B3;border-radius:6px;padding:.6rem 1rem;font-size:12px;color:#A32D2D;margin-bottom:.75rem;display:none;}
+.modal-err.show{display:block;}
+
+/* ── 所有記錄：展開卡片 ── */
+.rec-list { display: flex; flex-direction: column; gap: 8px; }
+.rec-card { background: #fff; border-radius: 10px; border: 1.5px solid var(--gray3); overflow: hidden; transition: box-shadow .2s; }
+.rec-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.09); }
+.rec-card.delivered { border-color: #9FE1CB; }
+.rec-header {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 100px 90px 70px 36px;
+  align-items: center;
+  gap: 0;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: #fff;
+}
+.rec-header:hover { background: var(--gray1); }
+.rec-col { font-size: 13px; padding-right: 12px; }
+.rec-col.date { font-size: 12px; color: var(--gray5); }
+.rec-col.customer { font-weight: 600; color: var(--brand); }
+.rec-col.vehicle { color: var(--gray6); }
+.rec-col.amount { font-weight: 700; color: var(--brand); }
+.rec-col.status {}
+.rec-col.sale { font-size: 12px; color: var(--gray5); }
+.rec-toggle { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--gray3); background: var(--gray1); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--gray5); transition: all .2s; flex-shrink: 0; cursor: pointer; }
+.rec-card.open .rec-toggle { background: var(--brand); color: #fff; border-color: var(--brand); transform: rotate(180deg); }
+.rec-detail { display: none; border-top: 1px solid var(--gray2); padding: 14px 14px 16px; background: var(--gray1); }
+.rec-card.open .rec-detail { display: block; }
+.rec-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 20px; }
+.rec-detail-section { margin-bottom: 12px; }
+.rec-detail-section:last-child { margin-bottom: 0; }
+.rec-detail-title { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gray4); border-bottom: 1px solid var(--gray3); padding-bottom: 4px; margin-bottom: 8px; }
+.rec-detail-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,.04); }
+.rec-detail-row:last-child { border-bottom: none; }
+.rec-detail-row .lbl { color: var(--gray5); flex-shrink: 0; margin-right: 8px; }
+.rec-detail-row .val { font-weight: 500; color: var(--text); text-align: right; }
+.rec-detail-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.rec-action-btn { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; border: 1.5px solid var(--gray3); background: #fff; color: var(--gray6); transition: all .15s; }
+.rec-action-btn:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+.rec-action-btn.green { border-color: #9FE1CB; color: var(--green); }
+.rec-action-btn.green:hover { background: var(--green); color: #fff; }
+.rec-header-labels { display: grid; grid-template-columns: 90px 1fr 1fr 100px 90px 70px 36px; gap: 0; padding: 6px 14px; border-bottom: 1px solid var(--gray2); }
+.rec-header-label { font-size: 10px; font-weight: 700; color: var(--gray4); letter-spacing: .05em; text-transform: uppercase; padding-right: 12px; }
+
+/* ── 備車資訊 ── */
+.prep-summary {
+  font-size:12px; color:var(--brand); font-weight:600;
+  padding:4px 10px; border-radius:99px;
+  background:#E6F1FB; border:1px solid #B5D4F4;
+  white-space:nowrap;
+}
+.btn-prep {
+  padding:5px 12px; border-radius:6px;
+  border:1.5px solid var(--gray3); background:#fff;
+  font-size:12px; font-family:inherit; cursor:pointer;
+  color:var(--gray5); white-space:nowrap; transition:all .15s;
+}
+.btn-prep:hover { background:var(--brand); color:#fff; border-color:var(--brand); }
+
+/* prep modal */
+.prep-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media(max-width:520px){ .prep-modal-grid { grid-template-columns:1fr; } }
+.prep-field { display:flex; flex-direction:column; gap:4px; }
+.prep-field label { font-size:12px; font-weight:600; color:var(--gray5); }
+.prep-field input, .prep-field select, .prep-field textarea {
+  padding:8px 10px; border:1.5px solid var(--gray3);
+  border-radius:6px; font-size:13px; font-family:inherit; color:var(--text);
+}
+.prep-field input:focus, .prep-field select:focus, .prep-field textarea:focus {
+  outline:none; border-color:var(--brand);
+}
+.prep-field.full { grid-column:1/-1; }
+.prep-section-title {
+  grid-column:1/-1; font-size:12px; font-weight:700;
+  color:var(--brand); padding:.5rem 0 .25rem;
+  border-bottom:1px solid var(--gray2); margin-bottom:2px;
+}
+.task-grid { display:flex; flex-direction:column; gap:10px; }
+.task-card {
+  background:#fff; border-radius:10px; border:1.5px solid var(--gray3);
+  overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.05);
+  transition:box-shadow .2s;
+}
+.task-card:hover { box-shadow:0 3px 14px rgba(0,0,0,0.1); }
+.task-card.today  { border-color:#185FA5; border-left:4px solid #185FA5; }
+.task-card.overdue{ border-color:#C0392B; border-left:4px solid #C0392B; }
+.task-card.done   { border-color:#1D9E75; border-left:4px solid #1D9E75; opacity:.75; }
+.task-card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.625rem 1rem; background:var(--gray1);
+  border-bottom:1px solid var(--gray2);
+}
+.task-card-id { font-size:12px; font-weight:700; color:var(--brand); font-family:monospace; }
+.task-card-date { font-size:12px; font-weight:600; }
+.task-card-date.today-date  { color:#185FA5; }
+.task-card-date.overdue-date{ color:#C0392B; }
+.task-card-date.future-date { color:var(--gray5); }
+.task-card-body { display:grid; grid-template-columns:200px 1fr; gap:0; }
+.task-vehicle {
+  padding:.75rem 1rem; border-right:1px solid var(--gray2);
+  background:#fff;
+}
+.task-vehicle-model { font-size:15px; font-weight:700; color:var(--brand); margin-bottom:4px; }
+.task-vehicle-sub   { font-size:12px; color:var(--gray5); line-height:1.7; }
+.task-addons { padding:.75rem 1rem; background:#fff; }
+.task-addons-title { font-size:11px; font-weight:600; color:var(--gray5); margin-bottom:6px; letter-spacing:.05em; }
+.task-addon-item {
+  display:flex; align-items:baseline; gap:6px;
+  font-size:13px; color:var(--text); padding:2px 0;
+}
+.task-addon-item::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; }
+.task-addon-price { font-size:12px; color:#534AB7; font-weight:600; margin-left:auto; }
+.task-no-addon { font-size:12px; color:var(--gray4); font-style:italic; }
+.task-card-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.5rem 1rem; border-top:1px solid var(--gray2);
+  background:var(--gray1); gap:1rem; flex-wrap:wrap;
+}
+.task-customer { font-size:12px; color:var(--gray5); }
+.task-customer strong { color:var(--brand); margin-right:6px; }
+.task-checks { display:flex; align-items:center; gap:12px; }
+.task-check-item { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--gray5); cursor:pointer; user-select:none; }
+.task-check-item input[type=checkbox] { width:15px; height:15px; cursor:pointer; accent-color:var(--green); }
+.task-status-badge {
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px;
+  white-space:nowrap;
+}
+.task-status-badge.s-none    { background:#EEEEEE; color:#888888; }
+.task-status-badge.s-working { background:#CCE5FF; color:#004085; }
+.task-status-badge.s-ready   { background:#C6EFCE; color:#1D6B3E; }
+.task-filter-bar { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
 </style>
 </head>
 <body>
 
-<div id="loading" class="loading">
-  <div class="spinner"></div>
-  <p>載入收據中...</p>
+<!-- 密碼保護畫面 -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-logo"><span>98GO</span><span>e-bike</span></div>
+    <h2>🔒 內部管理系統</h2>
+    <p>請輸入存取密碼</p>
+    <input class="lock-input" type="password" id="lock-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkPassword()" autocomplete="off" maxlength="20">
+    <button class="lock-btn" onclick="checkPassword()">確認進入</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
 </div>
 
-<div id="error-box" class="error-box" style="display:none;">
-  <h2>❌ 找不到收據</h2>
-  <p id="error-msg">此連結無效或收據不存在，請聯繫 98GO 門市。</p>
+<div id="app-body" style="display:none;">
+<div class="header">
+  <div class="logo">
+    <span>98GO</span>
+    <span>e-bike</span>
+  </div>
+  <div>
+    <h1>銷售報表</h1>
+    <p>內部管理系統</p>
+  </div>
+  <div class="header-right">
+    <span class="last-update" id="last-update"></span>
+    <button class="refresh-btn" onclick="loadData()">重新整理</button>
+  </div>
 </div>
 
-<div id="receipt" class="receipt" style="display:none;">
+<div class="nav">
+  <button class="nav-tab active" onclick="switchTab('overview')">業績總覽</button>
+  <button class="nav-tab" onclick="switchTab('sales')">銷售排行</button>
+  <button class="nav-tab" onclick="switchTab('purchase')">採購計算</button>
+  <button class="nav-tab" onclick="switchTab('delivery')">出貨進度</button>
+  <button class="nav-tab" onclick="switchTab('customer')">客戶分析</button>
+  <button class="nav-tab" onclick="switchTab('records')">所有記錄</button>
+  <button class="nav-tab" onclick="switchTab('tasks')">🔧 任務清單</button>
+</div>
 
-  <div class="receipt-header">
-    <div class="hdr-left">
-      <div class="logo-mark"><span>98GO</span><span>e-bike</span></div>
-      <div>
-        <div class="hdr-title">新車買賣保固收據</div>
-        <div class="hdr-sub">98GO 電動車｜正式收據</div>
+<div class="main">
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>載入資料中...</p>
+  </div>
+
+  <div id="content" style="display:none;">
+
+    <!-- 業績總覽 -->
+    <div id="tab-overview">
+      <div class="metrics" id="metrics-overview"></div>
+
+      <div id="missing-baldate-card" class="card" style="display:none;border-left:4px solid #E63946;">
+        <div class="card-title" style="color:#E63946;">⚠️ 尾款收款日期未填寫</div>
+        <p style="font-size:12px;color:#666;margin-bottom:10px;">以下訂單已勾選「尾款已收」但未填寫收款日期，會影響現金流統計準確性：</p>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>成交日期</th><th>客戶</th><th>車款</th><th>尾款金額</th><th>尾款付款</th><th>Sale</th>
+            </tr></thead>
+            <tbody id="tbody-missing-baldate"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
-    <div class="hdr-meta">
-      <strong id="r-id">單號：—</strong><br>
-      <span id="r-timestamp">—</span>
-    </div>
-  </div>
 
-  <div id="status-bar" class="status-bar pending">
-    <span id="status-text">⏳ 待交車</span>
-    <span id="status-sub"></span>
-  </div>
-
-  <div class="body">
-
-    <div class="sec">車輛資料</div>
-    <div class="two">
-      <table class="info">
-        <tr><td class="l">車種類型</td><td class="v" id="r-vehicleType">—</td></tr>
-        <tr><td class="l">車款</td><td class="v" id="r-model">—</td></tr>
-        <tr><td class="l">顏色</td><td class="v" id="r-color">—</td></tr>
-        <tr id="r-modelNote-row" style="display:none;"><td class="l">車輛備註</td><td class="v" id="r-modelNote">—</td></tr>
-        <tr id="r-frame-row" style="display:none;"><td class="l">車架號碼</td><td class="v" id="r-frame">—</td></tr>
-      </table>
-      <table class="info">
-        <tr><td class="l">電池</td><td class="v" id="r-battery">—</td></tr>
-        <tr id="r-batNote-row" style="display:none;"><td class="l">電池備註</td><td class="v" id="r-batNote">—</td></tr>
-        <tr><td class="l">速度設定</td><td class="v" id="r-speed">—</td></tr>
-        <tr><td class="l">成交日期</td><td class="v" id="r-date">—</td></tr>
-        <tr><td class="l">預計交車</td><td class="v" id="r-delivery">—</td></tr>
-        <tr id="r-staff-row" style="display:none;"><td class="l">門市人員</td><td class="v" id="r-staff">—</td></tr>
-      </table>
-    </div>
-    <!-- 速度設定提醒（已依客戶要求調整時顯示）-->
-    <div id="r-speed-notice" style="display:none;background:#FFF3E5;border:1.5px solid #F4A261;border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;font-size:13px;color:#854F0B;line-height:1.8;">
-      <div style="font-weight:700;margin-bottom:2px;">✅ 已告知客戶：</div>
-      <div>1. 速度越快越耗電，續航力可能下降。</div>
-      <div>2. 請遵守道路交通法規安全騎乘。</div>
-    </div>
-
-    <div class="sec">買方資料</div>
-    <div class="two">
-      <table class="info">
-        <tr><td class="l">車主姓名</td><td class="v" id="r-name">—</td></tr>
-        <tr><td class="l">身分證字號</td><td class="v" id="r-idNo">—</td></tr>
-        <tr><td class="l">手機號碼</td><td class="v" id="r-phone">—</td></tr>
-      </table>
-      <table class="info">
-        <tr id="r-gender-row" style="display:none;"><td class="l">性別</td><td class="v" id="r-gender">—</td></tr>
-        <tr id="r-birthday-row" style="display:none;"><td class="l">生日</td><td class="v" id="r-birthday">—</td></tr>
-        <tr><td class="l">通訊地址</td><td class="v" id="r-addr">—</td></tr>
-      </table>
-    </div>
-
-    <div id="addon-section" style="display:none;">
-      <div class="sec">加價購明細</div>
-      <div id="addon-list"></div>
-      <div id="addon-total-row" class="addon-total" style="display:none;">加購合計：<span id="addon-total-val">—</span></div>
-    </div>
-
-    <div class="sec">交易金額</div>
-    <div class="price-wrap">
-      <div class="pr"><span>車輛售價（車＋電池）</span><span id="r-bikePrice">—</span></div>
-      <div class="pr" id="r-addon-row" style="display:none;"><span>加價購小計</span><span id="r-addonTotal">—</span></div>
-      <div class="pr red" id="r-discount-row" style="display:none;"><span>折扣金額</span><span id="r-discount">—</span></div>
-    </div>
-    <div class="pt"><span>總金額</span><span id="r-total">—</span></div>
-    <div class="pd"><span id="r-dep-label">訂金</span><span id="r-deposit">—</span></div>
-    <div id="r-depDate-row" class="pdate" style="display:none;"></div>
-    <div class="pb"><span id="r-bal-label">尾款</span><span id="r-balance">—</span></div>
-    <div id="r-balDate-row" class="pdate" style="display:none;"></div>
-    <div id="r-fullDate-row" class="pfull" style="display:none;"><span id="r-fullDate-label">完款日期</span></div>
-
-    <div class="sign-box">
-      <div class="sign-chk">✓</div>
-      <div>
-        <div class="sign-title">買方已電子簽署確認</div>
-        <div class="sign-date" id="sign-date">簽署日期：—</div>
-        <div class="sign-note">本人確認以上所有資料正確無誤，同意本次買賣合約之所有條款，並以電子方式作為正式確認。</div>
+      <div class="card">
+        <div class="card-title">💰 現金流明細</div>
+        <div class="filter-row" style="margin-bottom:1rem;">
+          <label>查帳區間：</label>
+          <input type="date" id="cf-from" onchange="renderOverview()">
+          <span style="color:var(--gray4);font-size:13px;">～</span>
+          <input type="date" id="cf-to" onchange="renderOverview()">
+          <button onclick="setCFToday()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">今日</button>
+          <button onclick="setCFMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
+          <button onclick="setCFYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
+          <button onclick="clearCF()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
+        </div>
+        <div class="tbl-wrap">
+          <table id="table-cashflow">
+            <thead><tr>
+              <th>付款方式</th>
+              <th style="text-align:right;">訂金筆數</th>
+              <th style="text-align:right;">訂金合計</th>
+              <th style="text-align:right;">尾款筆數</th>
+              <th style="text-align:right;">尾款合計</th>
+              <th style="text-align:right;">小計</th>
+            </tr></thead>
+            <tbody id="tbody-cashflow"></tbody>
+            <tfoot id="tfoot-cashflow"></tfoot>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="sec" style="margin-top:2rem;">保固條款與使用責任</div>
-
-    <!-- ⭐ 98GO購車重點提醒（新增，放在保固條款之前）-->
-    <div style="background:#FFF9E6;border:2px solid #F4A261;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;">
-      <div style="font-size:18px;font-weight:900;color:#854F0B;margin-bottom:1rem;">⭐ 98GO 購車重點提醒</div>
-
-      <div style="display:flex;flex-direction:column;gap:.75rem;">
-        <div style="background:#fff;border-radius:8px;padding:.75rem 1rem;border-left:4px solid #185FA5;">
-          <div style="font-size:16px;font-weight:800;margin-bottom:.25rem;">🔋 電池不要碰水</div>
-          <div style="font-size:14px;color:#444;line-height:1.7;">進水、泡水、淋雨造成損壞，不在保固範圍</div>
+    <!-- 銷售排行 -->
+    <div id="tab-sales" style="display:none;">
+      <div class="filter-row">
+        <label>篩選月份：</label>
+        <select id="sales-month" onchange="renderSales()"></select>
+      </div>
+      <div class="card">
+        <div class="card-title">🛵 車種類型統計</div>
+        <div id="vehicletype-bars"></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🏍 車款銷售排行</div>
+          <div id="model-bars"></div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:.75rem 1rem;border-left:4px solid #E63946;">
-          <div style="font-size:16px;font-weight:800;margin-bottom:.25rem;">🔌 使用原廠充電器</div>
-          <div style="font-size:14px;color:#444;line-height:1.7;">混用充電器可能造成損壞，不在保固範圍</div>
+        <div class="card">
+          <div class="card-title">🔋 電池規格排行</div>
+          <div id="battery-bars"></div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:.75rem 1rem;border-left:4px solid #1D9E75;">
-          <div style="font-size:16px;font-weight:800;margin-bottom:.25rem;">🛞 輪胎不要沒氣</div>
-          <div style="font-size:14px;color:#444;line-height:1.7;">建議每月檢查胎壓一次</div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🎨 顏色排行</div>
+          <div id="color-bars"></div>
         </div>
-        <div style="background:#fff;border-radius:8px;padding:.75rem 1rem;border-left:4px solid #534AB7;">
-          <div style="font-size:16px;font-weight:800;margin-bottom:.25rem;">🔋 電池不要沒電</div>
-          <div style="font-size:14px;color:#444;line-height:1.7;">建議騎乘後充電，避免長期低電量存放</div>
+        <div class="card">
+          <div class="card-title">💳 付款方式分布</div>
+          <div id="payment-bars"></div>
         </div>
       </div>
     </div>
-    <!-- /購車重點提醒 -->
 
-    <div class="wb">
-      <h4>✅ 保固範圍</h4>
-      • 電控主機：1 年｜電池模組：鋰電池 1 年／鉛酸電池半年｜電機馬達：1 年<br>
-      <span style="color:#A32D2D;">✕ 外觀、功能開關、輪胎、煞車皮、鏈條等耗材不在保固範圍</span>
-    </div>
-    <div class="ww">
-      <h4>⚠️ 常見不保固原因</h4>
-      • 人為碰撞、改裝、進水導致之損壞<br>
-      • 非授權店家維修後，保固立即失效<br>
-      • 保固期間如需維修，車馬費、運費由車主自行負擔<br>
-      • 電池僅保固充電、放電功能，恕不保固續航里程
-    </div>
-    <div class="wc">
-      <h4>📋 車輛與使用責任</h4>
-      1. 尾款付清前，不得交車行駛上路。<br>
-      2. 買方若在合約成立後反悔，需負擔損害店家已支付之一切費用，方可解約。<br>
-      3. 車輛轉賣前應核對資料並確實登記，自即日起如有變遷等糾紛皆與本公司無關。<br>
-      4. 因個人因素退貨，車主須負責折舊損失車輛售價九成。<br>
-      5. 微型電動二輪車屬財產登記，購車後無法辦理退換貨。<br>
-      6. 簽署本收據即確認交車時限速為 25km/h。
+    <!-- 採購計算 -->
+    <div id="tab-purchase" style="display:none;">
+      <div class="filter-row">
+        <label>日期區間：</label>
+        <input type="date" id="purchase-from" onchange="renderPurchase()">
+        <span style="color:var(--gray4);font-size:13px;">～</span>
+        <input type="date" id="purchase-to" onchange="renderPurchase()">
+        <button onclick="setPurchaseMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
+        <button onclick="setPurchaseYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
+        <button onclick="clearPurchase()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>訂單狀態：</label>
+        <select id="purchase-status" onchange="renderPurchase()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+          <option value="all">全部訂單</option>
+          <option value="pending">待交車</option>
+          <option value="done">已交車</option>
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📦 車款銷售數量</div>
+          <div id="purchase-model"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔋 電池需求數量</div>
+          <div id="purchase-battery"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛍 加價購項目統計</div>
+        <div id="purchase-addon"></div>
+      </div>
     </div>
 
-    <div class="sec">日常保養建議</div>
-    <div class="wb">
-      <h4>🔋 電池保養</h4>
-      • 建議有騎乘就充電，避免長期低電量存放<br>
-      • 長時間未使用，每 1～2 週補充充電一次<br>
-      • 避免高溫曝曬與潮濕環境，請使用原廠充電器<br>
-      • 騎乘後靜置約 30 分鐘再充電；充電完成後間隔 30 分鐘再騎乘
+    <!-- 出貨進度 -->
+    <div id="tab-delivery" style="display:none;">
+      <div class="metrics" id="metrics-delivery"></div>
+      <div class="filter-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
+        <label>狀態：</label>
+        <select id="delivery-filter" onchange="renderDelivery()">
+          <option value="pending">待交車</option>
+          <option value="all">全部（含已交車）</option>
+          <option value="done">已交車</option>
+          <option value="overdue">已逾期</option>
+        </select>
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>快速區間：</label>
+        <button onclick="setDeliveryToday()" class="filter-btn">今日</button>
+        <button onclick="setDeliveryWeek()" class="filter-btn">本週</button>
+        <button onclick="setDeliveryMonth()" class="filter-btn">本月</button>
+        <button onclick="clearDeliveryDate()" class="filter-btn">全部</button>
+      </div>
+      <div class="filter-row" style="gap:8px;align-items:center;margin-top:-4px;">
+        <label>自訂區間：</label>
+        <input type="date" id="delivery-from" onchange="renderDelivery()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+        <span style="color:var(--gray4);font-size:13px;">～</span>
+        <input type="date" id="delivery-to" onchange="renderDelivery()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>月份：</label>
+        <select id="delivery-month" onchange="onDeliveryMonthChange()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+          <option value="">不限月份</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-title">🚚 交車清單</div>
+        <div class="tbl-wrap">
+          <table id="table-delivery">
+            <thead><tr>
+              <th>預計交車日</th><th>狀態</th><th>客戶</th><th>手機</th>
+              <th>車款</th><th>顏色</th><th>電池</th><th>Sale</th><th>總金額</th><th>應收／已收</th><th>操作</th>
+            </tr></thead>
+            <tbody id="tbody-delivery"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div class="wb" style="margin-bottom:0;">
-      <h4>🛠 車輛 ／ 🛞 輪胎保養</h4>
-      • 不建議使用水槍直沖，避免水分滲入電器元件<br>
-      • 停車建議放置遮蔽處，避免長時間日曬雨淋<br>
-      • 定期檢查胎壓，輪胎若有龜裂或磨損嚴重請盡早更換
+
+    <!-- 客戶分析 -->
+    <div id="tab-customer" style="display:none;">
+      <div class="filter-row" style="margin-bottom:1rem;">
+        <label>日期區間：</label>
+        <input type="date" id="customer-from" onchange="renderCustomer()">
+        <span style="color:var(--gray4);font-size:13px;">～</span>
+        <input type="date" id="customer-to" onchange="renderCustomer()">
+        <button onclick="setCustomerMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
+        <button onclick="setCustomerYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
+        <button onclick="clearCustomer()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">⚧ 性別統計</div>
+          <div id="gender-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎂 年齡分布</div>
+          <div id="age-bars"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📍 客戶地區分布（縣市）</div>
+          <div id="city-bars"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📍 行政區分布</div>
+          <div id="district-bars"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📣 來源渠道分析</div>
+        <div id="source-bars"></div>
+      </div>
+    </div>
+
+    <!-- 所有記錄 -->
+    <div id="tab-records" style="display:none;">
+      <div class="filter-row">
+        <input type="text" class="search-input" id="search-input" placeholder="搜尋客戶、車款、Sale..." oninput="filterRecords()">
+        <select id="filter-month" onchange="filterRecords()"></select>
+        <select id="filter-sale" onchange="filterRecords()">
+          <option value="">所有 Sale</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="rec-header-labels">
+          <span class="rec-header-label">日期</span>
+          <span class="rec-header-label">客戶 ／ 手機</span>
+          <span class="rec-header-label">車款</span>
+          <span class="rec-header-label">總金額</span>
+          <span class="rec-header-label">狀態</span>
+          <span class="rec-header-label">Sale</span>
+          <span class="rec-header-label"></span>
+        </div>
+        <div id="tbody-records" class="rec-list"></div>
+      </div>
+    </div>
+
+    <!-- 任務清單 -->
+    <div id="tab-tasks" style="display:none;">
+      <div class="task-filter-bar">
+        <span style="font-size:13px;font-weight:600;color:var(--brand);">篩選：</span>
+        <button class="filter-btn active" onclick="setTaskFilter('pending')" id="tf-pending">待處理</button>
+        <button class="filter-btn" onclick="setTaskFilter('today')" id="tf-today">今日交車</button>
+        <button class="filter-btn" onclick="setTaskFilter('overdue')" id="tf-overdue">逾期</button>
+        <button class="filter-btn" onclick="setTaskFilter('all')" id="tf-all">全部</button>
+        <span style="margin-left:auto;font-size:12px;color:var(--gray5);" id="task-count"></span>
+      </div>
+      <div id="task-grid" class="task-grid"></div>
     </div>
 
   </div>
+</div>
+</div><!-- end app-body -->
 
-  <div class="receipt-footer">
-    98GO 電動車｜本收據由系統自動產生<br>
-    單號 <span id="footer-id">—</span>｜如有疑問請聯繫門市 😊
+<script>
+// ====== PASSWORD ======
+const CORRECT_PASSWORD = '9866';
+function checkPassword() {
+  const input = document.getElementById('lock-input');
+  const err = document.getElementById('lock-error');
+  if (input.value === CORRECT_PASSWORD) {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app-body').style.display = 'block';
+    sessionStorage.setItem('98go_auth', '1');
+    loadData();
+  } else {
+    input.classList.add('error');
+    err.textContent = '密碼錯誤，請再試一次';
+    input.value = '';
+    setTimeout(() => { input.classList.remove('error'); err.textContent = ''; input.focus(); }, 1000);
+  }
+}
+// 若本次已驗證過（重新整理不需重輸）
+if (sessionStorage.getItem('98go_auth') === '1') {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('app-body').style.display = 'block';
+}
+
+// ====== CONFIG ======
+const SHEET_ID = '1eLlGkJ2hvk_XJvJYtVGqGgQ8pCrQolfSkUlGnDhXO8k';
+const SHEET_NAME = '購車保固資料表';
+const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&t=${Date.now()}`;
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
+window._SCRIPT_URL = APPS_SCRIPT_URL;
+
+// 商品主檔
+const PRODUCT_SHEET_ID  = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
+const PRODUCT_API_URL   = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
+
+let allData = [];
+let currentTab = 'overview';
+let batteryOptions  = [];   // [{ code, label }, ...]
+let chargerOptions  = [];   // [{ code, label }, ...]
+let productMasterLoaded = false;
+
+// ====== LOAD DATA ======
+async function loadData() {  document.getElementById('loading').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+  try {
+    // 每次載入都加新的 timestamp，強制繞過 gviz 快取
+    const freshURL = API_URL.replace(/&t=\d+/, '') + '&t=' + Date.now();
+    const res = await fetch(freshURL, { cache: 'no-store' });
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+    const cols = json.table.cols;
+    allData = rows.map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col.label || col.id] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
+      });
+      return obj;
+    }).filter(r => r['單號']);
+    document.getElementById('last-update').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
+    renderAll();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    // 讀取商品主檔（只需一次）
+    if (!productMasterLoaded) loadProductMaster();
+  } catch(e) {
+    document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請確認 Google Sheets 已開放「知道連結的人可以檢視」<br><br>錯誤：${e.message}</div>`;
+  }
+}
+
+function getNum(row, key) {
+  return parseFloat(row[key]) || 0;
+}
+function getDate(row, key) {
+  const v = row[key];
+  if (!v) return null;
+  if (typeof v === 'string') {
+    // gviz 回傳 Date(year,month,day) 格式（月份 0-based）
+    const match = v.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (match) return new Date(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
+    // 純文字日期 "2026-05-01"：用本地時間解析，避免 UTC 時區偏移
+    const isoMatch = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2])-1, parseInt(isoMatch[3]));
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof v === 'number') return new Date((v - 25569) * 86400000);
+  return null;
+}
+function fmtDate(v) {
+  if (!v) return '—';
+  const d = (typeof v === 'string' || typeof v === 'number') ? getDate({_k:v},'_k') : v;
+  if (!d || isNaN(d.getTime())) return String(v).slice(0,10) || '—';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+// checkbox 判斷：處理 gviz 回傳 true/false boolean 或 'TRUE'/'FALSE' 字串
+function isChecked(row, key) {
+  const v = row[key];
+  if (v === null || v === undefined || v === '' || v === false || v === 'FALSE' || v === 'false' || v === 0) return false;
+  return true; // true, 'TRUE', 'true', 1, 任何truthy值
+}
+
+// 把 input[type=date] 的值（"2026-05-01"）轉成本地時間 Date，避免 UTC 時區偏移
+function parseLocalDate(str, endOfDay) {
+  if (!str) return null;
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  const d = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  if (endOfDay) { d.setHours(23,59,59,999); }
+  return d;
+}
+
+function getVal(row, key) {
+  const v = row[key];
+  if (v === null || v === undefined) return '';
+  // Handle Google Sheets Date format
+  if (typeof v === 'string' && v.startsWith('Date(')) {
+    const d = getDate(row, key);
+    return d ? fmtDate(d) : '';
+  }
+  return v.toString().trim();
+}
+function fmtOrderId(raw) {
+  // 從原始單號（EB + timestamp ms）轉成 YYMMD-HHmm 格式
+  // 例：EB1776552751604 → 抓時間戳 → 260419-1452
+  if (!raw) return '—';
+  // 嘗試從單號中抽出時間戳（去掉EB前綴後的數字）
+  const ms = parseInt(raw.replace(/^EB/, ''));
+  if (!isNaN(ms) && ms > 1000000000000) {
+    const d = new Date(ms);
+    const yy = String(d.getFullYear()).slice(2);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const min = String(d.getMinutes()).padStart(2,'0');
+    return `${yy}${mm}${dd}-${hh}${min}`;
+  }
+  return raw.slice(-12) || raw;
+}
+function fmtMoney(n) {
+  return 'NT$ ' + Math.round(n).toLocaleString();
+}
+
+// ====== 多筆付款明細解析 ======
+// 格式：「現金:5000:2025-06-01｜信用卡:10000:2025-06-01」
+function parsePayDetail(str) {
+  if (!str) return [];
+  return str.split('｜').map(seg => {
+    const parts = seg.split(':');
+    return { method: parts[0]?.trim()||'', amount: parseFloat(parts[1])||0, date: parts[2]?.trim()||'' };
+  }).filter(d => d.method && d.amount > 0);
+}
+// 標準化付款方式（歷史資料「刷卡」→「信用卡」）
+function normMethod(m) { return (!m)?'': m==='刷卡'?'信用卡':m; }
+
+// 取訂金付款明細列表（單筆 or 多筆）
+function getDepDetailList(r) {
+  const method = normMethod(getVal(r,'訂金支付方式'));
+  const dep    = getNum(r,'訂金');
+  const detail = getVal(r,'訂金付款明細');
+  const date   = getVal(r,'訂金日期');
+  if (method==='多元付款' && detail) return parsePayDetail(detail);
+  if (dep>0 && method) return [{method, amount:dep, date}];
+  return [];
+}
+// 取尾款付款明細列表（單筆 or 多筆，需尾款已收）
+function getBalDetailList(r) {
+  if (!isChecked(r,'尾款已收')) return [];
+  const method = normMethod(getVal(r,'尾款支付方式'));
+  const bal    = getNum(r,'尾款');
+  const detail = getVal(r,'尾款付款明細');
+  const date   = getVal(r,'尾款收款日期');
+  if (method==='多元付款' && detail) return parsePayDetail(detail);
+  if (bal>0 && method) return [{method, amount:bal, date}];
+  return [];
+}
+function getYM(row) {
+  const d = getDate(row, '成交日期');
+  if (!d || isNaN(d.getTime())) return '';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+// ====== RENDER ALL ======
+function renderAll() {
+  // Debug: 印出尾款已收的值看格式
+  allData.slice(0,5).forEach(r => {
+    const v = r['尾款已收'];
+    console.log('尾款已收 raw:', v, 'type:', typeof v, 'isChecked:', isChecked(r,'尾款已收'));
+  });
+  populateFilters();
+  populateDeliveryMonths();
+  renderOverview();
+  renderSales();
+  renderPurchase();
+  renderDelivery();
+  renderCustomer();
+  filterRecords();
+  setCFToday();
+  clearDeliveryDate();
+}
+
+function populateFilters() {
+  const months = [...new Set(allData.map(r => getYM(r)).filter(Boolean))].sort().reverse();
+  ['filter-month','sales-month'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">全部月份</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  });
+  const sales = [...new Set(allData.map(r => getVal(r,'Sale')).filter(Boolean))].sort();
+  const fSale = document.getElementById('filter-sale');
+  fSale.innerHTML = '<option value="">所有 Sale</option>' + sales.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+// ====== OVERVIEW ======
+function getToday() {
+  const now = new Date();
+  return now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+}
+function setCFToday() {
+  const t = getToday();
+  document.getElementById('cf-from').value = t;
+  document.getElementById('cf-to').value = t;
+  renderOverview();
+}
+function setCFMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('cf-from').value = `${y}-${m}-01`;
+  document.getElementById('cf-to').value = `${y}-${m}-${last}`;
+  renderOverview();
+}
+function setCFYear() {
+  const y = new Date().getFullYear();
+  document.getElementById('cf-from').value = `${y}-01-01`;
+  document.getElementById('cf-to').value = `${y}-12-31`;
+  renderOverview();
+}
+function clearCF() {
+  document.getElementById('cf-from').value = '';
+  document.getElementById('cf-to').value = '';
+  renderOverview();
+}
+
+function renderOverview() {
+  const now = new Date();
+  const fromVal = document.getElementById('cf-from')?.value;
+  const toVal = document.getElementById('cf-to')?.value;
+
+  // ── 金流篩選（依訂金日期 / 尾款日期，不動）──
+  const filtered = allData.filter(r => {
+    const d = getDate(r, '成交日期');
+    if (!d || isNaN(d.getTime())) return false;
+    if (fromVal) { const from = parseLocalDate(fromVal); if (d < from) return false; }
+    if (toVal)   { const to   = parseLocalDate(toVal, true); if (d > to) return false; }
+    return true;
+  });
+
+  // ── 實際交車日取得邏輯（業績依據）──
+  // 優先用「實際交車日」；空白且有完款日期 → 用完款日期（歷史資料過渡）；兩者都沒有 → null（不計入業績）
+  const getDelivDate = r => {
+    const d1 = getDate(r, '實際交車日');
+    if (d1 && !isNaN(d1.getTime())) return d1;
+    const d2 = getDate(r, '完款日期');
+    if (d2 && !isNaN(d2.getTime())) return d2;
+    return null;
+  };
+
+  // ── 業績統計（依實際交車日）──
+  const isDateToday = d => d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+  const isDateThisMonth = d => d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  const isDateThisYear  = d => d && d.getFullYear()===now.getFullYear();
+
+  const todayDelivered  = allData.filter(r => isDateToday(getDelivDate(r)));
+  const monthDelivered  = allData.filter(r => isDateThisMonth(getDelivDate(r)));
+  const yearDelivered   = allData.filter(r => isDateThisYear(getDelivDate(r)));
+  const todayRevenue    = todayDelivered.reduce((s,r) => s+getNum(r,'總金額'), 0);
+  const monthRevenue    = monthDelivered.reduce((s,r) => s+getNum(r,'總金額'), 0);
+  const yearRevenue     = yearDelivered.reduce((s,r)  => s+getNum(r,'總金額'), 0);
+  const avgRevenue      = monthDelivered.length ? monthRevenue / monthDelivered.length : 0;
+
+  // ── 接單統計（依成交日期，保留查閱用途）──
+  const todayOrdered = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return isDateToday(d);
+  });
+
+  // ── 今日現金（金流，依訂金日期 / 尾款日期）──
+  const isToday = d => isDateToday(d);
+  const todayCash = allData.reduce((s,r) => {
+    let cash = 0;
+    getDepDetailList(r).forEach(d => {
+      const dd = d.date ? new Date(d.date) : getDate(r,'成交日期');
+      if (isToday(dd) && d.method==='現金') cash += d.amount;
+    });
+    getBalDetailList(r).forEach(d => {
+      const dd = d.date ? new Date(d.date) : getDate(r,'尾款收款日期');
+      if (isToday(dd) && d.method==='現金') cash += d.amount;
+    });
+    return s + cash;
+  }, 0);
+
+  document.getElementById('metrics-overview').innerHTML = `
+    <div class="metric accent">
+      <div class="lbl">今日交車</div>
+      <div class="val">${todayDelivered.length} 台</div>
+      <div class="sub">今日營收 ${fmtMoney(todayRevenue)}｜今日接單 ${todayOrdered.length} 筆</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">本月營收</div>
+      <div class="val">${fmtMoney(monthRevenue)}</div>
+      <div class="sub">本月交車 ${monthDelivered.length} 台</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">年度營收</div>
+      <div class="val">${fmtMoney(yearRevenue)}</div>
+      <div class="sub">${now.getFullYear()} 年・交車 ${yearDelivered.length} 台</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">平均客單價</div>
+      <div class="val">${fmtMoney(avgRevenue)}</div>
+      <div class="sub">本月交車均價</div>
+    </div>
+    <div class="metric" style="border:2px solid var(--green);background:var(--green);">
+      <div class="lbl" style="color:rgba(255,255,255,.7);">今日現金收款</div>
+      <div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div>
+      <div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div>
+    </div>
+  `;
+
+  // 現金流表格（支援多筆明細、信用卡、歷史刷卡相容）
+  const cfMap = {};
+  const addCF = (method, amount, isbal) => {
+    const m = normMethod(method) || '（未填）';
+    if (!cfMap[m]) cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0};
+    if (!isbal) { cfMap[m].depCount++; cfMap[m].dep += amount; }
+    else        { cfMap[m].balCount++; cfMap[m].bal += amount; }
+  };
+
+  filtered.forEach(r => {
+    getDepDetailList(r).forEach(d => addCF(d.method, d.amount, false));
+    getBalDetailList(r).forEach(d => addCF(d.method, d.amount, true));
+  });
+
+  const colorMap = {
+    '現金':'badge-green','匯款/轉帳':'badge-blue',
+    '信用卡':'badge-amber','刷卡':'badge-amber',
+    '無卡分期':'badge-purple','蝦皮':'badge-blue',
+    '官網':'badge-blue','其他':'badge-green','（未填）':'badge-green'
+  };
+  let totalDep=0, totalBal=0, totalDepCount=0, totalBalCount=0;
+  const rows = Object.entries(cfMap)
+    .sort((a,b) => (b[1].dep+b[1].bal)-(a[1].dep+a[1].bal))
+    .filter(([,v]) => v.dep+v.bal > 0)
+    .map(([method, v]) => {
+      totalDep += v.dep; totalBal += v.bal;
+      totalDepCount += v.depCount; totalBalCount += v.balCount;
+      return `<tr>
+        <td><span class="badge ${colorMap[method]||'badge-green'}">${method}</span></td>
+        <td style="text-align:right;color:var(--gray5);">${v.depCount} 筆</td>
+        <td style="text-align:right;font-weight:500;">${fmtMoney(v.dep)}</td>
+        <td style="text-align:right;color:var(--gray5);">${v.balCount} 筆</td>
+        <td style="text-align:right;font-weight:500;">${fmtMoney(v.bal)}</td>
+        <td style="text-align:right;font-weight:700;color:var(--brand);">${fmtMoney(v.dep+v.bal)}</td>
+      </tr>`;
+    }).join('');
+
+  document.getElementById('tbody-cashflow').innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray4);padding:2rem;">此區間無資料</td></tr>`;
+  // 檢查尾款已收但沒填收款日期的訂單
+  const missingBalDate = allData.filter(r =>
+    isChecked(r,'尾款已收') && !getVal(r,'尾款收款日期') && getNum(r,'尾款') > 0
+  );
+  const missingCard = document.getElementById('missing-baldate-card');
+  if (missingBalDate.length > 0) {
+    missingCard.style.display = '';
+    document.getElementById('tbody-missing-baldate').innerHTML = missingBalDate.map(r => `<tr>
+      <td>${getVal(r,'成交日期')}</td>
+      <td>${getVal(r,'姓名')}</td>
+      <td>${getVal(r,'車款')}</td>
+      <td style="color:#E63946;font-weight:600;">${fmtMoney(getNum(r,'尾款'))}</td>
+      <td>${getVal(r,'尾款支付方式')||'—'}</td>
+      <td>${getVal(r,'Sale')||'—'}</td>
+    </tr>`).join('');
+  } else {
+    missingCard.style.display = 'none';
+  }
+
+  document.getElementById('tfoot-cashflow').innerHTML = `
+    <tr style="background:#f0f2f5;border-top:2px solid var(--gray3);">
+      <td style="font-weight:700;padding:10px;color:var(--brand);">合計</td>
+      <td style="text-align:right;padding:10px;color:var(--gray5);">${totalDepCount} 筆</td>
+      <td style="text-align:right;padding:10px;font-weight:600;color:var(--brand);">${fmtMoney(totalDep)}</td>
+      <td style="text-align:right;padding:10px;color:var(--gray5);">${totalBalCount} 筆</td>
+      <td style="text-align:right;padding:10px;font-weight:600;color:var(--brand);">${fmtMoney(totalBal)}</td>
+      <td style="text-align:right;padding:10px;font-weight:700;font-size:15px;color:var(--brand);">${fmtMoney(totalDep+totalBal)}</td>
+    </tr>`;
+}
+
+// ====== SALES RANKING ======
+function renderSales() {
+  const ym = document.getElementById('sales-month')?.value;
+  // 銷售排行依實際交車日（歷史資料以完款日期過渡）
+  const getDelivYM = r => {
+    const d1 = getDate(r,'實際交車日');
+    if (d1 && !isNaN(d1.getTime())) return d1.getFullYear()+'-'+String(d1.getMonth()+1).padStart(2,'0');
+    const d2 = getDate(r,'完款日期');
+    if (d2 && !isNaN(d2.getTime())) return d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0');
+    return '';
+  };
+  const data = ym ? allData.filter(r => getDelivYM(r)===ym) : allData.filter(r => getDelivYM(r)!=='');
+
+  renderBarsFromData('vehicletype-bars', data, '車種類型', '#E63946', v => v+' 筆');
+  renderBarsFromData('model-bars', data, '車款', '#2B2D42', v => v+' 筆');
+  renderBarsFromData2('battery-bars', data, '電池規格(V)', '電池規格(ah)', '#1D9E75', v => v+' 筆');
+  renderBarsFromData('color-bars', data, '顏色', '#534AB7', v => v+' 筆');
+
+  // 付款方式：依金額統計，支援多筆明細，歷史「刷卡」合併至「信用卡」
+  const pmMap = {};
+  data.forEach(r => {
+    getDepDetailList(r).forEach(d => { pmMap[d.method] = (pmMap[d.method]||0) + d.amount; });
+    getBalDetailList(r).forEach(d => { pmMap[d.method] = (pmMap[d.method]||0) + d.amount; });
+  });
+  const pmEntries = Object.entries(pmMap).sort((a,b)=>b[1]-a[1]);
+  const pmMax = pmEntries[0]?.[1] || 1;
+  document.getElementById('payment-bars').innerHTML = pmEntries.map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/pmMax*100}%;background:#E63946;"><span>${fmtMoney(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+function renderBarsFromData(id, data, key, color, fmt) {
+  const map = {};
+  data.forEach(r => { const v=getVal(r,key); if(v) map[v]=(map[v]||0)+1; });
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const max = entries[0]?.[1]||1;
+  document.getElementById(id).innerHTML = entries.slice(0,10).map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%;background:${color};"><span>${fmt(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+function renderBarsFromData2(id, data, k1, k2, color, fmt) {
+  const map = {};
+  data.forEach(r => { const v=(getVal(r,k1)+' '+getVal(r,k2)).trim(); if(v) map[v]=(map[v]||0)+1; });
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const max = entries[0]?.[1]||1;
+  document.getElementById(id).innerHTML = entries.slice(0,10).map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%;background:${color};"><span>${fmt(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+function countBy(key) {
+  const map = {};
+  allData.forEach(r => {
+    const v = getVal(r, key);
+    if (!v) return;
+    map[v] = (map[v]||0)+1;
+  });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+function countBy2(k1, k2) {
+  const map = {};
+  allData.forEach(r => {
+    const v = (getVal(r,k1)+' '+getVal(r,k2)).trim();
+    if (!v) return;
+    map[v] = (map[v]||0)+1;
+  });
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]);
+}
+function renderBars(id, entries, color, fmt) {
+  const max = entries[0]?.[1] || 1;
+  document.getElementById(id).innerHTML = entries.slice(0,10).map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label||'—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%;background:${color};"><span>${fmt(val)}</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+// ====== PURCHASE ======
+function setPurchaseMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('purchase-from').value = `${y}-${m}-01`;
+  document.getElementById('purchase-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  renderPurchase();
+}
+function setPurchaseYear() {
+  const y = new Date().getFullYear();
+  document.getElementById('purchase-from').value = `${y}-01-01`;
+  document.getElementById('purchase-to').value = `${y}-12-31`;
+  renderPurchase();
+}
+function clearPurchase() {
+  document.getElementById('purchase-from').value = '';
+  document.getElementById('purchase-to').value = '';
+  renderPurchase();
+}
+
+function renderPurchase() {
+  const fromVal = document.getElementById('purchase-from').value;
+  const toVal = document.getElementById('purchase-to').value;
+  const fromD = parseLocalDate(fromVal);
+  const toD = parseLocalDate(toVal, true);
+
+  const statusFilter = document.getElementById('purchase-status')?.value || 'all';
+  const filtered = allData.filter(r => {
+    // 採購計算改用實際交車日（歷史資料以完款日期過渡）
+    const d1 = getDate(r, '實際交車日');
+    const d2 = getDate(r, '完款日期');
+    const d  = (d1 && !isNaN(d1.getTime())) ? d1 : (d2 && !isNaN(d2.getTime())) ? d2 : null;
+    if (!d) return false;
+    if (fromD && d < fromD) return false;
+    if (toD && d > toD) return false;
+    const status = getVal(r, '訂單狀態');
+    if (statusFilter === 'pending' && status === '已交車') return false;
+    if (statusFilter === 'done' && status !== '已交車') return false;
+    return true;
+  });
+
+  // 車款統計
+  const modelMap = {};
+  filtered.forEach(r => {
+    const m = getVal(r,'車款'); if(m) modelMap[m]=(modelMap[m]||0)+1;
+  });
+  const mEntries = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]);
+  const mMax = mEntries[0]?.[1]||1;
+  document.getElementById('purchase-model').innerHTML = mEntries.length ?
+    mEntries.map(([l,v])=>`
+      <div class="bar-item"><div class="bar-label">${l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:#854F0B;"><span>${v} 台</span></div></div></div>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 電池統計
+  const batMap = {};
+  filtered.forEach(r => {
+    const b = (getVal(r,'電池規格(V)')+' '+getVal(r,'電池規格(ah)')).trim();
+    if(b) batMap[b]=(batMap[b]||0)+1;
+  });
+  const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
+  const bMax = bEntries[0]?.[1]||1;
+  document.getElementById('purchase-battery').innerHTML = bEntries.length ?
+    bEntries.map(([l,v])=>`
+      <div class="bar-item"><div class="bar-label">${l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 加價購統計
+  const addonMap = {};
+  filtered.forEach(r => {
+    const items = getVal(r,'加價購項目').split('、');
+    items.forEach(item => {
+      item = item.trim();
+      if (item) addonMap[item] = (addonMap[item]||0)+1;
+    });
+  });
+  const aEntries = Object.entries(addonMap).sort((a,b)=>b[1]-a[1]);
+  const aMax = aEntries[0]?.[1]||1;
+  document.getElementById('purchase-addon').innerHTML = aEntries.length ?
+    aEntries.map(([l,v])=>`
+      <div class="bar-item"><div class="bar-label">${l}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${v/aMax*100}%;background:#534AB7;"><span>${v} 件</span></div></div></div>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無加價購資料</p>';
+}
+
+// ====== DELIVERY DATE FILTERS ======
+function setDeliveryToday() {
+  const t = getToday();
+  document.getElementById('delivery-from').value = t;
+  document.getElementById('delivery-to').value = t;
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('今日');
+  renderDelivery();
+}
+function setDeliveryWeek() {
+  const now = new Date();
+  const mon = new Date(now); mon.setDate(now.getDate() - now.getDay() + 1);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const fmt = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  document.getElementById('delivery-from').value = fmt(mon);
+  document.getElementById('delivery-to').value = fmt(sun);
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('本週');
+  renderDelivery();
+}
+function setDeliveryMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('delivery-from').value = `${y}-${m}-01`;
+  document.getElementById('delivery-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('本月');
+  renderDelivery();
+}
+function clearDeliveryDate() {
+  document.getElementById('delivery-from').value = '';
+  document.getElementById('delivery-to').value = '';
+  document.getElementById('delivery-month').value = '';
+  setActiveDeliveryBtn('全部');
+  renderDelivery();
+}
+function onDeliveryMonthChange() {
+  const ym = document.getElementById('delivery-month').value;
+  if (!ym) { clearDeliveryDate(); return; }
+  const [y, m] = ym.split('-');
+  const last = new Date(parseInt(y), parseInt(m), 0).getDate();
+  document.getElementById('delivery-from').value = `${y}-${m}-01`;
+  document.getElementById('delivery-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  setActiveDeliveryBtn('');
+  renderDelivery();
+}
+function setActiveDeliveryBtn(label) {
+  document.querySelectorAll('#tab-delivery .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === label);
+  });
+}
+function populateDeliveryMonths() {
+  const months = [...new Set(allData.map(r => {
+    const d = getDate(r, '預計交車日');
+    if (!d || isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('delivery-month');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">不限月份</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+// ====== DELIVERY ======
+function renderBalanceCell(r, isDone) {
+  const bal = getNum(r, '尾款');
+  if (isDone) return '<span class="status-done">✅ 已收款</span>';
+  if (bal <= 0) return '<span style="color:var(--green);font-size:12px;font-weight:600;">全額付清</span>';
+  return `<span style="color:#854F0B;font-weight:600;font-size:13px;">應收 ${fmtMoney(bal)}</span>`;
+}
+
+function renderDelivery() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const filterVal = document.getElementById('delivery-filter')?.value || 'pending';
+  const fromVal = document.getElementById('delivery-from')?.value;
+  const toVal = document.getElementById('delivery-to')?.value;
+
+  // 日期區間篩選函數（依預計交車日）
+  const inRange = r => {
+    if (!fromVal && !toVal) return true;
+    const d = getDate(r, '預計交車日');
+    if (!d) return false;
+    if (fromVal && d < parseLocalDate(fromVal)) return false;
+    if (toVal && d > parseLocalDate(toVal, true)) return false;
+    return true;
+  };
+
+  // 全資料（不限區間）用於指標卡
+  const delivered = allData.filter(r => getVal(r,'訂單狀態')==='已交車');
+  const pending = allData.filter(r => getVal(r,'訂單狀態')!=='已交車');
+  const overdue = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d < today; });
+  const thisWeek = pending.filter(r => { const d=getDate(r,'預計交車日'); return d && d>=today && d<=new Date(today.getTime()+7*86400000); });
+
+  const totalPendingBal = pending.reduce((s,r) => s + getNum(r,'尾款'), 0);
+  document.getElementById('metrics-delivery').innerHTML = `
+    <div class="metric"><div class="lbl">待交車總數</div><div class="val">${pending.length} 筆</div></div>
+    <div class="metric accent"><div class="lbl">本週待交車</div><div class="val">${thisWeek.length} 筆</div></div>
+    <div class="metric"><div class="lbl">逾期未交車</div><div class="val" style="color:#E63946;">${overdue.length} 筆</div></div>
+    <div class="metric" style="background:#FFF3E5;border:2px solid #F4A261;"><div class="lbl" style="color:#854F0B;">應收尾款總計</div><div class="val" style="color:#854F0B;">${fmtMoney(totalPendingBal)}</div><div class="sub" style="color:#854F0B;">待交車訂單合計</div></div>
+  `;
+
+  // 依狀態 + 日期區間篩選顯示清單
+  // 已交車用「成交日期」篩選（因為可能沒有預計交車日）
+  const inRangeByDate = r => {
+    if (!fromVal && !toVal) return true;
+    const d = getDate(r, '成交日期');
+    if (!d) return false;
+    if (fromVal && d < parseLocalDate(fromVal)) return false;
+    if (toVal && d > parseLocalDate(toVal, true)) return false;
+    return true;
+  };
+  let showData;
+  if (filterVal === 'done') showData = delivered.filter(inRangeByDate);
+  else if (filterVal === 'all') showData = [...pending, ...delivered].filter(r => inRange(r) || inRangeByDate(r));
+  else if (filterVal === 'overdue') showData = overdue.filter(inRange);
+  else showData = pending.filter(inRange);
+
+  const tbody = document.getElementById('tbody-delivery');
+  tbody.innerHTML = showData.sort((a,b)=>{
+    const da=getDate(a,'預計交車日'), db=getDate(b,'預計交車日');
+    return (da||0)-(db||0);
+  }).map(r => {
+    const d = getDate(r,'預計交車日');
+    const orderStatus = getVal(r,'訂單狀態');
+    const isDone = orderStatus === '已交車';
+    let status;
+    if (isDone) {
+      status = '<span class="status-done">✅ 已交車</span>';
+    } else if (d && d < today) {
+      status = '<span class="status-late">已逾期</span>';
+    } else if (d && d <= new Date(today.getTime()+7*86400000)) {
+      status = '<span class="status-pending">本週</span>';
+    } else {
+      status = '<span class="status-pending">待交車</span>';
+    }
+    return `<tr${isDone ? ' style="opacity:.6;"' : ''}>
+      <td>${fmtDate(getVal(r,'預計交車日'))}</td>
+      <td>${status}</td>
+      <td>${getVal(r,'姓名')}</td>
+      <td>${getVal(r,'手機號碼')}</td>
+      <td>${getVal(r,'車款')}</td>
+      <td>${getVal(r,'顏色')}</td>
+      <td>${getVal(r,'電池類型')} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
+      <td>${getVal(r,'Sale')}</td>
+      <td>${fmtMoney(getNum(r,'總金額'))}</td>
+      <td>${renderBalanceCell(r, isDone)}</td>
+      <td>${!isDone ? `<button onclick="openDeliveryModal('${getVal(r,'單號')}')" style="padding:5px 12px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">登記收款</button>` : '<span style="color:var(--gray4);font-size:12px;">—</span>'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">尚無資料</td></tr>';
+}
+
+// ====== CUSTOMER ======
+function setCustomerMonth() {
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
+  const last = new Date(y, now.getMonth()+1, 0).getDate();
+  document.getElementById('customer-from').value = `${y}-${m}-01`;
+  document.getElementById('customer-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
+  renderCustomer();
+}
+function setCustomerYear() {
+  const y = new Date().getFullYear();
+  document.getElementById('customer-from').value = `${y}-01-01`;
+  document.getElementById('customer-to').value = `${y}-12-31`;
+  renderCustomer();
+}
+function clearCustomer() {
+  document.getElementById('customer-from').value = '';
+  document.getElementById('customer-to').value = '';
+  renderCustomer();
+}
+
+function renderCustomer() {
+  const fromVal = document.getElementById('customer-from')?.value;
+  const toVal = document.getElementById('customer-to')?.value;
+  const fromD = parseLocalDate(fromVal);
+  const toD = parseLocalDate(toVal, true);
+
+  const data = allData.filter(r => {
+    if (!fromD && !toD) return true;
+    const d = getDate(r, '成交日期');
+    if (!d) return false;
+    if (fromD && d < fromD) return false;
+    if (toD && d > toD) return false;
+    return true;
+  });
+
+  // 性別統計
+  renderBarsFromData('gender-bars', data, '性別', '#534AB7', v => v+' 人');
+
+  // 年齡分布
+  const ageMap = {'18歲以下':0,'18-25歲':0,'26-35歲':0,'36-45歲':0,'46-55歲':0,'56歲以上':0,'未填寫':0};
+  data.forEach(r => {
+    const b = getVal(r,'生日');
+    if (!b) { ageMap['未填寫']++; return; }
+    const birth = new Date(b);
+    if (isNaN(birth.getTime())) { ageMap['未填寫']++; return; }
+    const age = new Date().getFullYear() - birth.getFullYear();
+    if (age < 18) ageMap['18歲以下']++;
+    else if (age <= 25) ageMap['18-25歲']++;
+    else if (age <= 35) ageMap['26-35歲']++;
+    else if (age <= 45) ageMap['36-45歲']++;
+    else if (age <= 55) ageMap['46-55歲']++;
+    else ageMap['56歲以上']++;
+  });
+  const ageEntries = Object.entries(ageMap).filter(([,v]) => v > 0);
+  const ageMax = Math.max(...ageEntries.map(([,v]) => v), 1);
+  document.getElementById('age-bars').innerHTML = ageEntries.map(([label,val]) => `
+    <div class="bar-item">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/ageMax*100}%;background:#1D9E75;"><span>${val} 人</span></div></div>
+    </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 縣市統計
+  renderBarsFromData('city-bars', data, '縣市', '#185FA5', v => v+' 人');
+
+  // 行政區統計
+  renderBarsFromData('district-bars', data, '行政區', '#378ADD', v => v+' 人');
+
+  // 來源渠道
+  const srcMap = {};
+  data.forEach(r => {
+    const sources = getVal(r,'從哪裡認識我們').split('、');
+    sources.forEach(s => { s=s.trim(); if(s) srcMap[s]=(srcMap[s]||0)+1; });
+  });
+  const srcEntries = Object.entries(srcMap).sort((a,b)=>b[1]-a[1]);
+  const srcMax = srcEntries[0]?.[1]||1;
+  document.getElementById('source-bars').innerHTML = srcEntries.map(([l,v])=>`
+    <div class="bar-item"><div class="bar-label">${l}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${v/srcMax*100}%;background:var(--purple);"><span>${v} 人</span></div></div></div>`).join('')||'<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+}
+
+// ====== RECORDS ======
+function filterRecords() {
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  const ym = document.getElementById('filter-month').value;
+  const sale = document.getElementById('filter-sale').value;
+  const filtered = allData.filter(r => {
+    if (ym && getYM(r)!==ym) return false;
+    if (sale && getVal(r,'Sale')!==sale) return false;
+    if (q) {
+      const haystack = [getVal(r,'姓名'),getVal(r,'車款'),getVal(r,'Sale'),getVal(r,'單號'),getVal(r,'手機號碼'),getVal(r,'身分證字號')].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+  const pmMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
+
+  if (!filtered.length) {
+    document.getElementById('tbody-records').innerHTML = '<div style="text-align:center;color:var(--gray4);padding:2rem;font-size:13px;">沒有符合的記錄</div>';
+    return;
+  }
+
+  document.getElementById('tbody-records').innerHTML = filtered
+    .sort((a,b) => getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記')))
+    .map((r, idx) => {
+      const id = getVal(r,'單號');
+      const cardId = 'rec-' + idx;
+      const isDone = getVal(r,'訂單狀態') === '已交車';
+      const bal = getNum(r,'尾款');
+      const depM = getVal(r,'訂金支付方式') || '—';
+      const balM = getVal(r,'尾款支付方式') || '—';
+      const depP = getVal(r,'訂金分期');
+      const balP = getVal(r,'尾款分期');
+
+      // 狀態 badge
+      const statusBadge = isDone
+        ? '<span class="badge badge-green">✅ 已交車</span>'
+        : bal > 0
+          ? `<span class="badge badge-amber">待收 ${fmtMoney(bal)}</span>`
+          : '<span class="badge badge-blue">待交車</span>';
+
+      // 加購項目
+      const addonItems = getVal(r,'加價購項目');
+      const addonRows = addonItems
+        ? addonItems.split('、').filter(Boolean).map(i => {
+            const parts = i.split(':');
+            const name = parts[0].trim();
+            const price = parts[1] ? fmtMoney(parseFloat(parts[1])) : '';
+            return `<div class="rec-detail-row"><span class="lbl">${name}</span><span class="val">${price}</span></div>`;
+          }).join('')
+        : '<div style="font-size:12px;color:var(--gray4);">無加購項目</div>';
+
+      return `
+      <div class="rec-card${isDone?' delivered':''}" id="${cardId}">
+        <div class="rec-header" onclick="toggleRecord('${cardId}')">
+          <span class="rec-col date">${fmtDate(getVal(r,'成交日期'))}</span>
+          <span class="rec-col customer">
+            ${getVal(r,'姓名')}
+            <span style="font-size:11px;font-weight:400;color:var(--gray5);display:block;">${getVal(r,'手機號碼')}</span>
+          </span>
+          <span class="rec-col vehicle">
+            ${getVal(r,'車款')||'—'}
+            <span style="font-size:11px;color:var(--gray5);display:block;">${getVal(r,'車種類型')||''} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</span>
+          </span>
+          <span class="rec-col amount">${fmtMoney(getNum(r,'總金額'))}</span>
+          <span class="rec-col status">${statusBadge}</span>
+          <span class="rec-col sale">${getVal(r,'Sale')||'—'}</span>
+          <span class="rec-toggle">▾</span>
+        </div>
+        <div class="rec-detail">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+
+            <div>
+              <div class="rec-detail-title">📋 訂單資訊</div>
+              <div class="rec-detail-row"><span class="lbl">單號</span><span class="val" style="font-family:monospace;font-size:11px;">${fmtOrderId(id)}</span></div>
+              <div class="rec-detail-row"><span class="lbl">成交日期</span><span class="val">${fmtDate(getVal(r,'成交日期'))}</span></div>
+              <div class="rec-detail-row"><span class="lbl">預計交車</span><span class="val">${fmtDate(getVal(r,'預計交車日'))||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">訂單狀態</span><span class="val">${getVal(r,'訂單狀態')||'待交車'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">Sale</span><span class="val">${getVal(r,'Sale')||'—'}</span></div>
+            </div>
+
+            <div>
+              <div class="rec-detail-title">🏍 車輛資料</div>
+              <div class="rec-detail-row"><span class="lbl">車種</span><span class="val">${getVal(r,'車種類型')||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">車款</span><span class="val">${getVal(r,'車款')||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">顏色</span><span class="val">${getVal(r,'顏色')||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">電池</span><span class="val">${[getVal(r,'電池類型'),getVal(r,'電池規格(V)'),getVal(r,'電池規格(ah)')].filter(Boolean).join(' ')||'—'}</span></div>
+              ${getVal(r,'車架號碼') ? `<div class="rec-detail-row"><span class="lbl">車架號碼</span><span class="val" style="font-family:monospace;font-size:11px;">${getVal(r,'車架號碼')}</span></div>` : ''}
+              ${getVal(r,'車牌號碼') ? `<div class="rec-detail-row"><span class="lbl">車牌</span><span class="val">${getVal(r,'車牌號碼')}</span></div>` : ''}
+              ${getVal(r,'車輛備註') ? `<div class="rec-detail-row"><span class="lbl">備註</span><span class="val">${getVal(r,'車輛備註')}</span></div>` : ''}
+            </div>
+
+            <div>
+              <div class="rec-detail-title">👤 客戶資料</div>
+              <div class="rec-detail-row"><span class="lbl">姓名</span><span class="val">${getVal(r,'姓名')||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">手機</span><span class="val">${getVal(r,'手機號碼')||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">身分證</span><span class="val" style="font-family:monospace;font-size:11px;">${getVal(r,'身分證字號')||'—'}</span></div>
+              <div class="rec-detail-row"><span class="lbl">地址</span><span class="val">${[getVal(r,'縣市'),getVal(r,'行政區'),getVal(r,'地址')].filter(Boolean).join('')||'—'}</span></div>
+              ${getVal(r,'生日') ? `<div class="rec-detail-row"><span class="lbl">生日</span><span class="val">${fmtDate(getVal(r,'生日'))}</span></div>` : ''}
+            </div>
+
+            <div>
+              <div class="rec-detail-title">💰 金額明細</div>
+              <div class="rec-detail-row"><span class="lbl">車輛售價</span><span class="val">${fmtMoney(getNum(r,'車輛售價'))}</span></div>
+              ${getNum(r,'加價購金額') > 0 ? `<div class="rec-detail-row"><span class="lbl">加購小計</span><span class="val">${fmtMoney(getNum(r,'加價購金額'))}</span></div>` : ''}
+              ${getNum(r,'折扣金額') > 0 ? `<div class="rec-detail-row"><span class="lbl">折扣</span><span class="val" style="color:var(--accent);">－${fmtMoney(getNum(r,'折扣金額'))}</span></div>` : ''}
+              <div class="rec-detail-row"><span class="lbl">總金額</span><span class="val" style="font-weight:700;">${fmtMoney(getNum(r,'總金額'))}</span></div>
+              <div style="height:6px;"></div>
+              <div class="rec-detail-row"><span class="lbl">訂金</span><span class="val">${fmtMoney(getNum(r,'訂金'))}</span></div>
+              <div class="rec-detail-row"><span class="lbl">訂金付款</span><span class="val"><span class="badge ${pmMap[depM]||'badge-green'}">${depM}${depP?' '+depP:''}</span></span></div>
+              ${getVal(r,'訂金日期') ? `<div class="rec-detail-row"><span class="lbl">訂金日期</span><span class="val">${fmtDate(getVal(r,'訂金日期'))}</span></div>` : ''}
+              <div style="height:6px;"></div>
+              <div class="rec-detail-row"><span class="lbl">尾款</span><span class="val">${fmtMoney(bal)}</span></div>
+              <div class="rec-detail-row"><span class="lbl">尾款付款</span><span class="val"><span class="badge ${pmMap[balM]||'badge-green'}">${balM}${balP?' '+balP:''}</span></span></div>
+              ${getVal(r,'完款日期') ? `<div class="rec-detail-row"><span class="lbl">完款日期</span><span class="val">${fmtDate(getVal(r,'完款日期'))}</span></div>` : ''}
+            </div>
+
+            <div>
+              <div class="rec-detail-title">🛍 加購項目</div>
+              ${addonRows}
+            </div>
+
+          </div>
+          <div class="rec-detail-actions">
+            <button class="rec-action-btn" onclick="window.open('https://98goebike.github.io/98GOcheckin/receipt.html?id=${id}','_blank')">🔗 查看收據</button>
+            ${!isDone ? `<button class="rec-action-btn green" onclick="openDeliveryModal('${id}')">💰 登記收款</button>` : ''}
+            ${!isDone ? `<button class="rec-action-btn" onclick="openEditModal('${id}')" style="border-color:#B5D4F4;color:#185FA5;">✏️ 編輯訂單</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function toggleRecord(cardId) {
+  const card = document.getElementById(cardId);
+  if (card) card.classList.toggle('open');
+}
+
+// ====== TAB SWITCH ======
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-tab').forEach((t,i) => {
+    const tabs = ['overview','sales','purchase','delivery','customer','records','tasks'];
+    t.classList.toggle('active', tabs[i]===tab);
+  });
+  ['overview','sales','purchase','delivery','customer','records','tasks'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===tab?'':'none';
+  });
+  if (tab === 'tasks') renderTasks();
+}
+
+// ====== INIT ======
+
+// ====== 任務清單 ======
+let taskFilter = 'pending';
+
+function setTaskFilter(f) {
+  taskFilter = f;
+  ['pending','today','overdue','all'].forEach(k => {
+    const el = document.getElementById('tf-'+k);
+    if (el) el.classList.toggle('active', k===f);
+  });
+  renderTasks();
+}
+
+function renderTasks() {
+  if (!allData.length) return;
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  const filtered = allData.filter(r => {
+    const status = getVal(r,'訂單狀態');
+    if (status === '已交車' || status === '已取消') return false;
+    const raw = getVal(r,'預計交車日');
+    const d = raw ? new Date(raw) : null;
+    if (d) d.setHours(0,0,0,0);
+
+    if (taskFilter === 'today')   return d && d.getTime() === now.getTime();
+    if (taskFilter === 'overdue') return d && d < now;
+    if (taskFilter === 'pending') return true; // 全部待處理
+    return true; // all
+  }).sort((a,b) => {
+    const da = getDate(a,'預計交車日'), db = getDate(b,'預計交車日');
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da - db;
+  });
+
+  document.getElementById('task-count').textContent = `共 ${filtered.length} 筆`;
+
+  const grid = document.getElementById('task-grid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--gray4);">目前沒有符合條件的任務 😊</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(r => renderTaskCard(r, now)).join('');
+}
+
+function renderTaskCard(r, now) {
+  const id       = getVal(r,'單號');
+  const model    = getVal(r,'車款');
+  const color    = getVal(r,'顏色');
+  const note     = getVal(r,'車輛備註');
+  const batType  = getVal(r,'電池類型');
+  const batV     = getVal(r,'電池規格(V)');
+  const batAh    = getVal(r,'電池規格(ah)');
+  const batNote  = getVal(r,'電池備註');
+  const addons   = getVal(r,'加價購項目');
+  const name     = getVal(r,'姓名');
+  const phone    = getVal(r,'手機號碼');
+  const city     = getVal(r,'縣市');
+  const dist     = getVal(r,'行政區');
+  const addr     = getVal(r,'地址');
+  const idNo     = getVal(r,'身分證字號');
+  const raw      = getVal(r,'預計交車日');
+  const balAmt   = getNum(r,'尾款');
+  const isInstalled  = isChecked(r,'已安裝') || false;
+  const isRegistered = isChecked(r,'已掛牌') || false;
+  const speedSetting = getVal(r,'速度設定');
+
+  // 備車資訊
+  const prepBattery  = getVal(r,'實際出貨電池編號');
+  const prepCharger  = getVal(r,'充電器商品編號');
+  const prepPurchase = getVal(r,'採購狀態');
+  const prepAssemble = getVal(r,'組裝狀態');
+  const prepStaff    = getVal(r,'處理人員');
+  const prepNote     = getVal(r,'內部備註');
+
+  // 速度設定標籤
+  const speedLabel = speedSetting === '已依客戶要求調整' ? '⚡ 已依客戶要求調整'
+                   : speedSetting === '原廠設定'         ? '⚡ 原廠設定'
+                   : '';
+  const speedHtml = speedLabel
+    ? `<div style="margin:0 1rem .25rem;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;display:inline-block;background:${speedSetting==='已依客戶要求調整'?'#FFF3E5':'#E1F5EE'};color:${speedSetting==='已依客戶要求調整'?'#854F0B':'#085041'};">${speedLabel}</div>`
+    : '';
+
+  // 備車摘要（分行，只顯示有值的欄位）
+  const prepLines = [
+    prepBattery  ? `電池：${prepBattery}`   : '',
+    prepCharger  ? `充電器：${prepCharger}` : '',
+    prepAssemble ? `組裝：${prepAssemble}`  : '',
+    prepStaff    ? `處理：${prepStaff}`     : '',
+  ].filter(Boolean);
+
+  const prepSummaryHtml = prepLines.length > 0
+    ? `<div style="padding:.5rem 1rem;border-top:1px solid var(--gray2);background:#E6F1FB;">
+        <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:4px;">📦 備車資訊</div>
+        ${prepLines.map(l => `<div style="font-size:12px;color:var(--brand);line-height:1.8;">${l}</div>`).join('')}
+       </div>`
+    : '';
+
+  // 日期判斷
+  let cardClass = '', dateClass = 'future-date', dateLabel = '';
+  if (raw) {
+    const d = new Date(raw); d.setHours(0,0,0,0);
+    if (d.getTime() === now.getTime()) {
+      cardClass = 'today'; dateClass = 'today-date';
+      dateLabel = '📅 今日交車 ' + fmtDate(raw);
+    } else if (d < now) {
+      cardClass = 'overdue'; dateClass = 'overdue-date';
+      dateLabel = '⚠️ 逾期 ' + fmtDate(raw);
+    } else {
+      dateLabel = '🗓 ' + fmtDate(raw);
+    }
+  } else {
+    dateLabel = '📅 未定交車日';
+  }
+
+  // 狀態
+  let statusClass = 's-none', statusLabel = '未開始';
+  if (isInstalled && isRegistered) { statusClass = 's-ready'; statusLabel = '✅ 可交車'; }
+  else if (isInstalled || isRegistered) { statusClass = 's-working'; statusLabel = '🔧 施工中'; }
+
+  // 電池
+  const battery = [batType, batV, batAh, batNote].filter(Boolean).join(' ');
+
+  // 加購項目
+  let addonHtml = '';
+  if (addons) {
+    const items = addons.split('、').filter(Boolean);
+    addonHtml = items.map(i => {
+      const parts = i.split(':');
+      const aName = parts[0].trim();
+      const aPrice = parts[1] ? '<span class="task-addon-price">NT$ ' + parseFloat(parts[1]).toLocaleString() + '</span>' : '';
+      return `<div class="task-addon-item"><span>${aName}</span>${aPrice}</div>`;
+    }).join('');
+  } else {
+    addonHtml = '<div class="task-no-addon">無加購項目</div>';
+  }
+
+  // 地址
+  const fullAddr = [city, dist, addr].filter(Boolean).join('');
+
+  // 尾款
+  const balHtml = balAmt > 0
+    ? `<span style="font-size:12px;font-weight:700;color:#854F0B;">應收尾款：NT$ ${balAmt.toLocaleString()}</span>`
+    : `<span style="font-size:12px;color:var(--green);font-weight:600;">✅ 已全額付清</span>`;
+
+  return `
+  <div class="task-card ${cardClass}" id="tcard-${id}">
+    <div class="task-card-header">
+      <span class="task-card-id">${id}</span>
+      <span class="task-card-date ${dateClass}">${dateLabel}</span>
+      <span class="task-status-badge ${statusClass}">${statusLabel}</span>
+    </div>
+    <div class="task-card-body">
+      <div class="task-vehicle">
+        <div class="task-vehicle-model">${model || '—'}</div>
+        <div class="task-vehicle-sub">
+          ${color || ''}${note ? ' · '+note : ''}<br>
+          ${battery || '—'}
+          ${speedSetting ? `<br><span style="display:inline-block;margin-top:3px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${speedSetting==='已依客戶要求調整'?'#FFF3E5':'#E1F5EE'};color:${speedSetting==='已依客戶要求調整'?'#854F0B':'#085041'};">⚙️ ${speedSetting}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-addons">
+        <div class="task-addons-title">加購項目</div>
+        ${addonHtml}
+      </div>
+    </div>
+    ${speedHtml}
+    <div class="task-card-footer">
+      <div class="task-customer">
+        <strong>${name}</strong>${phone}
+        ${fullAddr ? '<br>' + fullAddr : ''}
+        ${idNo ? ' · <span style="color:var(--gray4);">'+idNo+'</span>' : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        ${balHtml}
+        <div class="task-checks">
+          <label class="task-check-item">
+            <input type="checkbox" ${isInstalled?'checked':''} onchange="toggleTaskCheck('${id}','已安裝',this.checked)">
+            已安裝
+          </label>
+          <label class="task-check-item">
+            <input type="checkbox" ${isRegistered?'checked':''} onchange="toggleTaskCheck('${id}','已掛牌',this.checked)">
+            已掛牌
+          </label>
+        </div>
+      </div>
+    </div>
+    ${prepSummaryHtml}
+    <div style="padding:.5rem 1rem .75rem;border-top:1px solid var(--gray2);background:var(--gray1);display:flex;justify-content:flex-end;">
+      <button class="btn-prep" onclick="openPrepModal('${id}')">📦 編輯備車資訊</button>
+    </div>
+  </div>`;
+}
+
+// ====== 商品主檔讀取 ======
+async function loadProductMaster() {
+  try {
+    const res  = await fetch(PRODUCT_API_URL + '&t=' + Date.now(), { cache: 'no-store' });
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols = json.table.cols.map(c => (c.label || c.id).replace(/\s+/g, ''));
+    const rows = (json.table.rows || []).map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col] = row.c[i] ? (row.c[i].v !== undefined ? String(row.c[i].v).trim() : '') : '';
+      });
+      return obj;
+    });
+
+    batteryOptions = rows
+      .filter(r => r['大分類'] === '電池' && r['是否啟用'] === 'Y')
+      .map(r => ({ code: r['商品編號'], label: r['商品編號'] + '｜' + r['商品名稱'] }))
+      .filter(r => r.code);
+
+    chargerOptions = rows
+      .filter(r => r['大分類'] === '充電器' && r['是否啟用'] === 'Y')
+      .map(r => ({ code: r['商品編號'], label: r['商品編號'] + '｜' + r['商品名稱'] }))
+      .filter(r => r.code);
+
+    productMasterLoaded = true;
+  } catch(e) {
+    console.warn('商品主檔讀取失敗', e);
+    productMasterLoaded = false;
+  }
+}
+
+function fillPrepSelects(currentBattery, currentCharger) {
+  const batSel = document.getElementById('prep-battery');
+  const chgSel = document.getElementById('prep-charger');
+
+  if (!productMasterLoaded) {
+    batSel.innerHTML = '<option value="">商品主檔載入失敗，請稍後再試</option>';
+    chgSel.innerHTML = '<option value="">商品主檔載入失敗，請稍後再試</option>';
+    return;
+  }
+
+  batSel.innerHTML = '<option value="">尚未選擇</option>' +
+    batteryOptions.map(o => `<option value="${o.code}"${o.code===currentBattery?' selected':''}>${o.label}</option>`).join('');
+
+  chgSel.innerHTML = '<option value="">尚未選擇</option>' +
+    chargerOptions.map(o => `<option value="${o.code}"${o.code===currentCharger?' selected':''}>${o.label}</option>`).join('');
+}
+
+// ====== 備車資訊 Modal ======
+let prepOrderId = null;
+
+function openPrepModal(orderId) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  prepOrderId = orderId;
+
+  document.getElementById('prep-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
+  document.getElementById('prep-modal-sub').textContent  = getVal(r,'車款') + '　' + getVal(r,'顏色') + '　' + orderId;
+
+  const currentBattery = getVal(r,'實際出貨電池編號');
+  const currentCharger = getVal(r,'充電器商品編號');
+  fillPrepSelects(currentBattery, currentCharger);
+
+  document.getElementById('prep-purchase').value = getVal(r,'採購狀態');
+  document.getElementById('prep-assemble').value = getVal(r,'組裝狀態');
+  document.getElementById('prep-staff').value    = getVal(r,'處理人員');
+  document.getElementById('prep-note').value     = getVal(r,'內部備註');
+
+  document.getElementById('prep-err').classList.remove('show');
+  document.getElementById('prep-submit-btn').disabled = false;
+  document.getElementById('prep-submit-btn').textContent = '✅ 儲存備車資訊';
+  document.getElementById('prep-modal').style.display = 'flex';
+}
+
+function closePrepModal() {
+  document.getElementById('prep-modal').style.display = 'none';
+  prepOrderId = null;
+}
+
+function submitPrep() {
+  if (!prepOrderId) return;
+  const btn = document.getElementById('prep-submit-btn');
+  const errEl = document.getElementById('prep-err');
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = '儲存中...';
+
+  const battery  = document.getElementById('prep-battery').value;
+  const charger  = document.getElementById('prep-charger').value;
+  const purchase = document.getElementById('prep-purchase').value;
+  const assemble = document.getElementById('prep-assemble').value;
+  const staff    = document.getElementById('prep-staff').value.trim();
+  const note     = document.getElementById('prep-note').value.trim();
+
+  const cbName = 'cb_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=updatePrep`
+    + `&orderId=${encodeURIComponent(prepOrderId)}`
+    + `&battery=${encodeURIComponent(battery)}`
+    + `&charger=${encodeURIComponent(charger)}`
+    + `&purchase=${encodeURIComponent(purchase)}`
+    + `&assemble=${encodeURIComponent(assemble)}`
+    + `&staff=${encodeURIComponent(staff)}`
+    + `&note=${encodeURIComponent(note)}`
+    + `&callback=${cbName}`;
+
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      // 更新本地 allData
+      const r = allData.find(row => getVal(row,'單號') === prepOrderId);
+      if (r) {
+        r['實際出貨電池編號'] = battery;
+        r['充電器商品編號']   = charger;
+        r['採購狀態']         = purchase;
+        r['組裝狀態']         = assemble;
+        r['處理人員']         = staff;
+        r['內部備註']         = note;
+      }
+      closePrepModal();
+      renderTasks(); // 即時更新卡片，不整頁重整
+    } else {
+      errEl.textContent = data.message || '儲存失敗，請稍後再試';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '✅ 儲存備車資訊';
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => {
+    errEl.textContent = '網路異常，請再試一次';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '✅ 儲存備車資訊';
+  };
+  document.body.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) {
+      delete window[cbName]; script.remove();
+      errEl.textContent = '送出逾時，請再試一次';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '✅ 儲存備車資訊';
+    }
+  }, 12000);
+}
+
+function toggleTaskCheck(orderId, field, checked) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+
+  const fieldParam = field === '已安裝' ? 'installed' : 'registered';
+  const colName = field;   // 「已安裝」或「已掛牌」，直接用原始欄位名
+  const cbName = 'cb_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=updateCheck&orderId=${encodeURIComponent(orderId)}&field=${fieldParam}&value=${checked}&callback=${cbName}`;
+
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      r[colName] = checked;   // 先更新本地資料
+      renderTasks();          // 再重渲染，畫面才會保留勾勾
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  document.head.appendChild(script);
+}
+
+// loadData() 由密碼驗證通過後呼叫
+// 若已在 session 中驗證過，直接載入
+if (sessionStorage.getItem('98go_auth') === '1') loadData();
+</script>
+
+<!-- 備車資訊 Modal -->
+<div id="prep-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closePrepModal()">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>📦 備車資訊</h3>
+      <button class="modal-close" onclick="closePrepModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-order-info">
+        <div class="name" id="prep-modal-name">—</div>
+        <div class="sub" id="prep-modal-sub" style="font-size:12px;color:var(--gray4);margin-top:2px;"></div>
+      </div>
+      <div class="modal-err" id="prep-err"></div>
+      <div class="prep-modal-grid">
+        <div class="prep-section-title">🔋 實際出貨商品</div>
+        <div class="prep-field full">
+          <label>實際出貨電池</label>
+          <select id="prep-battery">
+            <option value="">尚未選擇</option>
+          </select>
+        </div>
+        <div class="prep-field full">
+          <label>充電器商品</label>
+          <select id="prep-charger">
+            <option value="">尚未選擇</option>
+          </select>
+        </div>
+        <div class="prep-section-title">📋 採購 ／ 組裝狀態</div>
+        <div class="prep-field">
+          <label>採購狀態</label>
+          <select id="prep-purchase">
+            <option value="">請選擇</option>
+            <option value="待採購">待採購</option>
+            <option value="已採購">已採購</option>
+            <option value="已到貨">已到貨</option>
+          </select>
+        </div>
+        <div class="prep-field">
+          <label>組裝狀態</label>
+          <select id="prep-assemble">
+            <option value="">請選擇</option>
+            <option value="待組裝">待組裝</option>
+            <option value="組裝中">組裝中</option>
+            <option value="已完成">已完成</option>
+          </select>
+        </div>
+        <div class="prep-section-title">👤 處理人員 ／ 備註</div>
+        <div class="prep-field">
+          <label>處理人員</label>
+          <input type="text" id="prep-staff" placeholder="處理人員姓名">
+        </div>
+        <div class="prep-field full">
+          <label>內部備註</label>
+          <textarea id="prep-note" rows="2" placeholder="內部備註，不對外顯示" style="resize:vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closePrepModal()">取消</button>
+      <button class="modal-btn-submit" id="prep-submit-btn" onclick="submitPrep()">✅ 儲存備車資訊</button>
+    </div>
+  </div>
+</div>
+
+<!-- 編輯訂單 Modal -->
+<div id="edit-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-header">
+      <h3>✏️ 編輯訂單資料</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+      <div class="modal-order-info">
+        <div class="name" id="edit-modal-name">—</div>
+        <div class="sub" id="edit-modal-sub" style="font-size:11px;font-family:monospace;color:var(--gray4);"></div>
+      </div>
+      <div class="modal-err" id="edit-err"></div>
+      <div class="edit-modal-grid">
+
+        <div class="edit-section-title">🏍 車輛資料</div>
+
+        <div class="edit-field">
+          <label>車種類型</label>
+          <select id="edit-vehicleType">
+            <option value="">請選擇</option>
+            <option value="微型電動二輪車">微型電動二輪車</option>
+            <option value="電動輔助自行車">電動輔助自行車</option>
+            <option value="電動自行車">電動自行車</option>
+            <option value="電動機車">電動機車</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
+          <label>車款</label>
+          <input type="text" id="edit-model" placeholder="車款名稱">
+        </div>
+
+        <div class="edit-field">
+          <label>顏色</label>
+          <input type="text" id="edit-color" placeholder="顏色">
+        </div>
+
+        <div class="edit-field">
+          <label>車輛備註</label>
+          <input type="text" id="edit-modelNote" placeholder="選配、特殊規格等">
+        </div>
+
+        <div class="edit-section-title">🔋 電池規格</div>
+
+        <div class="edit-field">
+          <label>電池類型</label>
+          <select id="edit-batType">
+            <option value="">請選擇</option>
+            <option value="鋰電池">鋰電池</option>
+            <option value="鉛酸電池">鉛酸電池</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
+          <label>電壓（V）</label>
+          <select id="edit-batV">
+            <option value="">請選擇</option>
+            <option value="48V">48V</option>
+            <option value="60V">60V</option>
+            <option value="72V">72V</option>
+          </select>
+        </div>
+
+        <div class="edit-field">
+          <label>容量（Ah）</label>
+          <input type="text" id="edit-batAh" placeholder="例：20ah">
+        </div>
+
+        <div class="edit-field">
+          <label>電池備註</label>
+          <input type="text" id="edit-batNote" placeholder="電池備註">
+        </div>
+
+        <div class="edit-section-title">📅 訂單日期</div>
+
+        <div class="edit-field">
+          <label>成交日期</label>
+          <input type="date" id="edit-date">
+        </div>
+
+        <div class="edit-field">
+          <label>預計交車日</label>
+          <input type="date" id="edit-delivery">
+        </div>
+
+        <div class="edit-section-title">🛍 加購項目</div>
+
+        <div style="grid-column:1/-1;">
+          <div id="edit-addon-list" style="margin-bottom:8px;"></div>
+          <button onclick="addEditAddon()" style="padding:5px 14px;border-radius:6px;border:1.5px dashed var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray5);">＋ 新增加購項目</button>
+        </div>
+
+        <div class="edit-section-title">👤 Sale</div>
+
+        <div class="edit-field">
+          <label>Sale</label>
+          <input type="text" id="edit-staff" placeholder="Sale 姓名">
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
+      <button class="modal-btn-submit" id="edit-submit-btn" onclick="submitEditOrder()">✅ 儲存修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 登記收款 Modal -->
+<div id="delivery-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeliveryModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>💰 登記交車收款</h3>
+      <button class="modal-close" onclick="closeDeliveryModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-order-info">
+        <div class="name" id="modal-name">—</div>
+        <div class="sub" id="modal-sub">—</div>
+      </div>
+      <div class="modal-amount">
+        <div class="lbl">應收尾款</div>
+        <div class="val" id="modal-balance">—</div>
+      </div>
+      <div class="modal-err" id="modal-err"></div>
+      <div class="modal-field">
+        <label>實際支付方式</label>
+        <select id="modal-method">
+          <option value="">請選擇</option>
+          <option value="現金">現金</option>
+          <option value="匯款/轉帳">匯款／轉帳</option>
+          <option value="刷卡">刷卡</option>
+          <option value="無卡分期">無卡分期</option>
+        </select>
+      </div>
+      <div class="modal-field" id="modal-period-wrap" style="display:none;">
+        <label>分期期數</label>
+        <select id="modal-period">
+          <option value="一次付清">一次付清</option>
+          <option value="3 期">3 期</option>
+          <option value="6 期">6 期</option>
+          <option value="12 期">12 期</option>
+          <option value="24 期">24 期</option>
+          <option value="30 期">30 期</option>
+          <option value="36 期">36 期</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>收款日期</label>
+        <input type="date" id="modal-date">
+      </div>
+      <div class="modal-field">
+        <label>車架號碼</label>
+        <input type="text" id="modal-frame" placeholder="請輸入車架號碼">
+      </div>
+      <div class="modal-field">
+        <label>馬達編號 <span style="font-size:11px;color:var(--gray4);font-weight:400;">（選填）</span></label>
+        <input type="text" id="modal-motor" placeholder="請輸入馬達編號">
+      </div>
+      <div class="modal-field">
+        <label>車牌號碼 <span style="font-size:11px;color:var(--gray4);font-weight:400;">（選填）</span></label>
+        <input type="text" id="modal-plate" placeholder="例：ABC-1234">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closeDeliveryModal()">取消</button>
+      <button class="modal-btn-submit" id="modal-submit-btn" onclick="submitDelivery()">✅ 確認收款完成交車</button>
+    </div>
   </div>
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
+let modalOrderId = null;
 
-function fmtMoney(n){const num=parseFloat(n)||0;return 'NT$ '+num.toLocaleString();}
-function fmtDate(val){
-  if(!val)return '—';
-  try{const d=new Date(val);if(!isNaN(d.getTime())){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day;}}catch(e){}
-  return val.toString().split('T')[0]||val;
+function openDeliveryModal(orderId) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  modalOrderId = orderId;
+
+  document.getElementById('modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
+  document.getElementById('modal-sub').textContent = getVal(r,'車款') + '　' + getVal(r,'車種類型');
+  document.getElementById('modal-balance').textContent = fmtMoney(getNum(r,'尾款'));
+
+  // 預填今天日期
+  const today = new Date();
+  document.getElementById('modal-date').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+
+  // 清空欄位
+  document.getElementById('modal-method').value = '';
+  document.getElementById('modal-period').value = '一次付清';
+  document.getElementById('modal-period-wrap').style.display = 'none';
+  document.getElementById('modal-frame').value = '';
+  document.getElementById('modal-motor').value = '';
+  document.getElementById('modal-plate').value = '';
+  document.getElementById('modal-err').classList.remove('show');
+  document.getElementById('modal-submit-btn').disabled = false;
+  document.getElementById('delivery-modal').style.display = 'flex';
 }
-function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val||'—';}
 
-async function loadReceipt(){
-  const params=new URLSearchParams(window.location.search);
-  const orderId=params.get('id');
-  if(!orderId){document.getElementById('loading').style.display='none';document.getElementById('error-box').style.display='';return;}
+document.getElementById('modal-method')?.addEventListener('change', function(){
+  const wrap = document.getElementById('modal-period-wrap');
+  wrap.style.display = (this.value === '無卡分期' || this.value === '刷卡') ? '' : 'none';
+});
 
-  try{
-    const cbName='cb_'+Date.now();
-    const url=`${SCRIPT_URL}?action=receipt&orderId=${encodeURIComponent(orderId)}&callback=${cbName}`;
-    await new Promise((resolve,reject)=>{
-      const timeout=setTimeout(()=>reject(new Error('timeout')),15000);
-      window[cbName]=function(data){clearTimeout(timeout);delete window[cbName];script.remove();resolve(data);};
-      const script=document.createElement('script');
-      script.src=url;
-      script.onerror=()=>{clearTimeout(timeout);reject(new Error('load error'));};
-      document.head.appendChild(script);
-    }).then(data=>{
-      document.getElementById('loading').style.display='none';
-      if(!data||data.status==='not_found'){document.getElementById('error-box').style.display='';return;}
+function closeDeliveryModal() {
+  document.getElementById('delivery-modal').style.display = 'none';
+  modalOrderId = null;
+}
 
-      set('r-id','單號：'+orderId);
-      set('footer-id',orderId);
-      set('r-timestamp',fmtDate(data.date));
+function showModalErr(msg) {
+  const el = document.getElementById('modal-err');
+  el.textContent = msg;
+  el.classList.add('show');
+}
 
-      const isDone=data.orderStatus==='已交車';
-      const bar=document.getElementById('status-bar');
-      bar.className='status-bar '+(isDone?'done':'pending');
-      set('status-text',isDone?'✅ 已交車':'⏳ 待交車');
-      if(isDone&&data.frame)set('status-sub','車架號碼：'+data.frame);
+function submitDelivery() {
+  const method = document.getElementById('modal-method').value;
+  const period = document.getElementById('modal-period').value;
+  const date = document.getElementById('modal-date').value;
+  const frame = document.getElementById('modal-frame').value.trim();
+  const motor = document.getElementById('modal-motor').value.trim();
+  const plate = document.getElementById('modal-plate').value.trim();
 
-      // 車輛
-      set('r-vehicleType',data.vehicleType);
-      set('r-model',data.model);
-      set('r-color',data.color);
-      set('r-battery',[data.batType,data.batV,data.batAh].filter(Boolean).join(' '));
-      // 速度設定
-      if(data.speedSetting){
-        set('r-speed', data.speedSetting);
-        if(data.speedSetting === '已依客戶要求調整'){
-          document.getElementById('r-speed-notice').style.display = '';
-        }
-      }
-      set('r-date',fmtDate(data.date));
-      set('r-delivery',data.delivery?fmtDate(data.delivery):'待確認');
-      if(data.modelNote){document.getElementById('r-modelNote-row').style.display='';set('r-modelNote',data.modelNote);}
-      if(data.batNote){document.getElementById('r-batNote-row').style.display='';set('r-batNote',data.batNote);}
-      if(data.staff){document.getElementById('r-staff-row').style.display='';set('r-staff',data.staff);}
-      if(isDone&&data.frame){document.getElementById('r-frame-row').style.display='';set('r-frame',data.frame);}
+  document.getElementById('modal-err').classList.remove('show');
+  if (!method) return showModalErr('請選擇支付方式');
+  if (!date) return showModalErr('請填寫收款日期');
+  if (!frame) return showModalErr('請填寫車架號碼');
 
-      // 買方
-      set('r-name',data.name);
-      set('r-idNo',data.idNo||'—');
-      set('r-phone', data.phone || '—');
-      set('r-addr',[data.city,data.district,data.addr].filter(Boolean).join(' '));
-      if(data.gender){document.getElementById('r-gender-row').style.display='';set('r-gender',data.gender);}
-      if(data.birthday){document.getElementById('r-birthday-row').style.display='';set('r-birthday',fmtDate(data.birthday));}
+  const btn = document.getElementById('modal-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送出中...';
 
-      // 加購
-      if(data.addonItems){
-        const items=data.addonItems.split('、').filter(Boolean);
-        if(items.length>0){
-          document.getElementById('addon-section').style.display='';
-          document.getElementById('addon-list').innerHTML=items.map(i=>{
-            const parts=i.split(':');const name=parts[0].trim();const price=parts[1]?parseFloat(parts[1]):null;
-            return `<div class="addon-row"><span>✓ ${name}</span>${price?`<span style="color:#534AB7;font-weight:600;">${fmtMoney(price)}</span>`:''}</div>`;
-          }).join('');
-          if(parseFloat(data.addonTotal)>0){document.getElementById('addon-total-row').style.display='flex';set('addon-total-val',fmtMoney(data.addonTotal));}
-        }
-      }
+  const cbName = 'cb_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=delivery&orderId=${encodeURIComponent(modalOrderId)}&balMethod=${encodeURIComponent(method)}&balPeriod=${encodeURIComponent(period)}&balDate=${encodeURIComponent(date)}&frame=${encodeURIComponent(frame)}&motor=${encodeURIComponent(motor)}&plate=${encodeURIComponent(plate)}&callback=${cbName}`;
 
-      // 金額
-      set('r-bikePrice',fmtMoney(data.bikePrice));
-      if(parseFloat(data.addonTotal)>0){document.getElementById('r-addon-row').style.display='flex';set('r-addonTotal',fmtMoney(data.addonTotal));}
-      if(parseFloat(data.discount)>0){document.getElementById('r-discount-row').style.display='flex';set('r-discount','- '+fmtMoney(data.discount));}
-      set('r-total',fmtMoney(data.total));
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      closeDeliveryModal();
+      alert('✅ 收款登記完成！資料已更新。');
+      loadData(); // 重新載入報表
+    } else {
+      showModalErr('送出失敗：' + (data.message || '請稍後再試'));
+      btn.disabled = false;
+      btn.textContent = '✅ 確認收款完成交車';
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => { showModalErr('網路異常，請再試一次'); btn.disabled=false; btn.textContent='✅ 確認收款完成交車'; };
+  document.body.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) { delete window[cbName]; script.remove(); showModalErr('送出逾時，請再試一次'); btn.disabled=false; btn.textContent='✅ 確認收款完成交車'; }
+  }, 15000);
+}
 
-      // 解析付款明細字串（格式：現金:5000:2025-06-01｜信用卡:10000:2025-06-01）
-      function parseDetail(str){
-        if(!str) return [];
-        return str.split('｜').map(seg=>{
-          const p=seg.split(':');
-          return {method:p[0]?.trim()||'',amount:parseFloat(p[1])||0,date:p[2]?.trim()||''};
-        }).filter(d=>d.method&&d.amount>0);
-      }
-      function normMethod(m){return (!m)?'':m==='刷卡'?'信用卡':m;}
+// ====== 編輯訂單 ======
+let editOrderId = null;
+let editAddonCount = 0;
 
-      // 訂金
-      const depDetailItems = parseDetail(data.depositDetail);
-      const depMethod = normMethod(data.depositMethod||'');
-      const depPeriod = data.depositPeriod?`（${data.depositPeriod}）`:'';
-      if(depDetailItems.length>1){
-        // 多筆：標題顯示「訂金（多元付款）」，下方展開各筆
-        set('r-dep-label','訂金（多元付款）');
-        set('r-deposit',fmtMoney(data.deposit));
-        const listHtml=depDetailItems.map(d=>`
-          <div class="pay-detail-item">
-            <span class="pm">${normMethod(d.method)}</span>
-            <span><span class="pa">${fmtMoney(d.amount)}</span>${d.date?`<span class="pd-date">${fmtDate(d.date)}</span>`:''}</span>
-          </div>`).join('');
-        const listEl=document.getElementById('r-depDate-row');
-        listEl.style.display='block';
-        listEl.innerHTML=`<div class="pay-detail-list">${listHtml}</div>`;
-      } else {
-        // 單筆或舊資料
-        set('r-dep-label',depMethod?`訂金（${depMethod}${depPeriod}）`:'訂金');
-        set('r-deposit',fmtMoney(data.deposit));
-        if(data.depDate){const el=document.getElementById('r-depDate-row');el.style.display='block';el.textContent='訂金日期：'+fmtDate(data.depDate);}
-      }
+function openEditModal(orderId) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  editOrderId = orderId;
+  editAddonCount = 0;
 
-      // 尾款
-      const balDetailItems = parseDetail(data.balanceDetail);
-      const balMethod = normMethod(data.balanceMethod||'');
-      const balPeriod = data.balancePeriod?`（${data.balancePeriod}）`:'';
-      if(balDetailItems.length>1){
-        // 多筆：標題顯示「尾款（多元付款）」，下方展開各筆
-        set('r-bal-label','尾款（多元付款）');
-        set('r-balance',fmtMoney(data.balance));
-        const listHtml=balDetailItems.map(d=>`
-          <div class="pay-detail-item">
-            <span class="pm">${normMethod(d.method)}</span>
-            <span><span class="pa">${fmtMoney(d.amount)}</span>${d.date?`<span class="pd-date">${fmtDate(d.date)}</span>`:''}</span>
-          </div>`).join('');
-        const listEl=document.getElementById('r-balDate-row');
-        listEl.style.display='block';
-        listEl.innerHTML=`<div class="pay-detail-list">${listHtml}</div>`;
-      } else {
-        // 單筆或舊資料
-        set('r-bal-label',balMethod?`尾款（${balMethod}${balPeriod}）`:'尾款');
-        set('r-balance',fmtMoney(data.balance));
-        if(data.balDate){const el=document.getElementById('r-balDate-row');el.style.display='block';el.textContent='尾款日期：'+fmtDate(data.balDate);}
-      }
-      if(data.fullDate){document.getElementById('r-fullDate-row').style.display='flex';set('r-fullDate-label','✅ 完款日期：'+fmtDate(data.fullDate));}
+  document.getElementById('edit-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
+  document.getElementById('edit-modal-sub').textContent = fmtOrderId(orderId);
 
-      if(data.date)set('sign-date','簽署日期：'+fmtDate(data.date));
+  // 填入現有資料
+  document.getElementById('edit-vehicleType').value = getVal(r,'車種類型') || '';
+  document.getElementById('edit-model').value = getVal(r,'車款') || '';
+  document.getElementById('edit-color').value = getVal(r,'顏色') || '';
+  document.getElementById('edit-modelNote').value = getVal(r,'車輛備註') || '';
+  document.getElementById('edit-batType').value = getVal(r,'電池類型') || '';
+  document.getElementById('edit-batV').value = getVal(r,'電池規格(V)') || '';
+  document.getElementById('edit-batAh').value = getVal(r,'電池規格(ah)') || '';
+  document.getElementById('edit-batNote').value = getVal(r,'電池備註') || '';
+  document.getElementById('edit-date').value = fmtDate(getVal(r,'成交日期'));
+  document.getElementById('edit-delivery').value = fmtDate(getVal(r,'預計交車日'));
+  document.getElementById('edit-staff').value = getVal(r,'Sale') || '';
 
-      document.getElementById('receipt').style.display='';
+  // 填入加購項目
+  const addonList = document.getElementById('edit-addon-list');
+  addonList.innerHTML = '';
+  const addonItems = getVal(r,'加價購項目');
+  if (addonItems) {
+    addonItems.split('、').filter(Boolean).forEach(item => {
+      const parts = item.split(':');
+      addEditAddonRow(parts[0].trim(), parts[1] ? parseFloat(parts[1]) : '');
     });
-  }catch(e){
-    document.getElementById('loading').style.display='none';
-    document.getElementById('error-box').style.display='';
-    document.getElementById('error-msg').textContent='載入失敗，請稍後再試或聯繫門市。';
   }
+
+  document.getElementById('edit-err').classList.remove('show');
+  document.getElementById('edit-submit-btn').disabled = false;
+  document.getElementById('edit-submit-btn').textContent = '✅ 儲存修改';
+  document.getElementById('edit-modal').style.display = 'flex';
 }
-loadReceipt();
+
+function addEditAddonRow(name, price) {
+  editAddonCount++;
+  const id = editAddonCount;
+  const div = document.createElement('div');
+  div.id = 'edit-addon-' + id;
+  div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px;';
+  div.innerHTML = `
+    <input type="text" placeholder="項目名稱" value="${name||''}" style="flex:1;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
+    <input type="number" placeholder="金額" value="${price||''}" style="width:110px;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;text-align:right;">
+    <button onclick="document.getElementById('edit-addon-${id}').remove()" style="width:28px;height:28px;border:1px solid var(--gray3);border-radius:6px;background:#fff;cursor:pointer;font-size:14px;color:var(--gray4);flex-shrink:0;">×</button>`;
+  document.getElementById('edit-addon-list').appendChild(div);
+}
+
+function addEditAddon() { addEditAddonRow('', ''); }
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editOrderId = null;
+}
+
+function submitEditOrder() {
+  if (!editOrderId) return;
+  const btn = document.getElementById('edit-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '儲存中...';
+
+  // 收集加購項目
+  const addonRows = document.querySelectorAll('#edit-addon-list > div');
+  const addonItems = Array.from(addonRows).map(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    const price = inputs[1].value.trim();
+    if (!name) return null;
+    return price ? name + ':' + price : name;
+  }).filter(Boolean).join('、');
+
+  const addonTotal = Array.from(addonRows).reduce((s, row) => {
+    const p = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+    return s + p;
+  }, 0);
+
+  const payload = {
+    action: 'editOrder',
+    orderId: editOrderId,
+    vehicleType: document.getElementById('edit-vehicleType').value,
+    model:       document.getElementById('edit-model').value.trim(),
+    color:       document.getElementById('edit-color').value.trim(),
+    modelNote:   document.getElementById('edit-modelNote').value.trim(),
+    batType:     document.getElementById('edit-batType').value,
+    batV:        document.getElementById('edit-batV').value,
+    batAh:       document.getElementById('edit-batAh').value.trim(),
+    batNote:     document.getElementById('edit-batNote').value.trim(),
+    date:        document.getElementById('edit-date').value,
+    delivery:    document.getElementById('edit-delivery').value,
+    staff:       document.getElementById('edit-staff').value.trim(),
+    addonItems,
+    addonTotal,
+  };
+
+  const cbName = 'cb_' + Date.now();
+  const url = window._SCRIPT_URL + '?action=editOrder&orderId=' + encodeURIComponent(editOrderId)
+    + '&data=' + encodeURIComponent(JSON.stringify(payload)) + '&callback=' + cbName;
+
+  window[cbName] = function(res) {
+    delete window[cbName]; script.remove();
+    if (res.status === 'ok') {
+      closeEditModal();
+      alert('✅ 訂單已更新！');
+      loadData();
+    } else {
+      const errEl = document.getElementById('edit-err');
+      errEl.textContent = '儲存失敗：' + (res.message || '請稍後再試');
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '✅ 儲存修改';
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => { btn.disabled=false; btn.textContent='✅ 儲存修改'; };
+  document.body.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) { delete window[cbName]; script.remove(); btn.disabled=false; btn.textContent='✅ 儲存修改'; }
+  }, 15000);
+}
 </script>
+
 </body>
 </html>
