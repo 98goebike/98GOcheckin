@@ -612,6 +612,19 @@
     <div class="field" style="margin-top:10px;">
       <label>Sale</label><input type="text" id="s1-staff" placeholder="負責業務姓名">
     </div>
+    <!-- 速度設定 -->
+    <div class="field" style="margin-top:10px;">
+      <label>速度設定<span class="req">*</span></label>
+      <select id="s1-speed" onchange="onSpeedChange()">
+        <option value="已依客戶要求調整" selected>已依客戶要求調整</option>
+        <option value="原廠設定">原廠設定</option>
+      </select>
+    </div>
+    <div id="speed-notice" style="background:#FFF3E5;border:1.5px solid #F4A261;border-radius:8px;padding:.875rem 1rem;margin-top:8px;font-size:14px;color:#854F0B;line-height:1.9;">
+      <div style="font-weight:700;margin-bottom:4px;">✅ 已告知客戶：</div>
+      <div>1. 速度越快越耗電，續航力可能下降。</div>
+      <div>2. 請遵守道路交通法規安全騎乘。</div>
+    </div>
   </div>
 
   <div class="card" style="border:2px solid #B5D4F4;">
@@ -1241,6 +1254,12 @@ function onBatterySpecChange() {
   document.getElementById('s1-bat-note').value = opt?.dataset.note || '';
 }
 
+function onSpeedChange() {
+  const val = document.getElementById('s1-speed').value;
+  const notice = document.getElementById('speed-notice');
+  if (notice) notice.style.display = (val === '已依客戶要求調整') ? '' : 'none';
+}
+
 // ── 備用靜態選單（讀取失敗時） ──
 function initFallbackSelects() {
   const vtSel = document.getElementById('s1-vehicle-type');
@@ -1470,6 +1489,7 @@ function generateRemoteLink() {
     date:         ge('s1-date'),
     delivery:     ge('s1-delivery'),
     staff:        ge('s1-staff'),
+    speedSetting: document.getElementById('s1-speed')?.value || '',
     bikePrice:    parseFloat(ge('p-bike') || 0),
     discount:     parseFloat(ge('p-discount') || 0),
     deposit:      parseFloat(ge('p-deposit') || 0),
@@ -1906,6 +1926,7 @@ async function submitForm() {
     batNote: document.getElementById('s1-bat-note').value,
     frame: '', motor: '',
     date: v('s1-date'), delivery: v('s1-delivery'), staff: v('s1-staff'),
+    speedSetting: document.getElementById('s1-speed')?.value || '',
     addons,
     addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
     addonTotal: addons.reduce((s, a) => s + a.price, 0),
