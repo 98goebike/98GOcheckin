@@ -71,6 +71,29 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
 .spinner-wrap.show{display:block;}
 .spinner{width:28px;height:28px;border:3px solid var(--gray2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto .5rem;}
 @keyframes spin{to{transform:rotate(360deg);}}
+/* ====== 多筆尾款付款明細 ====== */
+.bal-detail-hdr{display:grid;grid-template-columns:1fr 90px 130px 30px;gap:6px;margin-bottom:3px;}
+.bal-detail-hdr span{font-size:10px;color:var(--gray4);font-weight:600;letter-spacing:.03em;}
+.bal-detail-row{display:grid;grid-template-columns:1fr 90px 130px 30px;gap:6px;align-items:center;margin-bottom:7px;}
+.bal-detail-row select,.bal-detail-row input[type=number],.bal-detail-row input[type=date]{
+  padding:9px 10px;border:1.5px solid var(--gray3);border-radius:var(--radius-sm);
+  font-size:14px;font-family:inherit;color:var(--text);background:#fff;width:100%;
+}
+.bal-detail-row input[type=number]{text-align:right;}
+.bal-detail-row select:focus,.bal-detail-row input:focus{outline:none;border-color:var(--brand);}
+.bal-row-remove{width:30px;height:30px;border-radius:6px;border:1.5px solid var(--gray3);background:#fff;color:var(--gray4);font-size:17px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+.bal-row-remove:hover{background:#FCEBEB;border-color:#F09595;color:#A32D2D;}
+.btn-add-bal{font-size:12px;padding:6px 14px;border-radius:var(--radius-sm);border:1.5px dashed #B5D4F4;background:#E6F1FB;color:#185FA5;cursor:pointer;font-family:inherit;font-weight:600;margin-top:4px;width:100%;}
+.btn-add-bal:hover{background:#185FA5;color:#fff;border-color:#185FA5;}
+.bal-sum-row{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:6px;font-size:12px;}
+.bal-sum-ok{color:var(--green);font-weight:700;}
+.bal-sum-err{color:var(--accent);font-weight:700;}
+@media(max-width:480px){
+  .bal-detail-hdr{grid-template-columns:1fr 80px 30px;}
+  .bal-detail-hdr .bal-date-lbl{display:none;}
+  .bal-detail-row{grid-template-columns:1fr 80px 30px;}
+  .bal-detail-row input[type=date]{display:none;}
+}
 #done-screen{display:none;text-align:center;padding:1rem 0;}
 .done-icon{width:80px;height:80px;background:var(--green-soft);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 1.25rem;}
 .done-title{font-size:22px;font-weight:700;color:var(--brand);margin-bottom:.5rem;}
@@ -156,40 +179,20 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
           <label>車牌號碼 <span style="color:var(--gray4);font-weight:400;">（選填）</span></label>
           <input type="text" id="d-plate" placeholder="例：ABC-1234" autocomplete="off">
         </div>
-        <div class="field">
-          <label>收款日期 <span class="req">*</span></label>
-          <input type="date" id="d-date">
-        </div>
       </div>
 
       <div id="bal-section">
         <div class="payment-section">
-          <div class="payment-section-title">尾款收款方式</div>
-          <div class="field" style="margin-bottom:8px;">
-            <select id="d-bal-method" onchange="togglePeriod()">
-              <option value="">（選填，全額付清可略過）</option>
-              <option value="現金">現金</option>
-              <option value="匯款/轉帳">匯款／轉帳</option>
-              <option value="刷卡">刷卡</option>
-              <option value="無卡分期">無卡分期</option>
-              <option value="蝦皮">蝦皮</option>
-              <option value="官網">官網</option>
-              <option value="其他">其他</option>
-            </select>
+          <div class="payment-section-title">尾款收款明細</div>
+          <div class="bal-detail-hdr">
+            <span>付款方式</span><span>金額</span><span class="bal-date-lbl">收款日期</span><span></span>
           </div>
-          <div class="period-row" id="period-row">
-            <div class="field" style="margin-bottom:0;">
-              <label>分期期數</label>
-              <select id="d-period">
-                <option value="一次付清">一次付清</option>
-                <option value="3期">3 期</option>
-                <option value="6期">6 期</option>
-                <option value="12期">12 期</option>
-                <option value="24期">24 期</option>
-                <option value="30期">30 期</option>
-                <option value="36期">36 期</option>
-              </select>
-            </div>
+          <div id="bal-detail-list"></div>
+          <button type="button" class="btn-add-bal" onclick="addBalRow()">＋ 新增付款方式</button>
+          <div class="bal-sum-row" id="bal-sum-row" style="display:none;">
+            加總：<span id="bal-sum-val">NT$ 0</span>
+            ／ 尾款 <span id="bal-target-val">NT$ 0</span>
+            <span id="bal-sum-status"></span>
           </div>
         </div>
       </div>
@@ -226,13 +229,61 @@ function setStep(n){
 }
 function showErr(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add('show');}
 function hideErr(id){document.getElementById(id).classList.remove('show');}
-function togglePeriod(){
-  const m=document.getElementById('d-bal-method').value;
-  document.getElementById('period-row').style.display=(m==='刷卡'||m==='無卡分期')?'block':'none';
+
+// ====== 多筆尾款付款明細 ======
+const BAL_METHODS=['現金','匯款/轉帳','信用卡','無卡分期','蝦皮','官網','其他'];
+function _balOpts(sel){return '<option value="">請選擇</option>'+BAL_METHODS.map(m=>`<option value="${m}"${m===sel?' selected':''}>${m}</option>`).join('');}
+let _balRowId=0;
+
+function addBalRow(method,amount,date){
+  _balRowId++;
+  const id=_balRowId;
+  const today=new Date().toISOString().split('T')[0];
+  const div=document.createElement('div');
+  div.className='bal-detail-row'; div.id='bal-r-'+id;
+  div.innerHTML=
+    `<select onchange="calcBalSum()">${_balOpts(method||'')}</select>`+
+    `<input type="number" placeholder="金額" min="0" value="${amount||''}" oninput="calcBalSum()" style="text-align:right;">`+
+    `<input type="date" value="${date||today}" onchange="calcBalSum()">`+
+    `<button type="button" class="bal-row-remove" onclick="removeBalRow(${id})">×</button>`;
+  document.getElementById('bal-detail-list').appendChild(div);
+  calcBalSum();
 }
 
-// 預填今天日期
-document.getElementById('d-date').value=new Date().toISOString().split('T')[0];
+function removeBalRow(id){
+  const el=document.getElementById('bal-r-'+id);
+  if(el) el.remove();
+  calcBalSum();
+}
+
+function getBalDetails(){
+  const rows=document.querySelectorAll('#bal-detail-list .bal-detail-row');
+  const result=[];
+  rows.forEach(row=>{
+    const method=row.querySelector('select').value;
+    const amount=parseFloat(row.querySelector('input[type=number]').value)||0;
+    const date=row.querySelector('input[type=date]').value;
+    result.push({method,amount,date});
+  });
+  return result;
+}
+
+function calcBalSum(){
+  const details=getBalDetails().filter(d=>d.amount>0);
+  const target=parseFloat(orderData?.balance)||0;
+  const sumRow=document.getElementById('bal-sum-row');
+  if(details.length===0||target===0){sumRow.style.display='none';return;}
+  const sum=details.reduce((s,d)=>s+d.amount,0);
+  document.getElementById('bal-sum-val').textContent='NT$ '+Math.round(sum).toLocaleString();
+  document.getElementById('bal-target-val').textContent='NT$ '+Math.round(target).toLocaleString();
+  const status=document.getElementById('bal-sum-status');
+  const ok=Math.abs(sum-target)<1;
+  status.textContent=ok?'✅':'⚠️ 不符'; status.className=ok?'bal-sum-ok':'bal-sum-err';
+  sumRow.style.display='flex';
+}
+
+// 預填今天日期（收款登記區日期改在每筆明細填）
+// document.getElementById('d-date') 已移除，改由各列日期欄位管理
 
 function queryOrder(){
   hideErr('err1');
@@ -262,7 +313,6 @@ function showStep2(data){
   setStep(2);
   window.scrollTo({top:0,behavior:'smooth'});
 
-  // 尾款顯示
   const bal=parseFloat(data.balance)||0;
   const balSection=document.getElementById('balance-section');
   if(bal>0){
@@ -272,12 +322,13 @@ function showStep2(data){
       <div class="sub">請向客人收款後再完成交車</div>
     </div>`;
     document.getElementById('bal-section').style.display='';
+    // 自動帶入一筆，金額預填尾款全額
+    addBalRow('',bal,new Date().toISOString().split('T')[0]);
   } else {
     balSection.innerHTML=`<div class="balance-zero">✅ 此訂單已完款，無需收取尾款</div>`;
     document.getElementById('bal-section').style.display='none';
   }
 
-  // 加購清單
   if(data.addonItems){
     const items=data.addonItems.split('、').filter(Boolean);
     if(items.length>0){
@@ -297,7 +348,6 @@ function showStep2(data){
     }
   }
 
-  // 訂單資料
   document.getElementById('order-info').innerHTML=`
     <div class="order-row"><span class="lbl">車主姓名</span><span class="val">${data.name||'—'}</span></div>
     <div class="order-row"><span class="lbl">手機號碼</span><span class="val">${data.phone||'—'}</span></div>
@@ -325,18 +375,30 @@ function confirmDelivery(){
   const frame=document.getElementById('d-frame').value.trim();
   const motor=document.getElementById('d-motor').value.trim();
   const plate=document.getElementById('d-plate').value.trim();
-  const date=document.getElementById('d-date').value;
-  const balMethod=document.getElementById('d-bal-method')?.value||'';
-  const period=document.getElementById('d-period')?.value||'一次付清';
   const bal=parseFloat(orderData.balance)||0;
 
   if(!frame) return showErr('err2','請填寫車架號碼');
-  if(!date) return showErr('err2','請填寫收款日期');
-  if(bal>0 && !balMethod) return showErr('err2','請選擇尾款付款方式');
+
+  // 尾款驗證
+  if(bal>0){
+    const details=getBalDetails();
+    const filled=details.filter(d=>d.method&&d.amount>0);
+    if(filled.length===0) return showErr('err2','請填寫尾款收款明細');
+    if(filled.some(d=>!d.method)) return showErr('err2','請選擇所有付款明細的付款方式');
+    if(filled.some(d=>!d.date)) return showErr('err2','請填寫收款日期，方便每日收款統計');
+    const sum=filled.reduce((s,d)=>s+d.amount,0);
+    if(Math.abs(sum-bal)>=1) return showErr('err2',`付款明細加總（NT$ ${Math.round(sum).toLocaleString()}）與尾款金額（NT$ ${Math.round(bal).toLocaleString()}）不符`);
+  }
+
+  // 組合送出資料
+  const details=getBalDetails().filter(d=>d.method&&d.amount>0);
+  const balMethod=details.length===0?'':details.length===1?details[0].method:'多元付款';
+  const balDate=details.length>0?details[0].date:'';
+  const balanceDetail=details.length>1?details.map(x=>`${x.method}:${x.amount}:${x.date}`).join('｜'):'';
 
   const msg=bal>0
-    ? `確認交車？\n\n應收尾款：${fmtMoney(bal)}\n付款方式：${balMethod}\n\n請確認已收款後送出。`
-    : `確認交車？\n\n此訂單已完款，確認送出？`;
+    ?`確認交車？\n\n應收尾款：${fmtMoney(bal)}\n付款方式：${balMethod}\n\n請確認已收款後送出。`
+    :`確認交車？\n\n此訂單已完款，確認送出？`;
   if(!confirm(msg)) return;
 
   const btn=document.querySelector('#step2 .btn-green');
@@ -349,8 +411,6 @@ function confirmDelivery(){
       document.getElementById('step2').style.display='none';
       document.getElementById('done-screen').style.display='block';
       setStep(3);
-      const today=new Date();
-      const dateStr=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
       document.getElementById('done-info').innerHTML=`
         <div class="done-info-row"><span class="lbl">車主</span><span class="val">${orderData.name}</span></div>
         <div class="done-info-row"><span class="lbl">車款</span><span class="val">${orderData.model}</span></div>
@@ -358,7 +418,7 @@ function confirmDelivery(){
         ${plate?`<div class="done-info-row"><span class="lbl">車牌</span><span class="val">${plate}</span></div>`:''}
         <div class="done-info-row"><span class="lbl">尾款</span><span class="val">${fmtMoney(bal)}</span></div>
         ${balMethod?`<div class="done-info-row"><span class="lbl">付款方式</span><span class="val">${balMethod}</span></div>`:''}
-        <div class="done-info-row"><span class="lbl">交車日期</span><span class="val">${dateStr}</span></div>`;
+        <div class="done-info-row"><span class="lbl">交車日期</span><span class="val">${balDate||'—'}</span></div>`;
       window.scrollTo({top:0,behavior:'smooth'});
     } else {
       showErr('err2','送出失敗：'+(data.message||'請稍後再試'));
@@ -368,8 +428,9 @@ function confirmDelivery(){
   const script=document.createElement('script');
   script.src=`${SCRIPT_URL}?action=delivery&orderId=${encodeURIComponent(orderData.id)}`
     +`&frame=${encodeURIComponent(frame)}&motor=${encodeURIComponent(motor)}`
-    +`&plate=${encodeURIComponent(plate)}&balDate=${encodeURIComponent(date)}`
-    +`&balMethod=${encodeURIComponent(balMethod)}&balPeriod=${encodeURIComponent(period)}`
+    +`&plate=${encodeURIComponent(plate)}&balDate=${encodeURIComponent(balDate)}`
+    +`&balMethod=${encodeURIComponent(balMethod)}`
+    +`&balanceDetail=${encodeURIComponent(balanceDetail)}`
     +`&callback=${cbName}`;
   script.onerror=()=>{showErr('err2','網路異常，請再試一次');btn.disabled=false;btn.textContent='✅ 確認交車完成';};
   document.body.appendChild(script);
