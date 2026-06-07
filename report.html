@@ -1616,23 +1616,19 @@ function renderTaskCard(r, now) {
 }
 
 function toggleTaskCheck(orderId, field, checked) {
-  // 找到 allData 對應列更新本地狀態
   const r = allData.find(row => getVal(row,'單號') === orderId);
   if (!r) return;
 
-  // 呼叫 Apps Script 寫回 Sheets
-  const cbName = 'cb_' + Date.now();
   const fieldParam = field === '已安裝' ? 'installed' : 'registered';
+  const colName = field;   // 「已安裝」或「已掛牌」，直接用原始欄位名
+  const cbName = 'cb_' + Date.now();
   const url = `${APPS_SCRIPT_URL}?action=updateCheck&orderId=${encodeURIComponent(orderId)}&field=${fieldParam}&value=${checked}&callback=${cbName}`;
 
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (data.status === 'ok') {
-      // 更新本地資料
-      const idx = allData.indexOf(r);
-      const headers = Object.keys(allData[0] || {});
-      // 重新渲染這張卡片
-      renderTasks();
+      r[colName] = checked;   // 先更新本地資料
+      renderTasks();          // 再重渲染，畫面才會保留勾勾
     }
   };
   const script = document.createElement('script');
