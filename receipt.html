@@ -137,10 +137,17 @@ table.info tr:last-child{border-bottom:none;}
       <table class="info">
         <tr><td class="l">電池</td><td class="v" id="r-battery">—</td></tr>
         <tr id="r-batNote-row" style="display:none;"><td class="l">電池備註</td><td class="v" id="r-batNote">—</td></tr>
+        <tr><td class="l">速度設定</td><td class="v" id="r-speed">—</td></tr>
         <tr><td class="l">成交日期</td><td class="v" id="r-date">—</td></tr>
         <tr><td class="l">預計交車</td><td class="v" id="r-delivery">—</td></tr>
         <tr id="r-staff-row" style="display:none;"><td class="l">門市人員</td><td class="v" id="r-staff">—</td></tr>
       </table>
+    </div>
+    <!-- 速度設定提醒（已依客戶要求調整時顯示）-->
+    <div id="r-speed-notice" style="display:none;background:#FFF3E5;border:1.5px solid #F4A261;border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;font-size:13px;color:#854F0B;line-height:1.8;">
+      <div style="font-weight:700;margin-bottom:2px;">✅ 已告知客戶：</div>
+      <div>1. 速度越快越耗電，續航力可能下降。</div>
+      <div>2. 請遵守道路交通法規安全騎乘。</div>
     </div>
 
     <div class="sec">買方資料</div>
@@ -302,6 +309,13 @@ async function loadReceipt(){
       set('r-model',data.model);
       set('r-color',data.color);
       set('r-battery',[data.batType,data.batV,data.batAh].filter(Boolean).join(' '));
+      // 速度設定
+      if(data.speedSetting){
+        set('r-speed', data.speedSetting);
+        if(data.speedSetting === '已依客戶要求調整'){
+          document.getElementById('r-speed-notice').style.display = '';
+        }
+      }
       set('r-date',fmtDate(data.date));
       set('r-delivery',data.delivery?fmtDate(data.delivery):'待確認');
       if(data.modelNote){document.getElementById('r-modelNote-row').style.display='';set('r-modelNote',data.modelNote);}
