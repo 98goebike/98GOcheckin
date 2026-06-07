@@ -611,8 +611,15 @@ const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 window._SCRIPT_URL = APPS_SCRIPT_URL;
 
+// 商品主檔
+const PRODUCT_SHEET_ID  = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
+const PRODUCT_API_URL   = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
+
 let allData = [];
 let currentTab = 'overview';
+let batteryOptions  = [];   // [{ code, label }, ...]
+let chargerOptions  = [];   // [{ code, label }, ...]
+let productMasterLoaded = false;
 
 // ====== LOAD DATA ======
 async function loadData() {  document.getElementById('loading').style.display = 'block';
@@ -636,6 +643,8 @@ async function loadData() {  document.getElementById('loading').style.display = 
     renderAll();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
+    // 讀取商品主檔（只需一次）
+    if (!productMasterLoaded) loadProductMaster();
   } catch(e) {
     document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請確認 Google Sheets 已開放「知道連結的人可以檢視」<br><br>錯誤：${e.message}</div>`;
   }
@@ -1566,11 +1575,26 @@ function renderTaskCard(r, now) {
   const prepStaff    = getVal(r,'處理人員');
   const prepNote     = getVal(r,'內部備註');
 
-  // 備車摘要（只顯示有值的欄位）
-  const prepParts = [prepAssemble, prepBattery, prepStaff].filter(Boolean);
-  const prepSummaryHtml = prepParts.length > 0
+  // 速度設定標籤
+  const speedLabel = speedSetting === '已依客戶要求調整' ? '⚡ 已依客戶要求調整'
+                   : speedSetting === '原廠設定'         ? '⚡ 原廠設定'
+                   : '';
+  const speedHtml = speedLabel
+    ? `<div style="margin:0 1rem .25rem;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;display:inline-block;background:${speedSetting==='已依客戶要求調整'?'#FFF3E5':'#E1F5EE'};color:${speedSetting==='已依客戶要求調整'?'#854F0B':'#085041'};">${speedLabel}</div>`
+    : '';
+
+  // 備車摘要（分行，只顯示有值的欄位）
+  const prepLines = [
+    prepBattery  ? `電池：${prepBattery}`   : '',
+    prepCharger  ? `充電器：${prepCharger}` : '',
+    prepAssemble ? `組裝：${prepAssemble}`  : '',
+    prepStaff    ? `處理：${prepStaff}`     : '',
+  ].filter(Boolean);
+
+  const prepSummaryHtml = prepLines.length > 0
     ? `<div style="padding:.5rem 1rem;border-top:1px solid var(--gray2);background:#E6F1FB;">
-        <span class="prep-summary">📦 備車：${prepParts.join('｜')}</span>
+        <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:4px;">📦 備車資訊</div>
+        ${prepLines.map(l => `<div style="font-size:12px;color:var(--brand);line-height:1.8;">${l}</div>`).join('')}
        </div>`
     : '';
 
@@ -1642,6 +1666,7 @@ function renderTaskCard(r, now) {
         ${addonHtml}
       </div>
     </div>
+    ${speedHtml}
     <div class="task-card-footer">
       <div class="task-customer">
         <strong>${name}</strong>${phone}
@@ -1669,6 +1694,55 @@ function renderTaskCard(r, now) {
   </div>`;
 }
 
+// ====== 商品主檔讀取 ======
+async function loadProductMaster() {
+  try {
+    const res  = await fetch(PRODUCT_API_URL + '&t=' + Date.now(), { cache: 'no-store' });
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols = json.table.cols.map(c => (c.label || c.id).replace(/\s+/g, ''));
+    const rows = (json.table.rows || []).map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        obj[col] = row.c[i] ? (row.c[i].v !== undefined ? String(row.c[i].v).trim() : '') : '';
+      });
+      return obj;
+    });
+
+    batteryOptions = rows
+      .filter(r => r['大分類'] === '電池' && r['是否啟用'] === 'Y')
+      .map(r => ({ code: r['商品編號'], label: r['商品編號'] + '｜' + r['商品名稱'] }))
+      .filter(r => r.code);
+
+    chargerOptions = rows
+      .filter(r => r['大分類'] === '充電器' && r['是否啟用'] === 'Y')
+      .map(r => ({ code: r['商品編號'], label: r['商品編號'] + '｜' + r['商品名稱'] }))
+      .filter(r => r.code);
+
+    productMasterLoaded = true;
+  } catch(e) {
+    console.warn('商品主檔讀取失敗', e);
+    productMasterLoaded = false;
+  }
+}
+
+function fillPrepSelects(currentBattery, currentCharger) {
+  const batSel = document.getElementById('prep-battery');
+  const chgSel = document.getElementById('prep-charger');
+
+  if (!productMasterLoaded) {
+    batSel.innerHTML = '<option value="">商品主檔載入失敗，請稍後再試</option>';
+    chgSel.innerHTML = '<option value="">商品主檔載入失敗，請稍後再試</option>';
+    return;
+  }
+
+  batSel.innerHTML = '<option value="">尚未選擇</option>' +
+    batteryOptions.map(o => `<option value="${o.code}"${o.code===currentBattery?' selected':''}>${o.label}</option>`).join('');
+
+  chgSel.innerHTML = '<option value="">尚未選擇</option>' +
+    chargerOptions.map(o => `<option value="${o.code}"${o.code===currentCharger?' selected':''}>${o.label}</option>`).join('');
+}
+
 // ====== 備車資訊 Modal ======
 let prepOrderId = null;
 
@@ -1680,8 +1754,10 @@ function openPrepModal(orderId) {
   document.getElementById('prep-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
   document.getElementById('prep-modal-sub').textContent  = getVal(r,'車款') + '　' + getVal(r,'顏色') + '　' + orderId;
 
-  document.getElementById('prep-battery').value  = getVal(r,'實際出貨電池編號');
-  document.getElementById('prep-charger').value  = getVal(r,'充電器商品編號');
+  const currentBattery = getVal(r,'實際出貨電池編號');
+  const currentCharger = getVal(r,'充電器商品編號');
+  fillPrepSelects(currentBattery, currentCharger);
+
   document.getElementById('prep-purchase').value = getVal(r,'採購狀態');
   document.getElementById('prep-assemble').value = getVal(r,'組裝狀態');
   document.getElementById('prep-staff').value    = getVal(r,'處理人員');
@@ -1706,8 +1782,8 @@ function submitPrep() {
   btn.disabled = true;
   btn.textContent = '儲存中...';
 
-  const battery  = document.getElementById('prep-battery').value.trim();
-  const charger  = document.getElementById('prep-charger').value.trim();
+  const battery  = document.getElementById('prep-battery').value;
+  const charger  = document.getElementById('prep-charger').value;
   const purchase = document.getElementById('prep-purchase').value;
   const assemble = document.getElementById('prep-assemble').value;
   const staff    = document.getElementById('prep-staff').value.trim();
@@ -1807,13 +1883,17 @@ if (sessionStorage.getItem('98go_auth') === '1') loadData();
       <div class="modal-err" id="prep-err"></div>
       <div class="prep-modal-grid">
         <div class="prep-section-title">🔋 實際出貨商品</div>
-        <div class="prep-field">
-          <label>實際出貨電池編號</label>
-          <input type="text" id="prep-battery" placeholder="例：BAT-TD-60V30ah">
+        <div class="prep-field full">
+          <label>實際出貨電池</label>
+          <select id="prep-battery">
+            <option value="">尚未選擇</option>
+          </select>
         </div>
-        <div class="prep-field">
-          <label>充電器商品編號</label>
-          <input type="text" id="prep-charger" placeholder="例：CHARG-102">
+        <div class="prep-field full">
+          <label>充電器商品</label>
+          <select id="prep-charger">
+            <option value="">尚未選擇</option>
+          </select>
         </div>
         <div class="prep-section-title">📋 採購 ／ 組裝狀態</div>
         <div class="prep-field">
