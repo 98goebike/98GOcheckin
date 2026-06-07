@@ -210,7 +210,39 @@ tr:last-child td{border-bottom:none;}
 .rec-header-labels { display: grid; grid-template-columns: 90px 1fr 1fr 100px 90px 70px 36px; gap: 0; padding: 6px 14px; border-bottom: 1px solid var(--gray2); }
 .rec-header-label { font-size: 10px; font-weight: 700; color: var(--gray4); letter-spacing: .05em; text-transform: uppercase; padding-right: 12px; }
 
-/* ── 任務清單 ── */
+/* ── 備車資訊 ── */
+.prep-summary {
+  font-size:12px; color:var(--brand); font-weight:600;
+  padding:4px 10px; border-radius:99px;
+  background:#E6F1FB; border:1px solid #B5D4F4;
+  white-space:nowrap;
+}
+.btn-prep {
+  padding:5px 12px; border-radius:6px;
+  border:1.5px solid var(--gray3); background:#fff;
+  font-size:12px; font-family:inherit; cursor:pointer;
+  color:var(--gray5); white-space:nowrap; transition:all .15s;
+}
+.btn-prep:hover { background:var(--brand); color:#fff; border-color:var(--brand); }
+
+/* prep modal */
+.prep-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media(max-width:520px){ .prep-modal-grid { grid-template-columns:1fr; } }
+.prep-field { display:flex; flex-direction:column; gap:4px; }
+.prep-field label { font-size:12px; font-weight:600; color:var(--gray5); }
+.prep-field input, .prep-field select, .prep-field textarea {
+  padding:8px 10px; border:1.5px solid var(--gray3);
+  border-radius:6px; font-size:13px; font-family:inherit; color:var(--text);
+}
+.prep-field input:focus, .prep-field select:focus, .prep-field textarea:focus {
+  outline:none; border-color:var(--brand);
+}
+.prep-field.full { grid-column:1/-1; }
+.prep-section-title {
+  grid-column:1/-1; font-size:12px; font-weight:700;
+  color:var(--brand); padding:.5rem 0 .25rem;
+  border-bottom:1px solid var(--gray2); margin-bottom:2px;
+}
 .task-grid { display:flex; flex-direction:column; gap:10px; }
 .task-card {
   background:#fff; border-radius:10px; border:1.5px solid var(--gray3);
@@ -1526,6 +1558,22 @@ function renderTaskCard(r, now) {
   const isRegistered = isChecked(r,'已掛牌') || false;
   const speedSetting = getVal(r,'速度設定');
 
+  // 備車資訊
+  const prepBattery  = getVal(r,'實際出貨電池編號');
+  const prepCharger  = getVal(r,'充電器商品編號');
+  const prepPurchase = getVal(r,'採購狀態');
+  const prepAssemble = getVal(r,'組裝狀態');
+  const prepStaff    = getVal(r,'處理人員');
+  const prepNote     = getVal(r,'內部備註');
+
+  // 備車摘要（只顯示有值的欄位）
+  const prepParts = [prepAssemble, prepBattery, prepStaff].filter(Boolean);
+  const prepSummaryHtml = prepParts.length > 0
+    ? `<div style="padding:.5rem 1rem;border-top:1px solid var(--gray2);background:#E6F1FB;">
+        <span class="prep-summary">📦 備車：${prepParts.join('｜')}</span>
+       </div>`
+    : '';
+
   // 日期判斷
   let cardClass = '', dateClass = 'future-date', dateLabel = '';
   if (raw) {
@@ -1614,7 +1662,108 @@ function renderTaskCard(r, now) {
         </div>
       </div>
     </div>
+    ${prepSummaryHtml}
+    <div style="padding:.5rem 1rem .75rem;border-top:1px solid var(--gray2);background:var(--gray1);display:flex;justify-content:flex-end;">
+      <button class="btn-prep" onclick="openPrepModal('${id}')">📦 編輯備車資訊</button>
+    </div>
   </div>`;
+}
+
+// ====== 備車資訊 Modal ======
+let prepOrderId = null;
+
+function openPrepModal(orderId) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  prepOrderId = orderId;
+
+  document.getElementById('prep-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
+  document.getElementById('prep-modal-sub').textContent  = getVal(r,'車款') + '　' + getVal(r,'顏色') + '　' + orderId;
+
+  document.getElementById('prep-battery').value  = getVal(r,'實際出貨電池編號');
+  document.getElementById('prep-charger').value  = getVal(r,'充電器商品編號');
+  document.getElementById('prep-purchase').value = getVal(r,'採購狀態');
+  document.getElementById('prep-assemble').value = getVal(r,'組裝狀態');
+  document.getElementById('prep-staff').value    = getVal(r,'處理人員');
+  document.getElementById('prep-note').value     = getVal(r,'內部備註');
+
+  document.getElementById('prep-err').classList.remove('show');
+  document.getElementById('prep-submit-btn').disabled = false;
+  document.getElementById('prep-submit-btn').textContent = '✅ 儲存備車資訊';
+  document.getElementById('prep-modal').style.display = 'flex';
+}
+
+function closePrepModal() {
+  document.getElementById('prep-modal').style.display = 'none';
+  prepOrderId = null;
+}
+
+function submitPrep() {
+  if (!prepOrderId) return;
+  const btn = document.getElementById('prep-submit-btn');
+  const errEl = document.getElementById('prep-err');
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = '儲存中...';
+
+  const battery  = document.getElementById('prep-battery').value.trim();
+  const charger  = document.getElementById('prep-charger').value.trim();
+  const purchase = document.getElementById('prep-purchase').value;
+  const assemble = document.getElementById('prep-assemble').value;
+  const staff    = document.getElementById('prep-staff').value.trim();
+  const note     = document.getElementById('prep-note').value.trim();
+
+  const cbName = 'cb_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=updatePrep`
+    + `&orderId=${encodeURIComponent(prepOrderId)}`
+    + `&battery=${encodeURIComponent(battery)}`
+    + `&charger=${encodeURIComponent(charger)}`
+    + `&purchase=${encodeURIComponent(purchase)}`
+    + `&assemble=${encodeURIComponent(assemble)}`
+    + `&staff=${encodeURIComponent(staff)}`
+    + `&note=${encodeURIComponent(note)}`
+    + `&callback=${cbName}`;
+
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      // 更新本地 allData
+      const r = allData.find(row => getVal(row,'單號') === prepOrderId);
+      if (r) {
+        r['實際出貨電池編號'] = battery;
+        r['充電器商品編號']   = charger;
+        r['採購狀態']         = purchase;
+        r['組裝狀態']         = assemble;
+        r['處理人員']         = staff;
+        r['內部備註']         = note;
+      }
+      closePrepModal();
+      renderTasks(); // 即時更新卡片，不整頁重整
+    } else {
+      errEl.textContent = data.message || '儲存失敗，請稍後再試';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '✅ 儲存備車資訊';
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  script.onerror = () => {
+    errEl.textContent = '網路異常，請再試一次';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '✅ 儲存備車資訊';
+  };
+  document.body.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) {
+      delete window[cbName]; script.remove();
+      errEl.textContent = '送出逾時，請再試一次';
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '✅ 儲存備車資訊';
+    }
+  }, 12000);
 }
 
 function toggleTaskCheck(orderId, field, checked) {
@@ -1642,6 +1791,66 @@ function toggleTaskCheck(orderId, field, checked) {
 // 若已在 session 中驗證過，直接載入
 if (sessionStorage.getItem('98go_auth') === '1') loadData();
 </script>
+
+<!-- 備車資訊 Modal -->
+<div id="prep-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closePrepModal()">
+  <div class="modal-box" style="max-width:500px;">
+    <div class="modal-header">
+      <h3>📦 備車資訊</h3>
+      <button class="modal-close" onclick="closePrepModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-order-info">
+        <div class="name" id="prep-modal-name">—</div>
+        <div class="sub" id="prep-modal-sub" style="font-size:12px;color:var(--gray4);margin-top:2px;"></div>
+      </div>
+      <div class="modal-err" id="prep-err"></div>
+      <div class="prep-modal-grid">
+        <div class="prep-section-title">🔋 實際出貨商品</div>
+        <div class="prep-field">
+          <label>實際出貨電池編號</label>
+          <input type="text" id="prep-battery" placeholder="例：BAT-TD-60V30ah">
+        </div>
+        <div class="prep-field">
+          <label>充電器商品編號</label>
+          <input type="text" id="prep-charger" placeholder="例：CHARG-102">
+        </div>
+        <div class="prep-section-title">📋 採購 ／ 組裝狀態</div>
+        <div class="prep-field">
+          <label>採購狀態</label>
+          <select id="prep-purchase">
+            <option value="">請選擇</option>
+            <option value="待採購">待採購</option>
+            <option value="已採購">已採購</option>
+            <option value="已到貨">已到貨</option>
+          </select>
+        </div>
+        <div class="prep-field">
+          <label>組裝狀態</label>
+          <select id="prep-assemble">
+            <option value="">請選擇</option>
+            <option value="待組裝">待組裝</option>
+            <option value="組裝中">組裝中</option>
+            <option value="已完成">已完成</option>
+          </select>
+        </div>
+        <div class="prep-section-title">👤 處理人員 ／ 備註</div>
+        <div class="prep-field">
+          <label>處理人員</label>
+          <input type="text" id="prep-staff" placeholder="處理人員姓名">
+        </div>
+        <div class="prep-field full">
+          <label>內部備註</label>
+          <textarea id="prep-note" rows="2" placeholder="內部備註，不對外顯示" style="resize:vertical;"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" onclick="closePrepModal()">取消</button>
+      <button class="modal-btn-submit" id="prep-submit-btn" onclick="submitPrep()">✅ 儲存備車資訊</button>
+    </div>
+  </div>
+</div>
 
 <!-- 編輯訂單 Modal -->
 <div id="edit-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeEditModal()">
