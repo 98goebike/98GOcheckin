@@ -179,6 +179,11 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
           <label>車牌號碼 <span style="color:var(--gray4);font-weight:400;">（選填）</span></label>
           <input type="text" id="d-plate" placeholder="例：ABC-1234" autocomplete="off">
         </div>
+        <div class="field">
+          <label>實際交車日 <span class="req">*</span></label>
+          <input type="date" id="d-delivery-date">
+          <div class="hint">預設今天，可手動修改</div>
+        </div>
       </div>
 
       <div id="bal-section">
@@ -313,6 +318,9 @@ function showStep2(data){
   setStep(2);
   window.scrollTo({top:0,behavior:'smooth'});
 
+  // 實際交車日預設今天
+  document.getElementById('d-delivery-date').value = new Date().toISOString().split('T')[0];
+
   const bal=parseFloat(data.balance)||0;
   const balSection=document.getElementById('balance-section');
   if(bal>0){
@@ -375,9 +383,11 @@ function confirmDelivery(){
   const frame=document.getElementById('d-frame').value.trim();
   const motor=document.getElementById('d-motor').value.trim();
   const plate=document.getElementById('d-plate').value.trim();
+  const deliveryDate=document.getElementById('d-delivery-date').value || new Date().toISOString().split('T')[0];
   const bal=parseFloat(orderData.balance)||0;
 
   if(!frame) return showErr('err2','請填寫車架號碼');
+  if(!deliveryDate) return showErr('err2','請填寫實際交車日');
 
   // 尾款驗證
   if(bal>0){
@@ -416,6 +426,7 @@ function confirmDelivery(){
         <div class="done-info-row"><span class="lbl">車款</span><span class="val">${orderData.model}</span></div>
         <div class="done-info-row"><span class="lbl">車架號碼</span><span class="val">${frame}</span></div>
         ${plate?`<div class="done-info-row"><span class="lbl">車牌</span><span class="val">${plate}</span></div>`:''}
+        <div class="done-info-row"><span class="lbl">實際交車日</span><span class="val">${deliveryDate}</span></div>
         <div class="done-info-row"><span class="lbl">尾款</span><span class="val">${fmtMoney(bal)}</span></div>
         ${balMethod?`<div class="done-info-row"><span class="lbl">付款方式</span><span class="val">${balMethod}</span></div>`:''}
         <div class="done-info-row"><span class="lbl">交車日期</span><span class="val">${balDate||'—'}</span></div>`;
@@ -431,6 +442,7 @@ function confirmDelivery(){
     +`&plate=${encodeURIComponent(plate)}&balDate=${encodeURIComponent(balDate)}`
     +`&balMethod=${encodeURIComponent(balMethod)}`
     +`&balanceDetail=${encodeURIComponent(balanceDetail)}`
+    +`&deliveryDate=${encodeURIComponent(deliveryDate)}`
     +`&callback=${cbName}`;
   script.onerror=()=>{showErr('err2','網路異常，請再試一次');btn.disabled=false;btn.textContent='✅ 確認交車完成';};
   document.body.appendChild(script);
