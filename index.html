@@ -399,6 +399,39 @@
     animation: spin .6s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ====== 多筆付款明細 ====== */
+  .dep-detail-wrap { margin: 8px 0 4px; }
+  .dep-detail-hdr { display: grid; grid-template-columns: 1fr 100px 140px 30px; gap: 6px; margin-bottom: 3px; }
+  .dep-detail-hdr span { font-size: 10px; color: var(--gray4); font-weight: 600; letter-spacing: .03em; }
+  .dep-detail-row { display: grid; grid-template-columns: 1fr 100px 140px 30px; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .dep-detail-row select, .dep-detail-row input[type=number], .dep-detail-row input[type=date] {
+    padding: 7px 9px; border: 1.5px solid var(--gray3); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit; color: var(--text); background: #fff; width: 100%;
+  }
+  .dep-detail-row select:focus, .dep-detail-row input:focus { outline: none; border-color: var(--brand); }
+  .dep-detail-row input[type=number] { text-align: right; }
+  .dep-row-remove {
+    width: 30px; height: 30px; border-radius: 6px; border: 1.5px solid var(--gray3);
+    background: #fff; color: var(--gray4); font-size: 17px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+  }
+  .dep-row-remove:hover { background: #FCEBEB; border-color: #F09595; color: #A32D2D; }
+  .btn-add-dep {
+    font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm);
+    border: 1.5px dashed #B5D4F4; background: #E6F1FB; color: #185FA5;
+    cursor: pointer; font-family: inherit; font-weight: 600; margin-top: 2px;
+  }
+  .btn-add-dep:hover { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .dep-sum-row { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
+  .dep-sum-ok { color: var(--green); font-weight: 700; }
+  .dep-sum-err { color: var(--accent); font-weight: 700; }
+  @media(max-width:520px) {
+    .dep-detail-hdr { grid-template-columns: 1fr 80px 30px; }
+    .dep-detail-hdr .dep-date-lbl { display: none; }
+    .dep-detail-row { grid-template-columns: 1fr 80px 30px; }
+    .dep-detail-row input[type=date] { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -640,42 +673,41 @@
     <div class="price-section">
       <div class="price-row deposit">
         <label>訂金金額</label>
-        <input type="number" id="p-deposit" placeholder="0" min="0" value="" oninput="calcBalance()">
+        <input type="number" id="p-deposit" placeholder="0" min="0" value="" oninput="calcBalance();onDepositAmountChange()">
       </div>
-      <div class="price-row">
-        <label>訂金支付方式</label>
-        <select id="p-dep-method" onchange="toggleInstallment('dep')">
-          <option value="現金">現金</option>
-          <option value="匯款/轉帳">匯款／轉帳</option>
-          <option value="刷卡">刷卡</option>
-          <option value="無卡分期">無卡分期</option>
-          <option value="蝦皮">蝦皮</option>
-          <option value="官網">官網</option>
-          <option value="其他">其他</option>
-        </select>
+
+      <!-- 訂金付款明細（多筆） -->
+      <div class="dep-detail-wrap" id="dep-detail-wrap">
+        <div style="font-size:12px;font-weight:700;color:var(--gray5);margin-bottom:6px;">訂金付款明細 <span class="req">*</span></div>
+        <div class="dep-detail-hdr">
+          <span>付款方式</span><span>金額</span><span class="dep-date-lbl">付款日期</span><span></span>
+        </div>
+        <div id="dep-detail-list"></div>
+        <button type="button" class="btn-add-dep" onclick="addDepRow()">＋ 新增付款方式</button>
+        <div class="dep-sum-row" id="dep-sum-row" style="display:none;">
+          加總：<span id="dep-sum-val" class="dep-sum-ok">NT$ 0</span>
+          ／ 訂金 <span id="dep-target-val">NT$ 0</span>
+          <span id="dep-sum-status"></span>
+        </div>
       </div>
-      <div class="price-row" id="dep-installment-row" style="display:none;">
-        <label>訂金分期期數</label>
-        <select id="p-dep-period">
-          <option>一次付清</option><option>3 期</option><option>6 期</option><option>12 期</option>
-          <option>18 期</option><option>24 期</option><option>30 期</option><option>36 期</option>
-        </select>
-      </div>
-      <div class="price-row">
-        <label>訂金日期</label>
-        <input type="date" id="p-dep-date" style="width:160px;">
-      </div>
+
+      <!-- 隱藏欄位：相容原有 Apps Script 欄位名稱 -->
+      <input type="hidden" id="p-dep-method">
+      <input type="hidden" id="p-dep-date">
+      <input type="hidden" id="p-dep-period">
+      <div id="dep-installment-row" style="display:none;"></div>
+
       <div class="price-row balance">
         <label>尾款（自動帶出）</label>
         <input type="number" id="p-balance" readonly value="0">
       </div>
       <div class="price-row">
-        <label>尾款支付方式</label>
+        <label>尾款支付方式 <span style="font-size:11px;color:var(--gray4);font-weight:400;">（交車時確認）</span></label>
         <select id="p-bal-method" onchange="toggleInstallment('bal')">
           <option value="">（交車時確認）</option>
           <option value="現金">現金</option>
           <option value="匯款/轉帳">匯款／轉帳</option>
-          <option value="刷卡">刷卡</option>
+          <option value="信用卡">信用卡</option>
           <option value="無卡分期">無卡分期</option>
           <option value="蝦皮">蝦皮</option>
           <option value="官網">官網</option>
@@ -690,11 +722,7 @@
         </select>
       </div>
       <div class="price-row">
-        <label>尾款日期</label>
-        <input type="date" id="p-bal-date" style="width:160px;">
-      </div>
-      <div class="price-row">
-        <label>完款日期</label>
+        <label>完款日期 <span style="font-size:11px;color:var(--gray4);font-weight:400;">（選填）</span></label>
         <input type="date" id="p-full-date" style="width:160px;">
       </div>
     </div>
@@ -1144,11 +1172,12 @@ function generateRemoteLink() {
     bikePrice:    parseFloat(ge('p-bike') || 0),
     discount:     parseFloat(ge('p-discount') || 0),
     deposit:      parseFloat(ge('p-deposit') || 0),
-    depositMethod: ge('p-dep-method'),
+    depositMethod: (() => { const d = getDepDetails().filter(x=>x.method&&x.amount>0); return d.length===1?d[0].method:d.length>1?'多元付款':''; })(),
     balanceMethod: ge('p-bal-method'),
-    depositPeriod: ge('p-dep-period'),
-    depDate:       ge('p-dep-date'),
-    balDate:       ge('p-bal-date'),
+    depositPeriod: '',
+    depDate:       (() => { const d = getDepDetails().filter(x=>x.date); return d.length>0?d[0].date:''; })(),
+    depositDetail: buildDepositDetail(),
+    balDate:       '',
     fullDate:      ge('p-full-date'),
     addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
     addonTotal: addons.reduce((s,a) => s+a.price, 0),
@@ -1284,6 +1313,95 @@ function getAddons() {
   return items;
 }
 
+// ====== 多筆訂金付款明細 ======
+const PAY_METHODS = ['現金','匯款/轉帳','信用卡','無卡分期','蝦皮','官網','其他'];
+function _payOpts(sel) {
+  return PAY_METHODS.map(m => `<option value="${m}"${m===sel?' selected':''}>${m}</option>`).join('');
+}
+let _depRowId = 0;
+
+function addDepRow(method, amount, date) {
+  _depRowId++;
+  const id = _depRowId;
+  const today = new Date().toISOString().split('T')[0];
+  const div = document.createElement('div');
+  div.className = 'dep-detail-row';
+  div.id = 'dep-r-' + id;
+  div.innerHTML =
+    `<select onchange="syncDepFields();calcDepSum()">${_payOpts(method||'')}</select>` +
+    `<input type="number" placeholder="金額" min="0" value="${amount||''}" oninput="calcDepSum()" style="text-align:right;">` +
+    `<input type="date" value="${date||today}" onchange="syncDepFields()">` +
+    `<button type="button" class="dep-row-remove" onclick="removeDepRow(${id})">×</button>`;
+  document.getElementById('dep-detail-list').appendChild(div);
+  syncDepFields();
+  calcDepSum();
+}
+
+function removeDepRow(id) {
+  const el = document.getElementById('dep-r-' + id);
+  if (el) el.remove();
+  syncDepFields();
+  calcDepSum();
+}
+
+function getDepDetails() {
+  const rows = document.querySelectorAll('#dep-detail-list .dep-detail-row');
+  const result = [];
+  rows.forEach(row => {
+    const method = row.querySelector('select').value;
+    const amount = parseFloat(row.querySelector('input[type=number]').value) || 0;
+    const date   = row.querySelector('input[type=date]').value;
+    result.push({ method, amount, date });
+  });
+  return result;
+}
+
+// 同步隱藏欄位（相容 Apps Script 原有欄位）
+function syncDepFields() {
+  const details = getDepDetails();
+  if (details.length === 0) {
+    document.getElementById('p-dep-method').value = '';
+    document.getElementById('p-dep-date').value   = '';
+    return;
+  }
+  if (details.length === 1) {
+    document.getElementById('p-dep-method').value = details[0].method;
+    document.getElementById('p-dep-date').value   = details[0].date;
+  } else {
+    document.getElementById('p-dep-method').value = '多元付款';
+    document.getElementById('p-dep-date').value   = details[0].date || '';
+  }
+}
+
+function calcDepSum() {
+  const details = getDepDetails().filter(d => d.amount > 0);
+  const target  = parseFloat(document.getElementById('p-deposit').value) || 0;
+  const sumRow  = document.getElementById('dep-sum-row');
+  if (details.length === 0 || target === 0) { sumRow.style.display = 'none'; return; }
+  const sum = details.reduce((s, d) => s + d.amount, 0);
+  document.getElementById('dep-sum-val').textContent    = 'NT$ ' + Math.round(sum).toLocaleString();
+  document.getElementById('dep-target-val').textContent = 'NT$ ' + Math.round(target).toLocaleString();
+  const status = document.getElementById('dep-sum-status');
+  const ok = Math.abs(sum - target) < 1;
+  status.textContent = ok ? '✅' : '⚠️ 不符';
+  status.className   = ok ? 'dep-sum-ok' : 'dep-sum-err';
+  sumRow.style.display = 'flex';
+}
+
+function onDepositAmountChange() {
+  const dep = parseFloat(document.getElementById('p-deposit').value) || 0;
+  const rows = document.querySelectorAll('#dep-detail-list .dep-detail-row');
+  if (dep > 0 && rows.length === 0) addDepRow();
+  calcDepSum();
+}
+
+// 訂金付款明細字串（寫入第56欄）
+function buildDepositDetail() {
+  const details = getDepDetails().filter(d => d.method && d.amount > 0);
+  if (details.length <= 1) return '';
+  return details.map(d => `${d.method}:${d.amount}:${d.date}`).join('｜');
+}
+
 // ====== CALC ======
 function calcAll() {
   const addons = getAddons();
@@ -1304,7 +1422,8 @@ function calcBalance() {
 function toggleInstallment(type) {
   const sel = document.getElementById('p-' + type + '-method');
   const row = document.getElementById(type + '-installment-row');
-  const show = sel.value === '刷卡' || sel.value === '無卡分期';
+  if (!sel || !row) return;
+  const show = sel.value === '信用卡' || sel.value === '無卡分期';
   row.style.display = show ? 'flex' : 'none';
 }
 function updateAddonSummary(addons, total) {
@@ -1356,6 +1475,16 @@ function validateStep(s) {
   }
   if (s === 2) {
     if (!document.getElementById('p-bike').value) return fail('請填寫車輛售價');
+    const dep = parseFloat(document.getElementById('p-deposit').value) || 0;
+    if (dep > 0) {
+      const details = getDepDetails();
+      if (details.length === 0) return fail('訂金金額 > 0，請至少填寫一筆付款明細');
+      if (details.some(d => !d.method)) return fail('請選擇所有付款明細的付款方式');
+      if (details.some(d => !d.date)) return fail('請填寫訂金日期，方便每日收款統計');
+      if (details.some(d => d.amount <= 0)) return fail('請填寫所有付款明細的金額');
+      const sum = details.reduce((s, d) => s + d.amount, 0);
+      if (Math.abs(sum - dep) >= 1) return fail(`訂金付款明細加總（NT$ ${Math.round(sum).toLocaleString()}）與訂金金額（NT$ ${Math.round(dep).toLocaleString()}）不符，請確認`);
+    }
   }
   if (s === 3) {
     if (!v('s1-name') || !v('s1-id') || !v('s1-phone') || !v('s1-addr'))
@@ -1464,14 +1593,15 @@ async function submitForm() {
     bikePrice: parseFloat(document.getElementById('p-bike').value) || 0,
     discount: parseFloat(document.getElementById('p-discount').value) || 0,
     total, deposit: dep,
-    depositMethod: document.getElementById('p-dep-method').value,
-    depositPeriod: document.getElementById('dep-installment-row').style.display !== 'none' ? document.getElementById('p-dep-period').value : '',
+    depositMethod: (() => { const d = getDepDetails().filter(x=>x.method&&x.amount>0); return d.length===1?d[0].method:d.length>1?'多元付款':''; })(),
+    depositPeriod: '',
+    depDate: (() => { const d = getDepDetails().filter(x=>x.date); return d.length>0?d[0].date:''; })(),
+    depositDetail: buildDepositDetail(),
     balance: bal,
     balanceMethod: document.getElementById('p-bal-method').value,
     balancePeriod: document.getElementById('bal-installment-row').style.display !== 'none' ? document.getElementById('p-bal-period').value : '',
     fullDate: document.getElementById('p-full-date').value,
-    depDate: document.getElementById('p-dep-date').value,
-    balDate: document.getElementById('p-bal-date').value,
+    balDate: '',
     warrantyEnd: warrantyEnd.toISOString().split('T')[0],
     chkWarranty: '已確認', chkUsage: '已確認', chkFinal: '已確認',
     sigImg
