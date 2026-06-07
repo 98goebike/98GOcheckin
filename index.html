@@ -1812,39 +1812,49 @@ function buildSummary() {
   const total = parseFloat(document.getElementById('p-total').value) || 0;
   const dep = parseFloat(document.getElementById('p-deposit').value) || 0;
   const bal = parseFloat(document.getElementById('p-balance').value) || 0;
+  const safeV = id => { const el = document.getElementById(id); return el ? el.value.trim() : '—'; };
   const items = [
-    ['車主姓名', v('s1-name')], ['手機號碼', v('s1-phone')],
-    ['身分證字號', v('s1-id')], ['性別', document.querySelector('input[name="gender"]:checked')?.value || '—'],
-    ['通訊地址', v('s1-addr') || '—'],
-    ['車款', document.getElementById('s1-model').value], ['顏色', document.getElementById('s1-color').value],
-    ['電池規格', document.getElementById('s1-battery-spec').value || (document.getElementById('s1-batv').value + ' ' + document.getElementById('s1-batah').value)],
-    ['車架號碼', v('s1-frame') || '—'], ['成交日期', v('s1-date')], ['預計交車日', v('s1-delivery') || '—'],
+    ['車主姓名', safeV('s1-name')], ['手機號碼', safeV('s1-phone')],
+    ['身分證字號', safeV('s1-id')], ['性別', document.querySelector('input[name="gender"]:checked')?.value || '—'],
+    ['通訊地址', safeV('s1-addr') || '—'],
+    ['車種類型', document.getElementById('s1-vehicle-type')?.value || '—'],
+    ['車款', document.getElementById('s1-model')?.value || '—'],
+    ['顏色', document.getElementById('s1-color')?.value || '—'],
+    ['電池規格', document.getElementById('s1-battery-spec')?.value || '—'],
+    ['成交日期', safeV('s1-date')], ['預計交車日', safeV('s1-delivery') || '—'],
+    ['業務', safeV('s1-staff') || '—'],
     ['車輛售價', 'NT$ ' + (parseFloat(document.getElementById('p-bike').value)||0).toLocaleString()],
     ['折扣', 'NT$ ' + (parseFloat(document.getElementById('p-discount').value)||0).toLocaleString()],
     ['訂金', 'NT$ ' + dep.toLocaleString()], ['尾款', 'NT$ ' + bal.toLocaleString()],
   ];
   const grid = document.getElementById('summary-grid');
-  grid.innerHTML = items.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val}</div></div>`).join('');
+  if (!grid) return;
+  grid.innerHTML = items.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val || '—'}</div></div>`).join('');
   grid.innerHTML += `<div class="summary-item highlight" style="grid-column:span 2"><div class="s-label">總金額</div><div class="s-val">NT$ ${total.toLocaleString()}</div></div>`;
 }
 
 // ====== SIGNATURE ======
 function initSig() {
-  sigCanvas = document.getElementById('sigpad');
-  sigCanvas.width = sigCanvas.offsetWidth || 600;
-  sigCtx = sigCanvas.getContext('2d');
-  sigCtx.lineWidth = 2.5; sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round'; sigCtx.strokeStyle = '#1a1a1a';
-  const getPos = (e, touch = false) => {
-    const r = sigCanvas.getBoundingClientRect();
-    const src = touch ? e.touches[0] : e;
-    return { x: src.clientX - r.left, y: src.clientY - r.top };
-  };
-  sigCanvas.onmousedown = e => { drawing = true; sigCtx.beginPath(); const p = getPos(e); sigCtx.moveTo(p.x, p.y); };
-  sigCanvas.onmousemove = e => { if (!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); };
-  sigCanvas.onmouseup = sigCanvas.onmouseleave = () => drawing = false;
-  sigCanvas.ontouchstart = e => { e.preventDefault(); drawing = true; sigCtx.beginPath(); const p = getPos(e, true); sigCtx.moveTo(p.x, p.y); };
-  sigCanvas.ontouchmove = e => { e.preventDefault(); if (!drawing) return; const p = getPos(e, true); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); };
-  sigCanvas.ontouchend = () => drawing = false;
+  // 用 setTimeout 確保 step6 display 切換後 canvas 有正確尺寸
+  setTimeout(() => {
+    sigCanvas = document.getElementById('sigpad');
+    if (!sigCanvas) return;
+    sigCanvas.width = sigCanvas.offsetWidth || sigCanvas.parentElement?.offsetWidth || 600;
+    sigCanvas.height = 200;
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.lineWidth = 2.5; sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round'; sigCtx.strokeStyle = '#1a1a1a';
+    const getPos = (e, touch = false) => {
+      const r = sigCanvas.getBoundingClientRect();
+      const src = touch ? e.touches[0] : e;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    };
+    sigCanvas.onmousedown = e => { drawing = true; sigCtx.beginPath(); const p = getPos(e); sigCtx.moveTo(p.x, p.y); };
+    sigCanvas.onmousemove = e => { if (!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); };
+    sigCanvas.onmouseup = sigCanvas.onmouseleave = () => drawing = false;
+    sigCanvas.ontouchstart = e => { e.preventDefault(); drawing = true; sigCtx.beginPath(); const p = getPos(e, true); sigCtx.moveTo(p.x, p.y); };
+    sigCanvas.ontouchmove = e => { e.preventDefault(); if (!drawing) return; const p = getPos(e, true); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); };
+    sigCanvas.ontouchend = () => drawing = false;
+  }, 50);
 }
 function clearSig() { if (sigCtx) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); }
 function isSigEmpty() {
@@ -1854,7 +1864,7 @@ function isSigEmpty() {
 
 // ====== SUBMIT ======
 async function submitForm() {
-  const errEl = document.getElementById('err5');
+  const errEl = document.getElementById('err6');
   errEl.classList.remove('show');
   if (!document.getElementById('chk6').checked) { errEl.textContent = '請勾選確認所有資料正確無誤'; errEl.classList.add('show'); return; }
   if (isSigEmpty()) { errEl.textContent = '請完成電子簽名'; errEl.classList.add('show'); return; }
@@ -1889,13 +1899,12 @@ async function submitForm() {
     modelNote:   v('s1-model-note'),
     color:       document.getElementById('s1-color').value,
     vehicleCode: document.getElementById('s1-vehicle-code').value,
-    // 電池：從隱藏欄位讀取（由 onBatterySpecChange 填入）
     batterySalesSpec: document.getElementById('s1-battery-spec').value,
     batType: document.getElementById('s1-battype').value,
     batV:    document.getElementById('s1-batv').value,
     batAh:   document.getElementById('s1-batah').value,
     batNote: document.getElementById('s1-bat-note').value,
-    frame: v('s1-frame'), motor: v('s1-motor'),
+    frame: '', motor: '',
     date: v('s1-date'), delivery: v('s1-delivery'), staff: v('s1-staff'),
     addons,
     addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
