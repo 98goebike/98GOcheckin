@@ -829,49 +829,52 @@ function renderOverview() {
   const fromVal = document.getElementById('cf-from')?.value;
   const toVal = document.getElementById('cf-to')?.value;
 
+  // ── 金流篩選（依訂金日期 / 尾款日期，不動）──
   const filtered = allData.filter(r => {
     const d = getDate(r, '成交日期');
     if (!d || isNaN(d.getTime())) return false;
-    if (fromVal) {
-      const from = parseLocalDate(fromVal);
-      if (d < from) return false;
-    }
-    if (toVal) {
-      const to = parseLocalDate(toVal, true);
-      if (d > to) return false;
-    }
+    if (fromVal) { const from = parseLocalDate(fromVal); if (d < from) return false; }
+    if (toVal)   { const to   = parseLocalDate(toVal, true); if (d > to) return false; }
     return true;
   });
 
-  const thisMonth = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
-  });
-  const today = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    if (!d) return false;
-    const t = new Date(); 
-    return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
-  });
-  const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const todayRevenue = today.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const yearRevenue = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    return d && d.getFullYear()===now.getFullYear();
-  }).reduce((s,r) => s+getNum(r,'總金額'),0);
+  // ── 實際交車日取得邏輯（業績依據）──
+  // 優先用「實際交車日」；空白且有完款日期 → 用完款日期（歷史資料過渡）；兩者都沒有 → null（不計入業績）
+  const getDelivDate = r => {
+    const d1 = getDate(r, '實際交車日');
+    if (d1 && !isNaN(d1.getTime())) return d1;
+    const d2 = getDate(r, '完款日期');
+    if (d2 && !isNaN(d2.getTime())) return d2;
+    return null;
+  };
 
-  // 今日現金總額（支援多筆明細）
-  const today2 = new Date();
-  const isToday = d => d && d.getFullYear()===today2.getFullYear() && d.getMonth()===today2.getMonth() && d.getDate()===today2.getDate();
+  // ── 業績統計（依實際交車日）──
+  const isDateToday = d => d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+  const isDateThisMonth = d => d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  const isDateThisYear  = d => d && d.getFullYear()===now.getFullYear();
+
+  const todayDelivered  = allData.filter(r => isDateToday(getDelivDate(r)));
+  const monthDelivered  = allData.filter(r => isDateThisMonth(getDelivDate(r)));
+  const yearDelivered   = allData.filter(r => isDateThisYear(getDelivDate(r)));
+  const todayRevenue    = todayDelivered.reduce((s,r) => s+getNum(r,'總金額'), 0);
+  const monthRevenue    = monthDelivered.reduce((s,r) => s+getNum(r,'總金額'), 0);
+  const yearRevenue     = yearDelivered.reduce((s,r)  => s+getNum(r,'總金額'), 0);
+  const avgRevenue      = monthDelivered.length ? monthRevenue / monthDelivered.length : 0;
+
+  // ── 接單統計（依成交日期，保留查閱用途）──
+  const todayOrdered = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return isDateToday(d);
+  });
+
+  // ── 今日現金（金流，依訂金日期 / 尾款日期）──
+  const isToday = d => isDateToday(d);
   const todayCash = allData.reduce((s,r) => {
     let cash = 0;
-    // 訂金：逐筆比對日期
     getDepDetailList(r).forEach(d => {
       const dd = d.date ? new Date(d.date) : getDate(r,'成交日期');
       if (isToday(dd) && d.method==='現金') cash += d.amount;
     });
-    // 尾款：用尾款收款日期判斷
     getBalDetailList(r).forEach(d => {
       const dd = d.date ? new Date(d.date) : getDate(r,'尾款收款日期');
       if (isToday(dd) && d.method==='現金') cash += d.amount;
@@ -880,11 +883,31 @@ function renderOverview() {
   }, 0);
 
   document.getElementById('metrics-overview').innerHTML = `
-    <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
-    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
-    <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
-    <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
-    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
+    <div class="metric accent">
+      <div class="lbl">今日交車</div>
+      <div class="val">${todayDelivered.length} 台</div>
+      <div class="sub">今日營收 ${fmtMoney(todayRevenue)}｜今日接單 ${todayOrdered.length} 筆</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">本月營收</div>
+      <div class="val">${fmtMoney(monthRevenue)}</div>
+      <div class="sub">本月交車 ${monthDelivered.length} 台</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">年度營收</div>
+      <div class="val">${fmtMoney(yearRevenue)}</div>
+      <div class="sub">${now.getFullYear()} 年・交車 ${yearDelivered.length} 台</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">平均客單價</div>
+      <div class="val">${fmtMoney(avgRevenue)}</div>
+      <div class="sub">本月交車均價</div>
+    </div>
+    <div class="metric" style="border:2px solid var(--green);background:var(--green);">
+      <div class="lbl" style="color:rgba(255,255,255,.7);">今日現金收款</div>
+      <div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div>
+      <div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div>
+    </div>
   `;
 
   // 現金流表格（支援多筆明細、信用卡、歷史刷卡相容）
@@ -958,7 +981,15 @@ function renderOverview() {
 // ====== SALES RANKING ======
 function renderSales() {
   const ym = document.getElementById('sales-month')?.value;
-  const data = ym ? allData.filter(r => getYM(r)===ym) : allData;
+  // 銷售排行依實際交車日（歷史資料以完款日期過渡）
+  const getDelivYM = r => {
+    const d1 = getDate(r,'實際交車日');
+    if (d1 && !isNaN(d1.getTime())) return d1.getFullYear()+'-'+String(d1.getMonth()+1).padStart(2,'0');
+    const d2 = getDate(r,'完款日期');
+    if (d2 && !isNaN(d2.getTime())) return d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0');
+    return '';
+  };
+  const data = ym ? allData.filter(r => getDelivYM(r)===ym) : allData.filter(r => getDelivYM(r)!=='');
 
   renderBarsFromData('vehicletype-bars', data, '車種類型', '#E63946', v => v+' 筆');
   renderBarsFromData('model-bars', data, '車款', '#2B2D42', v => v+' 筆');
@@ -1060,7 +1091,10 @@ function renderPurchase() {
 
   const statusFilter = document.getElementById('purchase-status')?.value || 'all';
   const filtered = allData.filter(r => {
-    const d = getDate(r, '成交日期');
+    // 採購計算改用實際交車日（歷史資料以完款日期過渡）
+    const d1 = getDate(r, '實際交車日');
+    const d2 = getDate(r, '完款日期');
+    const d  = (d1 && !isNaN(d1.getTime())) ? d1 : (d2 && !isNaN(d2.getTime())) ? d2 : null;
     if (!d) return false;
     if (fromD && d < fromD) return false;
     if (toD && d > toD) return false;
