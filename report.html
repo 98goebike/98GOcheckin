@@ -681,6 +681,40 @@ function fmtOrderId(raw) {
 function fmtMoney(n) {
   return 'NT$ ' + Math.round(n).toLocaleString();
 }
+
+// ====== 多筆付款明細解析 ======
+// 格式：「現金:5000:2025-06-01｜信用卡:10000:2025-06-01」
+function parsePayDetail(str) {
+  if (!str) return [];
+  return str.split('｜').map(seg => {
+    const parts = seg.split(':');
+    return { method: parts[0]?.trim()||'', amount: parseFloat(parts[1])||0, date: parts[2]?.trim()||'' };
+  }).filter(d => d.method && d.amount > 0);
+}
+// 標準化付款方式（歷史資料「刷卡」→「信用卡」）
+function normMethod(m) { return (!m)?'': m==='刷卡'?'信用卡':m; }
+
+// 取訂金付款明細列表（單筆 or 多筆）
+function getDepDetailList(r) {
+  const method = normMethod(getVal(r,'訂金支付方式'));
+  const dep    = getNum(r,'訂金');
+  const detail = getVal(r,'訂金付款明細');
+  const date   = getVal(r,'訂金日期');
+  if (method==='多元付款' && detail) return parsePayDetail(detail);
+  if (dep>0 && method) return [{method, amount:dep, date}];
+  return [];
+}
+// 取尾款付款明細列表（單筆 or 多筆，需尾款已收）
+function getBalDetailList(r) {
+  if (!isChecked(r,'尾款已收')) return [];
+  const method = normMethod(getVal(r,'尾款支付方式'));
+  const bal    = getNum(r,'尾款');
+  const detail = getVal(r,'尾款付款明細');
+  const date   = getVal(r,'尾款收款日期');
+  if (method==='多元付款' && detail) return parsePayDetail(detail);
+  if (bal>0 && method) return [{method, amount:bal, date}];
+  return [];
+}
 function getYM(row) {
   const d = getDate(row, '成交日期');
   if (!d || isNaN(d.getTime())) return '';
@@ -786,17 +820,21 @@ function renderOverview() {
     return d && d.getFullYear()===now.getFullYear();
   }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
-  // 今日現金總額
+  // 今日現金總額（支援多筆明細）
   const today2 = new Date();
   const isToday = d => d && d.getFullYear()===today2.getFullYear() && d.getMonth()===today2.getMonth() && d.getDate()===today2.getDate();
   const todayCash = allData.reduce((s,r) => {
     let cash = 0;
-    // 訂金：用成交日期判斷
-    const depDate = getDate(r,'成交日期');
-    if (isToday(depDate) && getVal(r,'訂金支付方式')==='現金') cash += getNum(r,'訂金');
-    // 尾款：用尾款收款日期判斷（AP欄）
-    const balDate = getDate(r,'尾款收款日期');
-    if (isToday(balDate) && getVal(r,'尾款支付方式')==='現金') cash += getNum(r,'尾款');
+    // 訂金：逐筆比對日期
+    getDepDetailList(r).forEach(d => {
+      const dd = d.date ? new Date(d.date) : getDate(r,'成交日期');
+      if (isToday(dd) && d.method==='現金') cash += d.amount;
+    });
+    // 尾款：用尾款收款日期判斷
+    getBalDetailList(r).forEach(d => {
+      const dd = d.date ? new Date(d.date) : getDate(r,'尾款收款日期');
+      if (isToday(dd) && d.method==='現金') cash += d.amount;
+    });
     return s + cash;
   }, 0);
 
@@ -808,36 +846,42 @@ function renderOverview() {
     <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
   `;
 
-  // 現金流表格
-  const methods = ['現金','匯款/轉帳','刷卡','無卡分期'];
+  // 現金流表格（支援多筆明細、信用卡、歷史刷卡相容）
   const cfMap = {};
-  methods.forEach(m => cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0});
+  const addCF = (method, amount, isbal) => {
+    const m = normMethod(method) || '（未填）';
+    if (!cfMap[m]) cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0};
+    if (!isbal) { cfMap[m].depCount++; cfMap[m].dep += amount; }
+    else        { cfMap[m].balCount++; cfMap[m].bal += amount; }
+  };
+
   filtered.forEach(r => {
-    const dm = getVal(r,'訂金支付方式') || '現金';
-    const bm = getVal(r,'尾款支付方式');
-    const dep = getNum(r,'訂金');
-    const bal = getNum(r,'尾款');
-    if (!cfMap[dm]) cfMap[dm] = {depCount:0,dep:0,balCount:0,bal:0};
-    if (!cfMap[bm]) cfMap[bm] = {depCount:0,dep:0,balCount:0,bal:0};
-    if (dep > 0) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
-    // 尾款只有「尾款已收✅」才計入現金流
-    if (bal > 0 && isChecked(r,'尾款已收')) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
+    getDepDetailList(r).forEach(d => addCF(d.method, d.amount, false));
+    getBalDetailList(r).forEach(d => addCF(d.method, d.amount, true));
   });
 
-  const colorMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
+  const colorMap = {
+    '現金':'badge-green','匯款/轉帳':'badge-blue',
+    '信用卡':'badge-amber','刷卡':'badge-amber',
+    '無卡分期':'badge-purple','蝦皮':'badge-blue',
+    '官網':'badge-blue','其他':'badge-green','（未填）':'badge-green'
+  };
   let totalDep=0, totalBal=0, totalDepCount=0, totalBalCount=0;
-  const rows = Object.entries(cfMap).filter(([,v]) => v.dep+v.bal > 0).map(([method, v]) => {
-    totalDep += v.dep; totalBal += v.bal;
-    totalDepCount += v.depCount; totalBalCount += v.balCount;
-    return `<tr>
-      <td><span class="badge ${colorMap[method]||'badge-green'}">${method}</span></td>
-      <td style="text-align:right;color:var(--gray5);">${v.depCount} 筆</td>
-      <td style="text-align:right;font-weight:500;">${fmtMoney(v.dep)}</td>
-      <td style="text-align:right;color:var(--gray5);">${v.balCount} 筆</td>
-      <td style="text-align:right;font-weight:500;">${fmtMoney(v.bal)}</td>
-      <td style="text-align:right;font-weight:700;color:var(--brand);">${fmtMoney(v.dep+v.bal)}</td>
-    </tr>`;
-  }).join('');
+  const rows = Object.entries(cfMap)
+    .sort((a,b) => (b[1].dep+b[1].bal)-(a[1].dep+a[1].bal))
+    .filter(([,v]) => v.dep+v.bal > 0)
+    .map(([method, v]) => {
+      totalDep += v.dep; totalBal += v.bal;
+      totalDepCount += v.depCount; totalBalCount += v.balCount;
+      return `<tr>
+        <td><span class="badge ${colorMap[method]||'badge-green'}">${method}</span></td>
+        <td style="text-align:right;color:var(--gray5);">${v.depCount} 筆</td>
+        <td style="text-align:right;font-weight:500;">${fmtMoney(v.dep)}</td>
+        <td style="text-align:right;color:var(--gray5);">${v.balCount} 筆</td>
+        <td style="text-align:right;font-weight:500;">${fmtMoney(v.bal)}</td>
+        <td style="text-align:right;font-weight:700;color:var(--brand);">${fmtMoney(v.dep+v.bal)}</td>
+      </tr>`;
+    }).join('');
 
   document.getElementById('tbody-cashflow').innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray4);padding:2rem;">此區間無資料</td></tr>`;
   // 檢查尾款已收但沒填收款日期的訂單
@@ -880,15 +924,11 @@ function renderSales() {
   renderBarsFromData2('battery-bars', data, '電池規格(V)', '電池規格(ah)', '#1D9E75', v => v+' 筆');
   renderBarsFromData('color-bars', data, '顏色', '#534AB7', v => v+' 筆');
 
-  // 付款方式：依金額統計（空白的尾款方式不納入，避免誤算）
+  // 付款方式：依金額統計，支援多筆明細，歷史「刷卡」合併至「信用卡」
   const pmMap = {};
   data.forEach(r => {
-    const dm = getVal(r,'訂金支付方式') || '現金';
-    const bm = getVal(r,'尾款支付方式');
-    const dep = getNum(r,'訂金');
-    const bal = getNum(r,'尾款');
-    if (dep > 0) { pmMap[dm] = (pmMap[dm]||0) + dep; }
-    if (bal > 0 && bm) { pmMap[bm] = (pmMap[bm]||0) + bal; }
+    getDepDetailList(r).forEach(d => { pmMap[d.method] = (pmMap[d.method]||0) + d.amount; });
+    getBalDetailList(r).forEach(d => { pmMap[d.method] = (pmMap[d.method]||0) + d.amount; });
   });
   const pmEntries = Object.entries(pmMap).sort((a,b)=>b[1]-a[1]);
   const pmMax = pmEntries[0]?.[1] || 1;
