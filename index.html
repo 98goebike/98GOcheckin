@@ -555,49 +555,56 @@
       此區由門市人員協助填寫
     </div>
     <div class="card-title"><div class="icon">車</div>車輛資料</div>
+
+    <!-- 商品主檔讀取狀態提示 -->
+    <div id="product-loading-msg" style="background:#E6F1FB;border-radius:6px;padding:.5rem 1rem;margin-bottom:10px;font-size:12px;color:#185FA5;">
+      ⏳ 載入商品資料中...
+    </div>
+    <div id="product-error-msg" style="background:#fff0f1;border-radius:6px;padding:.5rem 1rem;margin-bottom:10px;font-size:12px;color:#A32D2D;display:none;">
+      ⚠️ 商品資料載入失敗，請重新整理頁面
+    </div>
+
+    <!-- 車輛三層動態選單 -->
     <div class="field" style="margin-bottom:10px;">
       <label>車種類型<span class="req">*</span></label>
-      <select id="s1-vehicle-type">
-        <option value="">請選擇車種類型</option>
-        <option value="電動輔助自行車">電動輔助自行車</option>
-        <option value="微型電動二輪車">微型電動二輪車</option>
-        <option value="電動自行車(三輪車、腳踏車)">電動自行車（三輪車、腳踏車）</option>
+      <select id="s1-vehicle-type" onchange="onVehicleTypeChange()" disabled>
+        <option value="">載入中...</option>
       </select>
     </div>
     <div class="grid2">
-      <div class="field"><label>車款<span class="req">*</span></label><input type="text" id="s1-model" placeholder="請輸入車款名稱"></div>
-      <div class="field"><label>顏色</label><input type="text" id="s1-color" placeholder="請輸入顏色"></div>
+      <div class="field">
+        <label>型號<span class="req">*</span></label>
+        <select id="s1-model" onchange="onModelChange()" disabled>
+          <option value="">請先選車種類型</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>顏色<span class="req">*</span></label>
+        <select id="s1-color" onchange="onColorChange()" disabled>
+          <option value="">請先選型號</option>
+        </select>
+      </div>
     </div>
+    <!-- 車輛商品編號（隱藏，自動帶出） -->
+    <input type="hidden" id="s1-vehicle-code">
+
     <div class="field" style="margin-top:10px;">
       <label>車輛備註</label>
       <input type="text" id="s1-model-note" placeholder="例：客人指定加裝後座架、特殊烤漆...">
     </div>
+
+    <!-- 電池單一下拉 -->
     <div class="field" style="margin-top:10px;">
-      <label>電池類型</label>
-      <select id="s1-battype">
-        <option>鋰電池</option>
-        <option>鉛酸電池</option>
+      <label>電池銷售規格<span class="req">*</span></label>
+      <select id="s1-battery-spec" onchange="onBatterySpecChange()" disabled>
+        <option value="">載入中...</option>
       </select>
     </div>
-    <div class="grid2" style="margin-top:10px;">
-      <div class="field"><label>電池規格 (V)</label>
-        <select id="s1-batv">
-          <option>48V</option><option>60V</option><option>72V</option>
-        </select>
-      </div>
-      <div class="field"><label>電池規格 (ah)</label>
-        <select id="s1-batah">
-          <option>12ah</option><option>15ah</option><option>20ah</option>
-          <option>24ah</option><option>25ah</option><option>30ah</option><option>32ah</option>
-          <option>33ah</option><option>35ah</option><option>40ah</option>
-          <option>45ah</option><option>50ah</option>
-        </select>
-      </div>
-    </div>
-    <div class="field" style="margin-top:10px;">
-      <label>電池備註</label>
-      <input type="text" id="s1-bat-note" placeholder="例：客人指定升級電池容量、特殊規格...">
-    </div>
+    <!-- 電池拆解隱藏欄位（維持原有欄位名稱，保持報表相容） -->
+    <input type="hidden" id="s1-battype">
+    <input type="hidden" id="s1-batv">
+    <input type="hidden" id="s1-batah">
+    <input type="hidden" id="s1-bat-note">
     <div class="grid2" style="margin-top:10px;">
       <div class="field"><label>車架號碼</label><input type="text" id="s1-frame" placeholder="EB2024XXXXXX"></div>
       <div class="field"><label>馬達編號</label><input type="text" id="s1-motor" placeholder="MT2024XXXXXX"></div>
@@ -985,6 +992,11 @@
 // 將下方的 SCRIPT_URL 替換成你的 Google Apps Script 部署網址
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 
+// ====== 商品主檔 API ======
+const PRODUCT_SHEET_ID   = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
+const PRODUCT_API_URL    = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
+const SPEC_API_URL       = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('銷售規格表')}`;
+
 // ====== STATE ======
 let currentStep = 0;
 let addonCount = 0;
@@ -992,11 +1004,208 @@ let sourceSelected = [];
 let finalData = null;
 let sigCanvas, sigCtx, drawing = false;
 
+// 商品資料暫存
+let vehicleMap    = {};   // { 小分類: { 型號: [{color, code}, ...] } }
+let batterySpecs  = [];   // [{ label, type, v, ah, note }, ...]
+
 // ====== INIT ======
 document.getElementById('s1-date').value = new Date().toISOString().split('T')[0];
-// 初始顯示歡迎頁，隱藏其他步驟
 document.getElementById('step1').style.display = 'none';
 calcAll();
+loadProductData();
+
+// ====== 商品主檔讀取 ======
+async function loadProductData() {
+  try {
+    const [vRes, sRes] = await Promise.all([fetch(PRODUCT_API_URL), fetch(SPEC_API_URL)]);
+    const vText = await vRes.text();
+    const sText = await sRes.text();
+
+    // 解析 gviz JSON
+    const parseGviz = text => {
+      const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+      const cols = json.table.cols.map(c => c.label || c.id);
+      return (json.table.rows || []).map(row => {
+        const obj = {};
+        cols.forEach((col, i) => {
+          obj[col] = row.c[i] ? (row.c[i].v !== undefined ? String(row.c[i].v).trim() : '') : '';
+        });
+        return obj;
+      });
+    };
+
+    const vRows = parseGviz(vText);
+    const sRows = parseGviz(sText);
+
+    // ── 車輛三層結構 ──
+    vehicleMap = {};
+    vRows.forEach(r => {
+      if (r['大分類'] !== '車輛') return;
+      if (r['是否可販售'] !== 'Y') return;
+      if (r['是否啟用'] !== 'Y') return;
+      const cat   = r['小分類'];
+      const model = r['型號'];
+      const color = r['顏色'];
+      const code  = r['商品編號'];
+      if (!cat || !model || !color) return;
+      if (!vehicleMap[cat]) vehicleMap[cat] = {};
+      if (!vehicleMap[cat][model]) vehicleMap[cat][model] = [];
+      vehicleMap[cat][model].push({ color, code });
+    });
+
+    // ── 電池規格清單 ──
+    // 1. 鋰電池：從商品主檔取銷售規格去重
+    const lithiumMap = {};
+    vRows.forEach(r => {
+      if (r['大分類'] !== '電池') return;
+      if (r['小分類'] !== '鋰電池') return;
+      if (r['是否可販售'] !== 'Y') return;
+      if (r['是否啟用'] !== 'Y') return;
+      const spec = r['銷售規格'];
+      if (!spec || lithiumMap[spec]) return;
+      const vMatch  = spec.match(/(\d+)V/i);
+      const ahMatch = spec.match(/(\d+)ah/i);
+      const isMIT   = spec.toUpperCase().includes('MIT');
+      lithiumMap[spec] = {
+        label: spec,
+        type:  '鋰電池',
+        v:     vMatch  ? vMatch[1]  + 'V'  : '',
+        ah:    ahMatch ? ahMatch[1] + 'Ah' : '',
+        note:  isMIT ? 'MIT' : ''
+      };
+    });
+
+    // 2. 鉛酸電池：從銷售規格表讀取
+    const acidSpecs = sRows
+      .filter(r => r['銷售規格'])
+      .map(r => ({
+        label: r['銷售規格'],
+        type:  '鉛酸電池',
+        v:     r['電壓'] ? r['電壓'] + 'V'  : '',
+        ah:    r['Ah']   ? r['Ah']   + 'Ah' : '',
+        note:  ''
+      }));
+
+    batterySpecs = [...Object.values(lithiumMap), ...acidSpecs];
+
+    // ── 初始化選單 ──
+    initVehicleSelects();
+    initBatterySelect();
+
+    // 隱藏載入提示
+    document.getElementById('product-loading-msg').style.display = 'none';
+
+  } catch(e) {
+    console.warn('商品資料讀取失敗', e);
+    document.getElementById('product-loading-msg').style.display = 'none';
+    document.getElementById('product-error-msg').style.display = '';
+    // 備用靜態選單
+    initFallbackSelects();
+  }
+}
+
+// ── 車輛選單初始化 ──
+function initVehicleSelects() {
+  const vtSel = document.getElementById('s1-vehicle-type');
+  vtSel.innerHTML = '<option value="">請選擇車種類型</option>';
+  Object.keys(vehicleMap).sort().forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat; opt.textContent = cat;
+    vtSel.appendChild(opt);
+  });
+  vtSel.disabled = false;
+  document.getElementById('s1-model').disabled  = true;
+  document.getElementById('s1-color').disabled  = true;
+}
+
+function onVehicleTypeChange() {
+  const cat = document.getElementById('s1-vehicle-type').value;
+  const modelSel = document.getElementById('s1-model');
+  modelSel.innerHTML = '<option value="">請選擇型號</option>';
+  document.getElementById('s1-color').innerHTML = '<option value="">請先選型號</option>';
+  document.getElementById('s1-vehicle-code').value = '';
+  modelSel.disabled = !cat;
+  document.getElementById('s1-color').disabled = true;
+  if (!cat || !vehicleMap[cat]) return;
+  Object.keys(vehicleMap[cat]).sort().forEach(model => {
+    const opt = document.createElement('option');
+    opt.value = model; opt.textContent = model;
+    modelSel.appendChild(opt);
+  });
+}
+
+function onModelChange() {
+  const cat   = document.getElementById('s1-vehicle-type').value;
+  const model = document.getElementById('s1-model').value;
+  const colorSel = document.getElementById('s1-color');
+  colorSel.innerHTML = '<option value="">請選擇顏色</option>';
+  document.getElementById('s1-vehicle-code').value = '';
+  colorSel.disabled = !model;
+  if (!cat || !model || !vehicleMap[cat]?.[model]) return;
+  vehicleMap[cat][model].forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.color; opt.textContent = item.color;
+    colorSel.appendChild(opt);
+  });
+}
+
+function onColorChange() {
+  const cat   = document.getElementById('s1-vehicle-type').value;
+  const model = document.getElementById('s1-model').value;
+  const color = document.getElementById('s1-color').value;
+  if (!cat || !model || !color) { document.getElementById('s1-vehicle-code').value = ''; return; }
+  const found = (vehicleMap[cat]?.[model] || []).find(i => i.color === color);
+  document.getElementById('s1-vehicle-code').value = found ? found.code : '';
+}
+
+// ── 電池選單初始化 ──
+function initBatterySelect() {
+  const sel = document.getElementById('s1-battery-spec');
+  sel.innerHTML = '<option value="">請選擇電池銷售規格</option>';
+  batterySpecs.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.label; opt.textContent = item.label;
+    // 把拆解值存在 dataset，onchange 時讀取
+    opt.dataset.type = item.type;
+    opt.dataset.v    = item.v;
+    opt.dataset.ah   = item.ah;
+    opt.dataset.note = item.note;
+    sel.appendChild(opt);
+  });
+  sel.disabled = false;
+}
+
+function onBatterySpecChange() {
+  const sel = document.getElementById('s1-battery-spec');
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('s1-battype').value = opt?.dataset.type || '';
+  document.getElementById('s1-batv').value    = opt?.dataset.v    || '';
+  document.getElementById('s1-batah').value   = opt?.dataset.ah   || '';
+  document.getElementById('s1-bat-note').value = opt?.dataset.note || '';
+}
+
+// ── 備用靜態選單（讀取失敗時） ──
+function initFallbackSelects() {
+  const vtSel = document.getElementById('s1-vehicle-type');
+  vtSel.innerHTML = `<option value="">請選擇車種類型</option>
+    <option value="微電車">微電車</option>
+    <option value="電輔車">電輔車</option>`;
+  vtSel.disabled = false;
+  document.getElementById('s1-model').disabled  = false;
+  document.getElementById('s1-model').innerHTML = '<option value="">（請手動輸入）</option>';
+  document.getElementById('s1-color').disabled  = false;
+  document.getElementById('s1-color').innerHTML = '<option value="">（請手動輸入）</option>';
+
+  const batSel = document.getElementById('s1-battery-spec');
+  batSel.innerHTML = `<option value="">請選擇電池銷售規格</option>
+    <option data-type="鋰電池" data-v="48V" data-ah="20Ah" data-note="">48V 20ah 鋰電</option>
+    <option data-type="鋰電池" data-v="60V" data-ah="30Ah" data-note="">60V 30ah 鋰電</option>
+    <option data-type="鋰電池" data-v="72V" data-ah="30Ah" data-note="">72V 30ah 鋰電</option>
+    <option data-type="鉛酸電池" data-v="48V" data-ah="15Ah" data-note="">48V15Ah鉛酸</option>
+    <option data-type="鉛酸電池" data-v="60V" data-ah="32Ah" data-note="">60V32Ah鉛酸</option>
+    <option data-type="鉛酸電池" data-v="72V" data-ah="32Ah" data-note="">72V32Ah鉛酸</option>`;
+  batSel.disabled = false;
+}
 
 // ====== 遠距模式：URL 參數解析 ======
 (function initRemoteMode() {
@@ -1011,7 +1220,56 @@ calcAll();
     window._remoteMode = true;
     window._remoteData = data;
 
-    // 填入並鎖定 step1 欄位
+    // 填入並鎖定 step1 車輛欄位（遠距模式：select 改為 disabled）
+    const lockSelect = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      // 先嘗試設值；若選單尚未載入則等待
+      const trySet = () => {
+        if (val) {
+          const opt = document.createElement('option');
+          opt.value = val; opt.textContent = val; opt.selected = true;
+          el.innerHTML = '';
+          el.appendChild(opt);
+        }
+        el.disabled = true;
+        el.style.background = '#f8f8f8';
+        el.style.color = '#666';
+      };
+      trySet();
+    };
+    lockSelect('s1-vehicle-type', data.vehicleType || '');
+    lockSelect('s1-model',        data.model       || '');
+    lockSelect('s1-color',        data.color       || '');
+
+    // 車輛商品編號
+    if (data.vehicleCode) {
+      const vcEl = document.getElementById('s1-vehicle-code');
+      if (vcEl) vcEl.value = data.vehicleCode;
+    }
+
+    // 電池銷售規格（鎖定）
+    if (data.batterySalesSpec) {
+      const batSel = document.getElementById('s1-battery-spec');
+      if (batSel) {
+        const opt = document.createElement('option');
+        opt.value = data.batterySalesSpec; opt.textContent = data.batterySalesSpec; opt.selected = true;
+        // 填入 dataset（讓 onBatterySpecChange 可讀）
+        opt.dataset.type = data.batType || '';
+        opt.dataset.v    = data.batV    || '';
+        opt.dataset.ah   = data.batAh   || '';
+        opt.dataset.note = data.batNote || '';
+        batSel.innerHTML = ''; batSel.appendChild(opt);
+        batSel.disabled = true;
+        batSel.style.background = '#f8f8f8';
+      }
+      // 同步填入隱藏欄位
+      document.getElementById('s1-battype').value   = data.batType || '';
+      document.getElementById('s1-batv').value      = data.batV    || '';
+      document.getElementById('s1-batah').value     = data.batAh   || '';
+      document.getElementById('s1-bat-note').value  = data.batNote || '';
+    }
+
     const setLocked = (id, val) => {
       const el = document.getElementById(id);
       if (!el || !val) return;
@@ -1020,26 +1278,10 @@ calcAll();
       el.style.background = '#f8f8f8';
       el.style.color = '#666';
     };
-    setLocked('s1-model', data.model || '');
-    setLocked('s1-color', data.color || '');
-    setLocked('s1-battype', data.batType || '');
-    setLocked('s1-batv', data.batV || '');
-    setLocked('s1-batah', data.batAh || '');
-    setLocked('s1-bat-note', data.batNote || '');
     setLocked('s1-model-note', data.modelNote || '');
-    setLocked('s1-date', data.date || '');
-    setLocked('s1-delivery', data.delivery || '');
-    setLocked('s1-staff', data.staff || '');
-    // vehicleType 是 select，遠距模式設定 disabled
-    if (data.vehicleType) {
-      const vtEl = document.getElementById('s1-vehicle-type');
-      if (vtEl) {
-        vtEl.value = data.vehicleType;
-        vtEl.disabled = true;
-        vtEl.style.background = '#f8f8f8';
-        vtEl.style.color = '#666';
-      }
-    }
+    setLocked('s1-date',       data.date      || '');
+    setLocked('s1-delivery',   data.delivery  || '');
+    setLocked('s1-staff',      data.staff     || '');
 
     // 鎖定 step2 金額欄位
     const setLockedNum = (id, val) => {
@@ -1158,14 +1400,16 @@ function generateRemoteLink() {
 
   const ge = id => document.getElementById(id)?.value || '';
   const data = {
-    model:        ge('s1-model'),
-    vehicleType:  ge('s1-vehicle-type'),
-    color:        ge('s1-color'),
-    batType:      ge('s1-battype'),
-    batV:         ge('s1-batv'),
-    batAh:        ge('s1-batah'),
-    batNote:      ge('s1-bat-note'),
-    modelNote:    ge('s1-model-note'),
+    model:        document.getElementById('s1-model').value,
+    vehicleType:  document.getElementById('s1-vehicle-type').value,
+    color:        document.getElementById('s1-color').value,
+    vehicleCode:  document.getElementById('s1-vehicle-code').value,
+    batterySalesSpec: document.getElementById('s1-battery-spec').value,
+    batType:      document.getElementById('s1-battype').value,
+    batV:         document.getElementById('s1-batv').value,
+    batAh:        document.getElementById('s1-batah').value,
+    batNote:      document.getElementById('s1-bat-note').value,
+    modelNote:    v('s1-model-note'),
     date:         ge('s1-date'),
     delivery:     ge('s1-delivery'),
     staff:        ge('s1-staff'),
@@ -1470,8 +1714,14 @@ function validateStep(s) {
   if (s === 1) {
     if (!document.getElementById('s1-vehicle-type').value)
       return fail('請選擇車種類型');
-    if (!document.getElementById('s1-model').value.trim() || !v('s1-date'))
-      return fail('請填寫必填欄位（車款、成交日期）');
+    if (!document.getElementById('s1-model').value)
+      return fail('請選擇型號');
+    if (!document.getElementById('s1-color').value)
+      return fail('請選擇顏色');
+    if (!document.getElementById('s1-battery-spec').value)
+      return fail('請選擇電池銷售規格');
+    if (!v('s1-date'))
+      return fail('請填寫成交日期');
   }
   if (s === 2) {
     if (!document.getElementById('p-bike').value) return fail('請填寫車輛售價');
@@ -1510,7 +1760,7 @@ function buildSummary() {
     ['身分證字號', v('s1-id')], ['性別', document.querySelector('input[name="gender"]:checked')?.value || '—'],
     ['通訊地址', v('s1-addr') || '—'],
     ['車款', document.getElementById('s1-model').value], ['顏色', document.getElementById('s1-color').value],
-    ['電池規格', document.getElementById('s1-batv').value + ' ' + document.getElementById('s1-batah').value],
+    ['電池規格', document.getElementById('s1-battery-spec').value || (document.getElementById('s1-batv').value + ' ' + document.getElementById('s1-batah').value)],
     ['車架號碼', v('s1-frame') || '—'], ['成交日期', v('s1-date')], ['預計交車日', v('s1-delivery') || '—'],
     ['車輛售價', 'NT$ ' + (parseFloat(document.getElementById('p-bike').value)||0).toLocaleString()],
     ['折扣', 'NT$ ' + (parseFloat(document.getElementById('p-discount').value)||0).toLocaleString()],
@@ -1578,13 +1828,16 @@ async function submitForm() {
     birthday: document.getElementById('s1-birthday').value,
     source: sourceSelected.join('、'),
     vehicleType: document.getElementById('s1-vehicle-type').value,
-    model: document.getElementById('s1-model').value,
-    modelNote: v('s1-model-note'),
-    color: document.getElementById('s1-color').value,
+    model:       document.getElementById('s1-model').value,
+    modelNote:   v('s1-model-note'),
+    color:       document.getElementById('s1-color').value,
+    vehicleCode: document.getElementById('s1-vehicle-code').value,
+    // 電池：從隱藏欄位讀取（由 onBatterySpecChange 填入）
+    batterySalesSpec: document.getElementById('s1-battery-spec').value,
     batType: document.getElementById('s1-battype').value,
-    batV: document.getElementById('s1-batv').value,
-    batAh: document.getElementById('s1-batah').value,
-    batNote: v('s1-bat-note'),
+    batV:    document.getElementById('s1-batv').value,
+    batAh:   document.getElementById('s1-batah').value,
+    batNote: document.getElementById('s1-bat-note').value,
     frame: v('s1-frame'), motor: v('s1-motor'),
     date: v('s1-date'), delivery: v('s1-delivery'), staff: v('s1-staff'),
     addons,
