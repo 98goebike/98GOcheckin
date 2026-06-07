@@ -80,6 +80,14 @@ table.info tr:last-child{border-bottom:none;}
   .two{grid-template-columns:1fr;}
   .body{padding:1.25rem 1rem;}
 }
+
+/* 多筆付款明細 */
+.pay-detail-list{margin-top:4px;padding:6px 14px;background:rgba(0,0,0,.03);border-radius:6px;}
+.pay-detail-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.05);}
+.pay-detail-item:last-child{border-bottom:none;}
+.pay-detail-item .pm{color:var(--gray5);}
+.pay-detail-item .pa{font-weight:600;}
+.pay-detail-item .pd-date{color:var(--gray4);font-size:11px;margin-left:8px;}
 </style>
 </head>
 <body>
@@ -302,17 +310,61 @@ async function loadReceipt(){
       if(parseFloat(data.discount)>0){document.getElementById('r-discount-row').style.display='flex';set('r-discount','- '+fmtMoney(data.discount));}
       set('r-total',fmtMoney(data.total));
 
-      const depMethod=data.depositMethod||'';
-      const depPeriod=data.depositPeriod?`（${data.depositPeriod}）`:'';
-      set('r-dep-label',depMethod?`訂金（${depMethod}${depPeriod}）`:'訂金');
-      set('r-deposit',fmtMoney(data.deposit));
-      if(data.depDate){const el=document.getElementById('r-depDate-row');el.style.display='block';el.textContent='訂金日期：'+fmtDate(data.depDate);}
+      // 解析付款明細字串（格式：現金:5000:2025-06-01｜信用卡:10000:2025-06-01）
+      function parseDetail(str){
+        if(!str) return [];
+        return str.split('｜').map(seg=>{
+          const p=seg.split(':');
+          return {method:p[0]?.trim()||'',amount:parseFloat(p[1])||0,date:p[2]?.trim()||''};
+        }).filter(d=>d.method&&d.amount>0);
+      }
+      function normMethod(m){return (!m)?'':m==='刷卡'?'信用卡':m;}
 
-      const balMethod=data.balanceMethod||'';
-      const balPeriod=data.balancePeriod?`（${data.balancePeriod}）`:'';
-      set('r-bal-label',balMethod?`尾款（${balMethod}${balPeriod}）`:'尾款');
-      set('r-balance',fmtMoney(data.balance));
-      if(data.balDate){const el=document.getElementById('r-balDate-row');el.style.display='block';el.textContent='尾款日期：'+fmtDate(data.balDate);}
+      // 訂金
+      const depDetailItems = parseDetail(data.depositDetail);
+      const depMethod = normMethod(data.depositMethod||'');
+      const depPeriod = data.depositPeriod?`（${data.depositPeriod}）`:'';
+      if(depDetailItems.length>1){
+        // 多筆：標題顯示「訂金（多元付款）」，下方展開各筆
+        set('r-dep-label','訂金（多元付款）');
+        set('r-deposit',fmtMoney(data.deposit));
+        const listHtml=depDetailItems.map(d=>`
+          <div class="pay-detail-item">
+            <span class="pm">${normMethod(d.method)}</span>
+            <span><span class="pa">${fmtMoney(d.amount)}</span>${d.date?`<span class="pd-date">${fmtDate(d.date)}</span>`:''}</span>
+          </div>`).join('');
+        const listEl=document.getElementById('r-depDate-row');
+        listEl.style.display='block';
+        listEl.innerHTML=`<div class="pay-detail-list">${listHtml}</div>`;
+      } else {
+        // 單筆或舊資料
+        set('r-dep-label',depMethod?`訂金（${depMethod}${depPeriod}）`:'訂金');
+        set('r-deposit',fmtMoney(data.deposit));
+        if(data.depDate){const el=document.getElementById('r-depDate-row');el.style.display='block';el.textContent='訂金日期：'+fmtDate(data.depDate);}
+      }
+
+      // 尾款
+      const balDetailItems = parseDetail(data.balanceDetail);
+      const balMethod = normMethod(data.balanceMethod||'');
+      const balPeriod = data.balancePeriod?`（${data.balancePeriod}）`:'';
+      if(balDetailItems.length>1){
+        // 多筆：標題顯示「尾款（多元付款）」，下方展開各筆
+        set('r-bal-label','尾款（多元付款）');
+        set('r-balance',fmtMoney(data.balance));
+        const listHtml=balDetailItems.map(d=>`
+          <div class="pay-detail-item">
+            <span class="pm">${normMethod(d.method)}</span>
+            <span><span class="pa">${fmtMoney(d.amount)}</span>${d.date?`<span class="pd-date">${fmtDate(d.date)}</span>`:''}</span>
+          </div>`).join('');
+        const listEl=document.getElementById('r-balDate-row');
+        listEl.style.display='block';
+        listEl.innerHTML=`<div class="pay-detail-list">${listHtml}</div>`;
+      } else {
+        // 單筆或舊資料
+        set('r-bal-label',balMethod?`尾款（${balMethod}${balPeriod}）`:'尾款');
+        set('r-balance',fmtMoney(data.balance));
+        if(data.balDate){const el=document.getElementById('r-balDate-row');el.style.display='block';el.textContent='尾款日期：'+fmtDate(data.balDate);}
+      }
       if(data.fullDate){document.getElementById('r-fullDate-row').style.display='flex';set('r-fullDate-label','✅ 完款日期：'+fmtDate(data.fullDate));}
 
       if(data.date)set('sign-date','簽署日期：'+fmtDate(data.date));
