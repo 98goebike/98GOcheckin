@@ -612,19 +612,6 @@
     <div class="field" style="margin-top:10px;">
       <label>Sale</label><input type="text" id="s1-staff" placeholder="負責業務姓名">
     </div>
-    <!-- 速度設定 -->
-    <div class="field" style="margin-top:10px;">
-      <label>速度設定<span class="req">*</span></label>
-      <select id="s1-speed" onchange="onSpeedChange()">
-        <option value="已依客戶要求調整" selected>已依客戶要求調整</option>
-        <option value="原廠設定">原廠設定</option>
-      </select>
-    </div>
-    <div id="speed-notice" style="background:#FFF3E5;border:1.5px solid #F4A261;border-radius:8px;padding:.875rem 1rem;margin-top:8px;font-size:14px;color:#854F0B;line-height:1.9;">
-      <div style="font-weight:700;margin-bottom:4px;">✅ 已告知客戶：</div>
-      <div>1. 速度越快越耗電，續航力可能下降。</div>
-      <div>2. 請遵守道路交通法規安全騎乘。</div>
-    </div>
   </div>
 
   <div class="card" style="border:2px solid #B5D4F4;">
@@ -645,6 +632,18 @@
       </button>
       <button class="addon-preset-btn" onclick="addPresetAddon(this,'後照鏡',200)">
         後照鏡 <span class="preset-price">NT$200</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'尾箱尾架',1800)">
+        尾箱尾架 <span class="preset-price">NT$1,800</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'第三人責任險（一年）',1600)">
+        第三人責任險（一年） <span class="preset-price">NT$1,600</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'大鎖',200)">
+        大鎖 <span class="preset-price">NT$200</span>
+      </button>
+      <button class="addon-preset-btn" onclick="addPresetAddon(this,'充電計時器',350)">
+        充電計時器 <span class="preset-price">NT$350</span>
       </button>
     </div>
     <div id="addon-list"></div>
@@ -780,7 +779,13 @@
       <div class="field"><label>姓名<span class="req">*</span></label><input type="text" id="s1-name" placeholder="王小明"></div>
       <div class="field"><label>身分證字號<span class="req">*</span></label><input type="text" id="s1-id" placeholder="A123456789" maxlength="10"></div>
       <div class="field"><label>手機號碼<span class="req">*</span></label><input type="tel" id="s1-phone" placeholder="0912-345-678"></div>
-      <div class="field"><label>生日</label><input type="date" id="s1-birthday"></div>
+      <div class="field">
+        <label>生日</label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="s1-birthday-text" placeholder="例：1992/05/18" inputmode="numeric" style="flex:1;" oninput="onBirthdayTextInput()">
+          <input type="date" id="s1-birthday" style="flex:0 0 46px;padding-left:8px;padding-right:0;" onchange="onBirthdayDateChange()">
+        </div>
+      </div>
     </div>
     <div class="field" style="margin-top:10px;">
       <label>性別</label>
@@ -911,7 +916,7 @@
 <div id="step5" style="display:none;">
   <div class="card">
     <div class="card-title" style="font-size:22px;font-weight:900;"><div class="icon">🔋</div>⭐ 98GO 保養口訣</div>
-    <p style="font-size:16px;color:var(--gray5);margin-bottom:1.5rem;line-height:1.7;font-weight:500;">記住以下 5 件事即可</p>
+    <p style="font-size:16px;color:var(--gray5);margin-bottom:1.5rem;line-height:1.7;font-weight:500;">記住以下 6 件事即可</p>
 
     <!-- 1 輪胎不要沒氣 -->
     <div class="info-box" style="margin-bottom:1.25rem;border-left:5px solid #185FA5;">
@@ -953,6 +958,17 @@
       <h4 style="font-size:22px;font-weight:800;margin-bottom:.5rem;">⚡ 速度越快越耗電</h4>
       <ul style="font-size:17px;line-height:2;">
         <li>載重越重、速度越快，續航力越短</li>
+      </ul>
+    </div>
+
+    <!-- 6 電池使用注意事項 -->
+    <div class="info-box" style="margin-bottom:1.25rem;border-left:5px solid #185FA5;">
+      <h4 style="font-size:22px;font-weight:800;margin-bottom:.5rem;">🔌 電池使用注意事項</h4>
+      <ul style="font-size:17px;line-height:2;">
+        <li>避免過度放電</li>
+        <li>避免長時間過度充電</li>
+        <li>充電完成後，請靜置約 30 分鐘再騎乘</li>
+        <li>騎乘完成後，請靜置約 30 分鐘再充電</li>
       </ul>
     </div>
 
@@ -1003,6 +1019,24 @@
   <div class="card">
     <div class="card-title"><div class="icon">✓</div>資料確認</div>
     <div class="summary-grid" id="summary-grid"></div>
+  </div>
+  <div class="card" style="border:2px solid #B5D4F4;">
+    <div style="background:#E6F1FB;border-radius:6px;padding:.6rem 1rem;margin-bottom:1rem;font-size:13px;color:#185FA5;font-weight:500;">
+      此區由門市人員協助填寫
+    </div>
+    <div class="card-title"><div class="icon">⚡</div>速度設定確認</div>
+    <div class="field">
+      <label>速度設定<span class="req">*</span></label>
+      <select id="s1-speed" onchange="onSpeedChange()">
+        <option value="已依客戶要求調整" selected>已依客戶要求調整</option>
+        <option value="原廠設定">原廠設定</option>
+      </select>
+    </div>
+    <div id="speed-notice" style="background:#FFF3E5;border:1.5px solid #F4A261;border-radius:8px;padding:.875rem 1rem;margin-top:8px;font-size:14px;color:#854F0B;line-height:1.9;">
+      <div style="font-weight:700;margin-bottom:4px;">✅ 已告知客戶：</div>
+      <div>1. 速度越快越耗電，續航力可能下降。</div>
+      <div>2. 請遵守道路交通法規安全騎乘。</div>
+    </div>
   </div>
   <div class="card" style="border:2px solid #9FE1CB;">
     <div style="background:#E1F5EE;border-radius:6px;padding:.6rem 1rem;margin-bottom:1rem;font-size:13px;color:#085041;font-weight:500;">
@@ -1252,6 +1286,29 @@ function onBatterySpecChange() {
   document.getElementById('s1-batv').value    = opt?.dataset.v    || '';
   document.getElementById('s1-batah').value   = opt?.dataset.ah   || '';
   document.getElementById('s1-bat-note').value = opt?.dataset.note || '';
+}
+
+// ── 生日：文字輸入與 date picker 雙向同步 ──
+function onBirthdayTextInput() {
+  const txt = document.getElementById('s1-birthday-text').value.trim();
+  const m = txt.match(/^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/);
+  const dateInput = document.getElementById('s1-birthday');
+  if (m) {
+    const y = m[1], mo = String(m[2]).padStart(2,'0'), d = String(m[3]).padStart(2,'0');
+    const iso = `${y}-${mo}-${d}`;
+    const test = new Date(iso);
+    if (!isNaN(test.getTime()) && test.getFullYear() == y) {
+      dateInput.value = iso;
+      return;
+    }
+  }
+  dateInput.value = '';
+}
+function onBirthdayDateChange() {
+  const val = document.getElementById('s1-birthday').value;
+  if (!val) return;
+  const [y, mo, d] = val.split('-');
+  document.getElementById('s1-birthday-text').value = `${y}/${mo}/${d}`;
 }
 
 function onSpeedChange() {
@@ -2212,10 +2269,11 @@ ${addonRows}
 <div class="clause">
 <h4>日常保養建議</h4>
 【電池保養】<br>
-• 有騎乘就充電，避免長期低電量存放<br>
-• 長時間未用每 1～2 週補充一次<br>
-• 避免高溫曝曬與潮濕環境，請用原廠充電器<br>
-• 避免過充與過放；騎後靜置 30 分鐘再充電<br><br>
+• 避免過度放電<br>
+• 避免長時間過度充電<br>
+• 充電完成後，請靜置約 30 分鐘再騎乘<br>
+• 騎乘完成後，請靜置約 30 分鐘再充電<br>
+• 長時間未用每 1～2 週補充一次，避免高溫曝曬與潮濕環境，請用原廠充電器<br><br>
 【車輛保養】<br>
 • 不建議水槍直沖，避免水分滲入電器元件<br>
 • 停車建議放置遮蔽處，避免長時間日曬雨淋<br><br>
