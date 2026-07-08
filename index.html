@@ -782,7 +782,7 @@
       <div class="field">
         <label>生日</label>
         <div style="display:flex;gap:6px;">
-          <input type="text" id="s1-birthday-text" placeholder="例：1992/05/18" inputmode="numeric" style="flex:1;" oninput="onBirthdayTextInput()">
+          <input type="text" id="s1-birthday-text" placeholder="例：1992/05/18 或 19920518" inputmode="numeric" style="flex:1;" oninput="onBirthdayTextInput()">
           <input type="date" id="s1-birthday" style="flex:0 0 46px;padding-left:8px;padding-right:0;" onchange="onBirthdayDateChange()">
         </div>
       </div>
@@ -1297,10 +1297,14 @@ function onBatterySpecChange() {
 // ── 生日：文字輸入與 date picker 雙向同步 ──
 function onBirthdayTextInput() {
   const txt = document.getElementById('s1-birthday-text').value.trim();
-  const m = txt.match(/^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/);
   const dateInput = document.getElementById('s1-birthday');
-  if (m) {
-    const y = m[1], mo = String(m[2]).padStart(2,'0'), d = String(m[3]).padStart(2,'0');
+  let y, mo, d;
+  const m1 = txt.match(/^(\d{4})[\/\-.年](\d{1,2})[\/\-.月](\d{1,2})日?$/);
+  const m2 = txt.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (m1) { y = m1[1]; mo = m1[2]; d = m1[3]; }
+  else if (m2) { y = m2[1]; mo = m2[2]; d = m2[3]; }
+  if (y) {
+    mo = String(mo).padStart(2,'0'); d = String(d).padStart(2,'0');
     const iso = `${y}-${mo}-${d}`;
     const test = new Date(iso);
     if (!isNaN(test.getTime()) && test.getFullYear() == y) {
@@ -1905,15 +1909,16 @@ function buildSummary() {
     ['車款', document.getElementById('s1-model')?.value || '—'],
     ['電池類型', document.getElementById('s1-battype')?.value || '—'],
     ['電池規格', document.getElementById('s1-battery-spec')?.value || '—'],
-    ['加價購項目', addonText],
   ];
   const vGrid = document.getElementById('summary-grid-vehicle');
   if (vGrid) {
     vGrid.innerHTML = vehicleItems.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val || '—'}</div></div>`).join('')
+      + `<div class="summary-item" style="grid-column:span 2"><div class="s-label">加價購項目</div><div class="s-val">${addonText}</div></div>`
       + `<div class="summary-item highlight" style="grid-column:span 2"><div class="s-label">總金額</div><div class="s-val">NT$ ${total.toLocaleString()}</div></div>`;
   }
 
   // 👤 車主資訊
+  const fullAddr = [safeV('s1-city'), safeV('s1-district'), safeV('s1-addr')].filter(v => v && v !== '—').join('') || '—';
   const ownerItems = [
     ['姓名', safeV('s1-name')],
     ['電話', safeV('s1-phone')],
@@ -1921,11 +1926,13 @@ function buildSummary() {
   ];
   const oGrid = document.getElementById('summary-grid-owner');
   if (oGrid) {
-    oGrid.innerHTML = ownerItems.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val || '—'}</div></div>`).join('');
+    oGrid.innerHTML = ownerItems.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val || '—'}</div></div>`).join('')
+      + `<div class="summary-item" style="grid-column:span 2"><div class="s-label">地址</div><div class="s-val">${fullAddr}</div></div>`;
   }
 
   // 💰 付款資訊
   const depMethod = document.getElementById('p-dep-method')?.value || '—';
+  const depDate = document.getElementById('p-dep-date')?.value || '';
   const paymentItems = [
     ['付款方式', depMethod],
     ['訂金', 'NT$ ' + dep.toLocaleString()],
@@ -1933,7 +1940,8 @@ function buildSummary() {
   ];
   const pGrid = document.getElementById('summary-grid-payment');
   if (pGrid) {
-    pGrid.innerHTML = paymentItems.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val || '—'}</div></div>`).join('');
+    pGrid.innerHTML = paymentItems.map(([k, val]) => `<div class="summary-item"><div class="s-label">${k}</div><div class="s-val">${val || '—'}</div></div>`).join('')
+      + `<div class="summary-item" style="grid-column:span 2;background:#E1F5EE;"><div class="s-label" style="color:#0F6E56;">訂金日期</div><div class="s-val" style="color:#04342C;">${depDate || '—'}　✅ 確認已收訖</div></div>`;
   }
 }
 
