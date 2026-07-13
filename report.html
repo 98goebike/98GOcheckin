@@ -132,15 +132,6 @@ tr:last-child td{border-bottom:none;}
 .lock-btn:hover{background:#1a1c2e;}
 .lock-error{font-size:12px;color:var(--accent);margin-top:.5rem;height:16px;}
 
-/* ── 編輯訂單 Modal ── */
-.edit-modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
-@media(max-width:480px) { .edit-modal-grid { grid-template-columns: 1fr; } }
-.edit-section-title { font-size: 11px; font-weight: 700; color: var(--gray4); letter-spacing: .05em; text-transform: uppercase; grid-column: 1/-1; border-bottom: 1px solid var(--gray2); padding-bottom: 4px; margin-top: 8px; }
-.edit-field { display: flex; flex-direction: column; gap: 4px; }
-.edit-field label { font-size: 11px; font-weight: 600; color: var(--gray5); }
-.edit-field input, .edit-field select { padding: 8px 10px; border: 1.5px solid var(--gray3); border-radius: 6px; font-size: 13px; font-family: inherit; color: var(--text); }
-.edit-field input:focus, .edit-field select:focus { outline: none; border-color: var(--brand); }
-
 /* ── 登記收款 Modal ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;}
 .modal-box{background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.2);overflow:hidden;}
@@ -167,82 +158,7 @@ tr:last-child td{border-bottom:none;}
 .modal-err{background:#fff0f1;border:1px solid #F5C4B3;border-radius:6px;padding:.6rem 1rem;font-size:12px;color:#A32D2D;margin-bottom:.75rem;display:none;}
 .modal-err.show{display:block;}
 
-/* ── 所有記錄：展開卡片 ── */
-.rec-list { display: flex; flex-direction: column; gap: 8px; }
-.rec-card { background: #fff; border-radius: 10px; border: 1.5px solid var(--gray3); overflow: hidden; transition: box-shadow .2s; }
-.rec-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.09); }
-.rec-card.delivered { border-color: #9FE1CB; }
-.rec-header {
-  display: grid;
-  grid-template-columns: 90px 1fr 1fr 100px 90px 70px 36px;
-  align-items: center;
-  gap: 0;
-  padding: 10px 14px;
-  cursor: pointer;
-  user-select: none;
-  background: #fff;
-}
-.rec-header:hover { background: var(--gray1); }
-.rec-col { font-size: 13px; padding-right: 12px; }
-.rec-col.date { font-size: 12px; color: var(--gray5); }
-.rec-col.customer { font-weight: 600; color: var(--brand); }
-.rec-col.vehicle { color: var(--gray6); }
-.rec-col.amount { font-weight: 700; color: var(--brand); }
-.rec-col.status {}
-.rec-col.sale { font-size: 12px; color: var(--gray5); }
-.rec-toggle { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--gray3); background: var(--gray1); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--gray5); transition: all .2s; flex-shrink: 0; cursor: pointer; }
-.rec-card.open .rec-toggle { background: var(--brand); color: #fff; border-color: var(--brand); transform: rotate(180deg); }
-.rec-detail { display: none; border-top: 1px solid var(--gray2); padding: 14px 14px 16px; background: var(--gray1); }
-.rec-card.open .rec-detail { display: block; }
-.rec-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 20px; }
-.rec-detail-section { margin-bottom: 12px; }
-.rec-detail-section:last-child { margin-bottom: 0; }
-.rec-detail-title { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gray4); border-bottom: 1px solid var(--gray3); padding-bottom: 4px; margin-bottom: 8px; }
-.rec-detail-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,.04); }
-.rec-detail-row:last-child { border-bottom: none; }
-.rec-detail-row .lbl { color: var(--gray5); flex-shrink: 0; margin-right: 8px; }
-.rec-detail-row .val { font-weight: 500; color: var(--text); text-align: right; }
-.rec-detail-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.rec-action-btn { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; border: 1.5px solid var(--gray3); background: #fff; color: var(--gray6); transition: all .15s; }
-.rec-action-btn:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
-.rec-action-btn.green { border-color: #9FE1CB; color: var(--green); }
-.rec-action-btn.green:hover { background: var(--green); color: #fff; }
-.rec-header-labels { display: grid; grid-template-columns: 90px 1fr 1fr 100px 90px 70px 36px; gap: 0; padding: 6px 14px; border-bottom: 1px solid var(--gray2); }
-.rec-header-label { font-size: 10px; font-weight: 700; color: var(--gray4); letter-spacing: .05em; text-transform: uppercase; padding-right: 12px; }
-
-/* ── 備車資訊 ── */
-.prep-summary {
-  font-size:12px; color:var(--brand); font-weight:600;
-  padding:4px 10px; border-radius:99px;
-  background:#E6F1FB; border:1px solid #B5D4F4;
-  white-space:nowrap;
-}
-.btn-prep {
-  padding:5px 12px; border-radius:6px;
-  border:1.5px solid var(--gray3); background:#fff;
-  font-size:12px; font-family:inherit; cursor:pointer;
-  color:var(--gray5); white-space:nowrap; transition:all .15s;
-}
-.btn-prep:hover { background:var(--brand); color:#fff; border-color:var(--brand); }
-
-/* prep modal */
-.prep-modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-@media(max-width:520px){ .prep-modal-grid { grid-template-columns:1fr; } }
-.prep-field { display:flex; flex-direction:column; gap:4px; }
-.prep-field label { font-size:12px; font-weight:600; color:var(--gray5); }
-.prep-field input, .prep-field select, .prep-field textarea {
-  padding:8px 10px; border:1.5px solid var(--gray3);
-  border-radius:6px; font-size:13px; font-family:inherit; color:var(--text);
-}
-.prep-field input:focus, .prep-field select:focus, .prep-field textarea:focus {
-  outline:none; border-color:var(--brand);
-}
-.prep-field.full { grid-column:1/-1; }
-.prep-section-title {
-  grid-column:1/-1; font-size:12px; font-weight:700;
-  color:var(--brand); padding:.5rem 0 .25rem;
-  border-bottom:1px solid var(--gray2); margin-bottom:2px;
-}
+/* ── 任務清單 ── */
 .task-grid { display:flex; flex-direction:column; gap:10px; }
 .task-card {
   background:#fff; border-radius:10px; border:1.5px solid var(--gray3);
@@ -436,13 +352,6 @@ tr:last-child td{border-bottom:none;}
         <button onclick="setPurchaseMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
         <button onclick="setPurchaseYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
         <button onclick="clearPurchase()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
-        <span style="color:var(--gray3);margin:0 4px;">｜</span>
-        <label>訂單狀態：</label>
-        <select id="purchase-status" onchange="renderPurchase()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
-          <option value="all">全部訂單</option>
-          <option value="pending">待交車</option>
-          <option value="done">已交車</option>
-        </select>
       </div>
       <div class="grid2">
         <div class="card">
@@ -505,15 +414,6 @@ tr:last-child td{border-bottom:none;}
 
     <!-- 客戶分析 -->
     <div id="tab-customer" style="display:none;">
-      <div class="filter-row" style="margin-bottom:1rem;">
-        <label>日期區間：</label>
-        <input type="date" id="customer-from" onchange="renderCustomer()">
-        <span style="color:var(--gray4);font-size:13px;">～</span>
-        <input type="date" id="customer-to" onchange="renderCustomer()">
-        <button onclick="setCustomerMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
-        <button onclick="setCustomerYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
-        <button onclick="clearCustomer()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
-      </div>
       <div class="grid2">
         <div class="card">
           <div class="card-title">⚧ 性別統計</div>
@@ -549,17 +449,16 @@ tr:last-child td{border-bottom:none;}
           <option value="">所有 Sale</option>
         </select>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div class="rec-header-labels">
-          <span class="rec-header-label">日期</span>
-          <span class="rec-header-label">客戶 ／ 手機</span>
-          <span class="rec-header-label">車款</span>
-          <span class="rec-header-label">總金額</span>
-          <span class="rec-header-label">狀態</span>
-          <span class="rec-header-label">Sale</span>
-          <span class="rec-header-label"></span>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
+              <th>車種</th><th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>訂金付款</th><th>尾款</th><th>尾款付款</th><th>Sale</th>
+            </tr></thead>
+            <tbody id="tbody-records"></tbody>
+          </table>
         </div>
-        <div id="tbody-records" class="rec-list"></div>
       </div>
     </div>
 
@@ -607,27 +506,18 @@ if (sessionStorage.getItem('98go_auth') === '1') {
 // ====== CONFIG ======
 const SHEET_ID = '1eLlGkJ2hvk_XJvJYtVGqGgQ8pCrQolfSkUlGnDhXO8k';
 const SHEET_NAME = '購車保固資料表';
-const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&t=${Date.now()}`;
+const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 window._SCRIPT_URL = APPS_SCRIPT_URL;
 
-// 商品主檔
-const PRODUCT_SHEET_ID  = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
-const PRODUCT_API_URL   = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
-
 let allData = [];
 let currentTab = 'overview';
-let batteryOptions  = [];   // [{ code, label }, ...]
-let chargerOptions  = [];   // [{ code, label }, ...]
-let productMasterLoaded = false;
 
 // ====== LOAD DATA ======
 async function loadData() {  document.getElementById('loading').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
-    // 每次載入都加新的 timestamp，強制繞過 gviz 快取
-    const freshURL = API_URL.replace(/&t=\d+/, '') + '&t=' + Date.now();
-    const res = await fetch(freshURL, { cache: 'no-store' });
+    const res = await fetch(API_URL);
     const text = await res.text();
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const rows = json.table.rows;
@@ -635,7 +525,8 @@ async function loadData() {  document.getElementById('loading').style.display = 
     allData = rows.map(row => {
       const obj = {};
       cols.forEach((col, i) => {
-        obj[col.label || col.id] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
+        const key = (col.label || col.id || '').replace(/\s+/g,'');
+        obj[key] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
       });
       return obj;
     }).filter(r => r['單號']);
@@ -643,8 +534,6 @@ async function loadData() {  document.getElementById('loading').style.display = 
     renderAll();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
-    // 讀取商品主檔（只需一次）
-    if (!productMasterLoaded) loadProductMaster();
   } catch(e) {
     document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請確認 Google Sheets 已開放「知道連結的人可以檢視」<br><br>錯誤：${e.message}</div>`;
   }
@@ -657,31 +546,14 @@ function getDate(row, key) {
   const v = row[key];
   if (!v) return null;
   if (typeof v === 'string') {
-    // gviz 回傳 Date(year,month,day) 格式（月份 0-based）
+    // Google Sheets gviz returns Date(year,month,day) where month is 0-based
     const match = v.match(/Date\((\d+),(\d+),(\d+)\)/);
     if (match) return new Date(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
-    // 純文字日期 "2026-05-01"：用本地時間解析，避免 UTC 時區偏移
-    const isoMatch = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (isoMatch) return new Date(parseInt(isoMatch[1]), parseInt(isoMatch[2])-1, parseInt(isoMatch[3]));
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }
   if (typeof v === 'number') return new Date((v - 25569) * 86400000);
   return null;
-}
-
-// gviz 日期字串解析（統一入口，處理 Date(y,m,d) 格式）
-function parseGvizDate(v) {
-  if (!v) return null;
-  if (v instanceof Date) return v;
-  const s = String(v);
-  const m = s.match(/Date\((\d+),(\d+),(\d+)\)/);
-  if (m) return new Date(Number(m[1]), Number(m[2]), Number(m[3]));
-  // ISO 格式 "2026-05-01"
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return new Date(Number(iso[1]), Number(iso[2])-1, Number(iso[3]));
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
 }
 function fmtDate(v) {
   if (!v) return '—';
@@ -694,16 +566,6 @@ function isChecked(row, key) {
   const v = row[key];
   if (v === null || v === undefined || v === '' || v === false || v === 'FALSE' || v === 'false' || v === 0) return false;
   return true; // true, 'TRUE', 'true', 1, 任何truthy值
-}
-
-// 把 input[type=date] 的值（"2026-05-01"）轉成本地時間 Date，避免 UTC 時區偏移
-function parseLocalDate(str, endOfDay) {
-  if (!str) return null;
-  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return null;
-  const d = new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
-  if (endOfDay) { d.setHours(23,59,59,999); }
-  return d;
 }
 
 function getVal(row, key) {
@@ -735,40 +597,6 @@ function fmtOrderId(raw) {
 }
 function fmtMoney(n) {
   return 'NT$ ' + Math.round(n).toLocaleString();
-}
-
-// ====== 多筆付款明細解析 ======
-// 格式：「現金:5000:2025-06-01｜信用卡:10000:2025-06-01」
-function parsePayDetail(str) {
-  if (!str) return [];
-  return str.split('｜').map(seg => {
-    const parts = seg.split(':');
-    return { method: parts[0]?.trim()||'', amount: parseFloat(parts[1])||0, date: parts[2]?.trim()||'' };
-  }).filter(d => d.method && d.amount > 0);
-}
-// 標準化付款方式（歷史資料「刷卡」→「信用卡」）
-function normMethod(m) { return (!m)?'': m==='刷卡'?'信用卡':m; }
-
-// 取訂金付款明細列表（單筆 or 多筆）
-function getDepDetailList(r) {
-  const method = normMethod(getVal(r,'訂金支付方式'));
-  const dep    = getNum(r,'訂金');
-  const detail = getVal(r,'訂金付款明細');
-  const date   = getVal(r,'訂金日期');
-  if (method==='多元付款' && detail) return parsePayDetail(detail);
-  if (dep>0 && method) return [{method, amount:dep, date}];
-  return [];
-}
-// 取尾款付款明細列表（單筆 or 多筆，需尾款已收）
-function getBalDetailList(r) {
-  if (!isChecked(r,'尾款已收')) return [];
-  const method = normMethod(getVal(r,'尾款支付方式'));
-  const bal    = getNum(r,'尾款');
-  const detail = getVal(r,'尾款付款明細');
-  const date   = getVal(r,'尾款收款日期');
-  if (method==='多元付款' && detail) return parsePayDetail(detail);
-  if (bal>0 && method) return [{method, amount:bal, date}];
-  return [];
 }
 function getYM(row) {
   const d = getDate(row, '成交日期');
@@ -843,138 +671,91 @@ function renderOverview() {
   const fromVal = document.getElementById('cf-from')?.value;
   const toVal = document.getElementById('cf-to')?.value;
 
-  // ── 金流篩選（依訂金日期 / 尾款日期，不動）──
-  const filtered = allData.filter(r => {
-    const d = getDate(r, '成交日期');
+  // 查帳區間判斷（訂金與尾款分別用各自的日期欄位來判斷，不能共用同一個篩選）
+  const inCFRange = d => {
     if (!d || isNaN(d.getTime())) return false;
-    if (fromVal) { const from = parseLocalDate(fromVal); if (d < from) return false; }
-    if (toVal)   { const to   = parseLocalDate(toVal, true); if (d > to) return false; }
+    if (fromVal) {
+      const from = new Date(fromVal); from.setHours(0,0,0,0);
+      if (d < from) return false;
+    }
+    if (toVal) {
+      const to = new Date(toVal); to.setHours(23,59,59,999);
+      if (d > to) return false;
+    }
     return true;
-  });
-
-  // ── 實際交車日取得邏輯（業績依據）──
-  // 優先用「實際交車日」；空白且有完款日期 → 用完款日期（歷史資料過渡）；兩者都沒有 → null（不計入業績）
-  const getDelivDate = r => {
-    const d1 = getDate(r, '實際交車日');
-    if (d1 && !isNaN(d1.getTime())) return d1;
-    const d2 = getDate(r, '完款日期');
-    if (d2 && !isNaN(d2.getTime())) return d2;
-    return null;
   };
 
-  // ── 業績統計（依實際交車日）──
-  const isDateToday = d => d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
-  const isDateThisMonth = d => d && d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
-  const isDateThisYear  = d => d && d.getFullYear()===now.getFullYear();
-
-  const todayDelivered  = allData.filter(r => isDateToday(getDelivDate(r)));
-  const monthDelivered  = allData.filter(r => isDateThisMonth(getDelivDate(r)));
-  const yearDelivered   = allData.filter(r => isDateThisYear(getDelivDate(r)));
-  const todayRevenue    = todayDelivered.reduce((s,r) => s+getNum(r,'總金額'), 0);
-  const monthRevenue    = monthDelivered.reduce((s,r) => s+getNum(r,'總金額'), 0);
-  const yearRevenue     = yearDelivered.reduce((s,r)  => s+getNum(r,'總金額'), 0);
-  const avgRevenue      = monthDelivered.length ? monthRevenue / monthDelivered.length : 0;
-
-  // ── 接單統計（依成交日期，保留查閱用途）──
-  const todayOrdered = allData.filter(r => {
+  const thisMonth = allData.filter(r => {
     const d = getDate(r,'成交日期');
-    return isDateToday(d);
+    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
+  const today = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    if (!d) return false;
+    const t = new Date(); 
+    return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
+  });
+  const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const todayRevenue = today.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const yearRevenue = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return d && d.getFullYear()===now.getFullYear();
+  }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
-  // ── 今日現金（金流，依訂金日期 / 尾款日期）──
-  const isToday = d => isDateToday(d);
+  // 今日現金總額
+  const today2 = new Date();
+  const isToday = d => d && d.getFullYear()===today2.getFullYear() && d.getMonth()===today2.getMonth() && d.getDate()===today2.getDate();
   const todayCash = allData.reduce((s,r) => {
     let cash = 0;
-    getDepDetailList(r).forEach(d => {
-      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'成交日期');
-      if (isToday(dd) && d.method==='現金') cash += d.amount;
-    });
-    getBalDetailList(r).forEach(d => {
-      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'尾款收款日期');
-      if (isToday(dd) && d.method==='現金') cash += d.amount;
-    });
+    // 訂金：用成交日期判斷
+    const depDate = getDate(r,'成交日期');
+    if (isToday(depDate) && getVal(r,'訂金支付方式')==='現金') cash += getNum(r,'訂金');
+    // 尾款：用尾款收款日期判斷（AP欄）
+    const balDate = getDate(r,'尾款收款日期');
+    if (isToday(balDate) && getVal(r,'尾款支付方式')==='現金') cash += getNum(r,'尾款');
     return s + cash;
   }, 0);
 
   document.getElementById('metrics-overview').innerHTML = `
-    <div class="metric accent">
-      <div class="lbl">今日交車</div>
-      <div class="val">${todayDelivered.length} 台</div>
-      <div class="sub">今日營收 ${fmtMoney(todayRevenue)}｜今日接單 ${todayOrdered.length} 筆</div>
-    </div>
-    <div class="metric">
-      <div class="lbl">本月營收</div>
-      <div class="val">${fmtMoney(monthRevenue)}</div>
-      <div class="sub">本月交車 ${monthDelivered.length} 台</div>
-    </div>
-    <div class="metric">
-      <div class="lbl">年度營收</div>
-      <div class="val">${fmtMoney(yearRevenue)}</div>
-      <div class="sub">${now.getFullYear()} 年・交車 ${yearDelivered.length} 台</div>
-    </div>
-    <div class="metric">
-      <div class="lbl">平均客單價</div>
-      <div class="val">${fmtMoney(avgRevenue)}</div>
-      <div class="sub">本月交車均價</div>
-    </div>
-    <div class="metric" style="border:2px solid var(--green);background:var(--green);">
-      <div class="lbl" style="color:rgba(255,255,255,.7);">今日現金收款</div>
-      <div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div>
-      <div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div>
-    </div>
+    <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
+    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
+    <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
+    <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
+    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
   `;
 
-  // 現金流表格：訂金依訂金日期篩選，尾款依尾款收款日期篩選（各自獨立，不用 filtered）
+  // 現金流表格
+  const methods = ['現金','匯款/轉帳','刷卡','無卡分期'];
   const cfMap = {};
-  const addCF = (method, amount, isbal) => {
-    const m = normMethod(method) || '（未填）';
-    if (!cfMap[m]) cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0};
-    if (!isbal) { cfMap[m].depCount++; cfMap[m].dep += amount; }
-    else        { cfMap[m].balCount++; cfMap[m].bal += amount; }
-  };
-
-  const inRange = date => {
-    if (!date || isNaN(date.getTime())) return false;
-    if (fromVal) { const from = parseLocalDate(fromVal); if (date < from) return false; }
-    if (toVal)   { const to   = parseLocalDate(toVal, true); if (date > to) return false; }
-    return true;
-  };
-
+  methods.forEach(m => cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0});
   allData.forEach(r => {
-    // 訂金：依各筆訂金日期判斷是否在區間內
-    getDepDetailList(r).forEach(d => {
-      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'成交日期');
-      if (inRange(dd)) addCF(d.method, d.amount, false);
-    });
-    // 尾款：依各筆尾款收款日期判斷是否在區間內
-    getBalDetailList(r).forEach(d => {
-      const dd = d.date ? parseGvizDate(d.date) : getDate(r,'尾款收款日期');
-      if (inRange(dd)) addCF(d.method, d.amount, true);
-    });
+    const dm = getVal(r,'訂金支付方式') || '現金';
+    const bm = getVal(r,'尾款支付方式') || '現金';
+    const dep = getNum(r,'訂金');
+    const bal = getNum(r,'尾款');
+    if (!cfMap[dm]) cfMap[dm] = {depCount:0,dep:0,balCount:0,bal:0};
+    if (!cfMap[bm]) cfMap[bm] = {depCount:0,dep:0,balCount:0,bal:0};
+    // 訂金：用「成交日期」判斷是否落在查帳區間
+    if (dep > 0 && inCFRange(getDate(r,'成交日期'))) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
+    // 尾款：只有「尾款已收✅」才計入，且用「尾款收款日期」判斷是否落在查帳區間（不是用成交日期）
+    if (bal > 0 && isChecked(r,'尾款已收') && inCFRange(getDate(r,'尾款收款日期'))) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
   });
 
-  const colorMap = {
-    '現金':'badge-green','匯款/轉帳':'badge-blue',
-    '信用卡':'badge-amber','刷卡':'badge-amber',
-    '無卡分期':'badge-purple','蝦皮':'badge-blue',
-    '官網':'badge-blue','其他':'badge-green','（未填）':'badge-green'
-  };
+  const colorMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
   let totalDep=0, totalBal=0, totalDepCount=0, totalBalCount=0;
-  const rows = Object.entries(cfMap)
-    .sort((a,b) => (b[1].dep+b[1].bal)-(a[1].dep+a[1].bal))
-    .filter(([,v]) => v.dep+v.bal > 0)
-    .map(([method, v]) => {
-      totalDep += v.dep; totalBal += v.bal;
-      totalDepCount += v.depCount; totalBalCount += v.balCount;
-      return `<tr>
-        <td><span class="badge ${colorMap[method]||'badge-green'}">${method}</span></td>
-        <td style="text-align:right;color:var(--gray5);">${v.depCount} 筆</td>
-        <td style="text-align:right;font-weight:500;">${fmtMoney(v.dep)}</td>
-        <td style="text-align:right;color:var(--gray5);">${v.balCount} 筆</td>
-        <td style="text-align:right;font-weight:500;">${fmtMoney(v.bal)}</td>
-        <td style="text-align:right;font-weight:700;color:var(--brand);">${fmtMoney(v.dep+v.bal)}</td>
-      </tr>`;
-    }).join('');
+  const rows = Object.entries(cfMap).filter(([,v]) => v.dep+v.bal > 0).map(([method, v]) => {
+    totalDep += v.dep; totalBal += v.bal;
+    totalDepCount += v.depCount; totalBalCount += v.balCount;
+    return `<tr>
+      <td><span class="badge ${colorMap[method]||'badge-green'}">${method}</span></td>
+      <td style="text-align:right;color:var(--gray5);">${v.depCount} 筆</td>
+      <td style="text-align:right;font-weight:500;">${fmtMoney(v.dep)}</td>
+      <td style="text-align:right;color:var(--gray5);">${v.balCount} 筆</td>
+      <td style="text-align:right;font-weight:500;">${fmtMoney(v.bal)}</td>
+      <td style="text-align:right;font-weight:700;color:var(--brand);">${fmtMoney(v.dep+v.bal)}</td>
+    </tr>`;
+  }).join('');
 
   document.getElementById('tbody-cashflow').innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--gray4);padding:2rem;">此區間無資料</td></tr>`;
   // 檢查尾款已收但沒填收款日期的訂單
@@ -1010,26 +791,22 @@ function renderOverview() {
 // ====== SALES RANKING ======
 function renderSales() {
   const ym = document.getElementById('sales-month')?.value;
-  // 銷售排行依實際交車日（歷史資料以完款日期過渡）
-  const getDelivYM = r => {
-    const d1 = getDate(r,'實際交車日');
-    if (d1 && !isNaN(d1.getTime())) return d1.getFullYear()+'-'+String(d1.getMonth()+1).padStart(2,'0');
-    const d2 = getDate(r,'完款日期');
-    if (d2 && !isNaN(d2.getTime())) return d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0');
-    return '';
-  };
-  const data = ym ? allData.filter(r => getDelivYM(r)===ym) : allData.filter(r => getDelivYM(r)!=='');
+  const data = ym ? allData.filter(r => getYM(r)===ym) : allData;
 
   renderBarsFromData('vehicletype-bars', data, '車種類型', '#E63946', v => v+' 筆');
   renderBarsFromData('model-bars', data, '車款', '#2B2D42', v => v+' 筆');
   renderBarsFromData2('battery-bars', data, '電池規格(V)', '電池規格(ah)', '#1D9E75', v => v+' 筆');
   renderBarsFromData('color-bars', data, '顏色', '#534AB7', v => v+' 筆');
 
-  // 付款方式：依金額統計，支援多筆明細，歷史「刷卡」合併至「信用卡」
+  // 付款方式：依金額統計
   const pmMap = {};
   data.forEach(r => {
-    getDepDetailList(r).forEach(d => { pmMap[d.method] = (pmMap[d.method]||0) + d.amount; });
-    getBalDetailList(r).forEach(d => { pmMap[d.method] = (pmMap[d.method]||0) + d.amount; });
+    const dm = getVal(r,'訂金支付方式') || '現金';
+    const bm = getVal(r,'尾款支付方式') || '現金';
+    const dep = getNum(r,'訂金');
+    const bal = getNum(r,'尾款');
+    if (dep > 0) { pmMap[dm] = (pmMap[dm]||0) + dep; }
+    if (bal > 0) { pmMap[bm] = (pmMap[bm]||0) + bal; }
   });
   const pmEntries = Object.entries(pmMap).sort((a,b)=>b[1]-a[1]);
   const pmMax = pmEntries[0]?.[1] || 1;
@@ -1115,21 +892,14 @@ function clearPurchase() {
 function renderPurchase() {
   const fromVal = document.getElementById('purchase-from').value;
   const toVal = document.getElementById('purchase-to').value;
-  const fromD = parseLocalDate(fromVal);
-  const toD = parseLocalDate(toVal, true);
+  const fromD = fromVal ? new Date(fromVal) : null;
+  const toD = toVal ? new Date(toVal + 'T23:59:59') : null;
 
-  const statusFilter = document.getElementById('purchase-status')?.value || 'all';
   const filtered = allData.filter(r => {
-    // 採購計算改用實際交車日（歷史資料以完款日期過渡）
-    const d1 = getDate(r, '實際交車日');
-    const d2 = getDate(r, '完款日期');
-    const d  = (d1 && !isNaN(d1.getTime())) ? d1 : (d2 && !isNaN(d2.getTime())) ? d2 : null;
+    const d = getDate(r, '成交日期');
     if (!d) return false;
     if (fromD && d < fromD) return false;
     if (toD && d > toD) return false;
-    const status = getVal(r, '訂單狀態');
-    if (statusFilter === 'pending' && status === '已交車') return false;
-    if (statusFilter === 'done' && status !== '已交車') return false;
     return true;
   });
 
@@ -1260,8 +1030,8 @@ function renderDelivery() {
     if (!fromVal && !toVal) return true;
     const d = getDate(r, '預計交車日');
     if (!d) return false;
-    if (fromVal && d < parseLocalDate(fromVal)) return false;
-    if (toVal && d > parseLocalDate(toVal, true)) return false;
+    if (fromVal && d < new Date(fromVal)) return false;
+    if (toVal && d > new Date(toVal + 'T23:59:59')) return false;
     return true;
   };
 
@@ -1285,8 +1055,8 @@ function renderDelivery() {
     if (!fromVal && !toVal) return true;
     const d = getDate(r, '成交日期');
     if (!d) return false;
-    if (fromVal && d < parseLocalDate(fromVal)) return false;
-    if (toVal && d > parseLocalDate(toVal, true)) return false;
+    if (fromVal && d < new Date(fromVal)) return false;
+    if (toVal && d > new Date(toVal + 'T23:59:59')) return false;
     return true;
   };
   let showData;
@@ -1330,47 +1100,13 @@ function renderDelivery() {
 }
 
 // ====== CUSTOMER ======
-function setCustomerMonth() {
-  const now = new Date();
-  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0');
-  const last = new Date(y, now.getMonth()+1, 0).getDate();
-  document.getElementById('customer-from').value = `${y}-${m}-01`;
-  document.getElementById('customer-to').value = `${y}-${m}-${String(last).padStart(2,'0')}`;
-  renderCustomer();
-}
-function setCustomerYear() {
-  const y = new Date().getFullYear();
-  document.getElementById('customer-from').value = `${y}-01-01`;
-  document.getElementById('customer-to').value = `${y}-12-31`;
-  renderCustomer();
-}
-function clearCustomer() {
-  document.getElementById('customer-from').value = '';
-  document.getElementById('customer-to').value = '';
-  renderCustomer();
-}
-
 function renderCustomer() {
-  const fromVal = document.getElementById('customer-from')?.value;
-  const toVal = document.getElementById('customer-to')?.value;
-  const fromD = parseLocalDate(fromVal);
-  const toD = parseLocalDate(toVal, true);
-
-  const data = allData.filter(r => {
-    if (!fromD && !toD) return true;
-    const d = getDate(r, '成交日期');
-    if (!d) return false;
-    if (fromD && d < fromD) return false;
-    if (toD && d > toD) return false;
-    return true;
-  });
-
   // 性別統計
-  renderBarsFromData('gender-bars', data, '性別', '#534AB7', v => v+' 人');
+  renderBarsFromData('gender-bars', allData, '性別', '#534AB7', v => v+' 人');
 
   // 年齡分布
   const ageMap = {'18歲以下':0,'18-25歲':0,'26-35歲':0,'36-45歲':0,'46-55歲':0,'56歲以上':0,'未填寫':0};
-  data.forEach(r => {
+  allData.forEach(r => {
     const b = getVal(r,'生日');
     if (!b) { ageMap['未填寫']++; return; }
     const birth = new Date(b);
@@ -1392,14 +1128,14 @@ function renderCustomer() {
     </div>`).join('') || '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
 
   // 縣市統計
-  renderBarsFromData('city-bars', data, '縣市', '#185FA5', v => v+' 人');
+  renderBarsFromData('city-bars', allData, '縣市', '#185FA5', v => v+' 人');
 
   // 行政區統計
-  renderBarsFromData('district-bars', data, '行政區', '#378ADD', v => v+' 人');
+  renderBarsFromData('district-bars', allData, '行政區', '#378ADD', v => v+' 人');
 
   // 來源渠道
   const srcMap = {};
-  data.forEach(r => {
+  allData.forEach(r => {
     const sources = getVal(r,'從哪裡認識我們').split('、');
     sources.forEach(s => { s=s.trim(); if(s) srcMap[s]=(srcMap[s]||0)+1; });
   });
@@ -1419,132 +1155,27 @@ function filterRecords() {
     if (ym && getYM(r)!==ym) return false;
     if (sale && getVal(r,'Sale')!==sale) return false;
     if (q) {
-      const haystack = [getVal(r,'姓名'),getVal(r,'車款'),getVal(r,'Sale'),getVal(r,'單號'),getVal(r,'手機號碼'),getVal(r,'身分證字號')].join(' ').toLowerCase();
+      const haystack = [getVal(r,'姓名'),getVal(r,'車款'),getVal(r,'Sale'),getVal(r,'單號'),getVal(r,'手機號碼')].join(' ').toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
   });
   const pmMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
-
-  if (!filtered.length) {
-    document.getElementById('tbody-records').innerHTML = '<div style="text-align:center;color:var(--gray4);padding:2rem;font-size:13px;">沒有符合的記錄</div>';
-    return;
-  }
-
-  document.getElementById('tbody-records').innerHTML = filtered
-    .sort((a,b) => getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記')))
-    .map((r, idx) => {
-      const id = getVal(r,'單號');
-      const cardId = 'rec-' + idx;
-      const isDone = getVal(r,'訂單狀態') === '已交車';
-      const bal = getNum(r,'尾款');
-      const depM = getVal(r,'訂金支付方式') || '—';
-      const balM = getVal(r,'尾款支付方式') || '—';
-      const depP = getVal(r,'訂金分期');
-      const balP = getVal(r,'尾款分期');
-
-      // 狀態 badge
-      const statusBadge = isDone
-        ? '<span class="badge badge-green">✅ 已交車</span>'
-        : bal > 0
-          ? `<span class="badge badge-amber">待收 ${fmtMoney(bal)}</span>`
-          : '<span class="badge badge-blue">待交車</span>';
-
-      // 加購項目
-      const addonItems = getVal(r,'加價購項目');
-      const addonRows = addonItems
-        ? addonItems.split('、').filter(Boolean).map(i => {
-            const parts = i.split(':');
-            const name = parts[0].trim();
-            const price = parts[1] ? fmtMoney(parseFloat(parts[1])) : '';
-            return `<div class="rec-detail-row"><span class="lbl">${name}</span><span class="val">${price}</span></div>`;
-          }).join('')
-        : '<div style="font-size:12px;color:var(--gray4);">無加購項目</div>';
-
-      return `
-      <div class="rec-card${isDone?' delivered':''}" id="${cardId}">
-        <div class="rec-header" onclick="toggleRecord('${cardId}')">
-          <span class="rec-col date">${fmtDate(getVal(r,'成交日期'))}</span>
-          <span class="rec-col customer">
-            ${getVal(r,'姓名')}
-            <span style="font-size:11px;font-weight:400;color:var(--gray5);display:block;">${getVal(r,'手機號碼')}</span>
-          </span>
-          <span class="rec-col vehicle">
-            ${getVal(r,'車款')||'—'}
-            <span style="font-size:11px;color:var(--gray5);display:block;">${getVal(r,'車種類型')||''} ${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</span>
-          </span>
-          <span class="rec-col amount">${fmtMoney(getNum(r,'總金額'))}</span>
-          <span class="rec-col status">${statusBadge}</span>
-          <span class="rec-col sale">${getVal(r,'Sale')||'—'}</span>
-          <span class="rec-toggle">▾</span>
-        </div>
-        <div class="rec-detail">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
-
-            <div>
-              <div class="rec-detail-title">📋 訂單資訊</div>
-              <div class="rec-detail-row"><span class="lbl">單號</span><span class="val" style="font-family:monospace;font-size:11px;">${fmtOrderId(id)}</span></div>
-              <div class="rec-detail-row"><span class="lbl">成交日期</span><span class="val">${fmtDate(getVal(r,'成交日期'))}</span></div>
-              <div class="rec-detail-row"><span class="lbl">預計交車</span><span class="val">${fmtDate(getVal(r,'預計交車日'))||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">訂單狀態</span><span class="val">${getVal(r,'訂單狀態')||'待交車'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">Sale</span><span class="val">${getVal(r,'Sale')||'—'}</span></div>
-            </div>
-
-            <div>
-              <div class="rec-detail-title">🏍 車輛資料</div>
-              <div class="rec-detail-row"><span class="lbl">車種</span><span class="val">${getVal(r,'車種類型')||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">車款</span><span class="val">${getVal(r,'車款')||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">顏色</span><span class="val">${getVal(r,'顏色')||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">電池</span><span class="val">${[getVal(r,'電池類型'),getVal(r,'電池規格(V)'),getVal(r,'電池規格(ah)')].filter(Boolean).join(' ')||'—'}</span></div>
-              ${getVal(r,'車架號碼') ? `<div class="rec-detail-row"><span class="lbl">車架號碼</span><span class="val" style="font-family:monospace;font-size:11px;">${getVal(r,'車架號碼')}</span></div>` : ''}
-              ${getVal(r,'車牌號碼') ? `<div class="rec-detail-row"><span class="lbl">車牌</span><span class="val">${getVal(r,'車牌號碼')}</span></div>` : ''}
-              ${getVal(r,'車輛備註') ? `<div class="rec-detail-row"><span class="lbl">備註</span><span class="val">${getVal(r,'車輛備註')}</span></div>` : ''}
-            </div>
-
-            <div>
-              <div class="rec-detail-title">👤 客戶資料</div>
-              <div class="rec-detail-row"><span class="lbl">姓名</span><span class="val">${getVal(r,'姓名')||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">手機</span><span class="val">${getVal(r,'手機號碼')||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">身分證</span><span class="val" style="font-family:monospace;font-size:11px;">${getVal(r,'身分證字號')||'—'}</span></div>
-              <div class="rec-detail-row"><span class="lbl">地址</span><span class="val">${[getVal(r,'縣市'),getVal(r,'行政區'),getVal(r,'地址')].filter(Boolean).join('')||'—'}</span></div>
-              ${getVal(r,'生日') ? `<div class="rec-detail-row"><span class="lbl">生日</span><span class="val">${fmtDate(getVal(r,'生日'))}</span></div>` : ''}
-            </div>
-
-            <div>
-              <div class="rec-detail-title">💰 金額明細</div>
-              <div class="rec-detail-row"><span class="lbl">車輛售價</span><span class="val">${fmtMoney(getNum(r,'車輛售價'))}</span></div>
-              ${getNum(r,'加價購金額') > 0 ? `<div class="rec-detail-row"><span class="lbl">加購小計</span><span class="val">${fmtMoney(getNum(r,'加價購金額'))}</span></div>` : ''}
-              ${getNum(r,'折扣金額') > 0 ? `<div class="rec-detail-row"><span class="lbl">折扣</span><span class="val" style="color:var(--accent);">－${fmtMoney(getNum(r,'折扣金額'))}</span></div>` : ''}
-              <div class="rec-detail-row"><span class="lbl">總金額</span><span class="val" style="font-weight:700;">${fmtMoney(getNum(r,'總金額'))}</span></div>
-              <div style="height:6px;"></div>
-              <div class="rec-detail-row"><span class="lbl">訂金</span><span class="val">${fmtMoney(getNum(r,'訂金'))}</span></div>
-              <div class="rec-detail-row"><span class="lbl">訂金付款</span><span class="val"><span class="badge ${pmMap[depM]||'badge-green'}">${depM}${depP?' '+depP:''}</span></span></div>
-              ${getVal(r,'訂金日期') ? `<div class="rec-detail-row"><span class="lbl">訂金日期</span><span class="val">${fmtDate(getVal(r,'訂金日期'))}</span></div>` : ''}
-              <div style="height:6px;"></div>
-              <div class="rec-detail-row"><span class="lbl">尾款</span><span class="val">${fmtMoney(bal)}</span></div>
-              <div class="rec-detail-row"><span class="lbl">尾款付款</span><span class="val"><span class="badge ${pmMap[balM]||'badge-green'}">${balM}${balP?' '+balP:''}</span></span></div>
-              ${getVal(r,'完款日期') ? `<div class="rec-detail-row"><span class="lbl">完款日期</span><span class="val">${fmtDate(getVal(r,'完款日期'))}</span></div>` : ''}
-            </div>
-
-            <div>
-              <div class="rec-detail-title">🛍 加購項目</div>
-              ${addonRows}
-            </div>
-
-          </div>
-          <div class="rec-detail-actions">
-            <button class="rec-action-btn" onclick="window.open('https://98goebike.github.io/98GOcheckin/receipt.html?id=${id}','_blank')">🔗 查看收據</button>
-            ${!isDone ? `<button class="rec-action-btn green" onclick="openDeliveryModal('${id}')">💰 登記收款</button>` : ''}
-            ${!isDone ? `<button class="rec-action-btn" onclick="openEditModal('${id}')" style="border-color:#B5D4F4;color:#185FA5;">✏️ 編輯訂單</button>` : ''}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-}
-
-function toggleRecord(cardId) {
-  const card = document.getElementById(cardId);
-  if (card) card.classList.toggle('open');
+  document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記'))).map(r => `<tr>
+    <td>${getVal(r,'成交日期')}</td>
+    <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(getVal(r,'單號'))}</td>
+    <td>${getVal(r,'姓名')}</td>
+    <td>${getVal(r,'手機號碼')}</td>
+    <td style="font-size:11px;">${getVal(r,'車種類型')||'—'}</td>
+    <td>${getVal(r,'車款')}</td>
+    <td>${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
+    <td style="font-weight:600;">${fmtMoney(getNum(r,'總金額'))}</td>
+    <td>${fmtMoney(getNum(r,'訂金'))}</td>
+    <td><span class="badge ${pmMap[getVal(r,'訂金支付方式')]||'badge-green'}">${getVal(r,'訂金支付方式')||'—'}</span></td>
+    <td>${fmtMoney(getNum(r,'尾款'))}</td>
+    <td><span class="badge ${pmMap[getVal(r,'尾款支付方式')]||'badge-green'}">${getVal(r,'尾款支付方式')||'—'}</span></td>
+    <td>${getVal(r,'Sale')||'—'}</td>
+  </tr>`).join('') || '<tr><td colspan="13" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
@@ -1628,38 +1259,6 @@ function renderTaskCard(r, now) {
   const balAmt   = getNum(r,'尾款');
   const isInstalled  = isChecked(r,'已安裝') || false;
   const isRegistered = isChecked(r,'已掛牌') || false;
-  const speedSetting = getVal(r,'速度設定');
-
-  // 備車資訊
-  const prepBattery  = getVal(r,'實際出貨電池編號');
-  const prepCharger  = getVal(r,'充電器商品編號');
-  const prepPurchase = getVal(r,'採購狀態');
-  const prepAssemble = getVal(r,'組裝狀態');
-  const prepStaff    = getVal(r,'處理人員');
-  const prepNote     = getVal(r,'內部備註');
-
-  // 速度設定標籤
-  const speedLabel = speedSetting === '已依客戶要求調整' ? '⚡ 已依客戶要求調整'
-                   : speedSetting === '原廠設定'         ? '⚡ 原廠設定'
-                   : '';
-  const speedHtml = speedLabel
-    ? `<div style="margin:0 1rem .25rem;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;display:inline-block;background:${speedSetting==='已依客戶要求調整'?'#FFF3E5':'#E1F5EE'};color:${speedSetting==='已依客戶要求調整'?'#854F0B':'#085041'};">${speedLabel}</div>`
-    : '';
-
-  // 備車摘要（分行，只顯示有值的欄位）
-  const prepLines = [
-    prepBattery  ? `電池：${prepBattery}`   : '',
-    prepCharger  ? `充電器：${prepCharger}` : '',
-    prepAssemble ? `組裝：${prepAssemble}`  : '',
-    prepStaff    ? `處理：${prepStaff}`     : '',
-  ].filter(Boolean);
-
-  const prepSummaryHtml = prepLines.length > 0
-    ? `<div style="padding:.5rem 1rem;border-top:1px solid var(--gray2);background:#E6F1FB;">
-        <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:4px;">📦 備車資訊</div>
-        ${prepLines.map(l => `<div style="font-size:12px;color:var(--brand);line-height:1.8;">${l}</div>`).join('')}
-       </div>`
-    : '';
 
   // 日期判斷
   let cardClass = '', dateClass = 'future-date', dateLabel = '';
@@ -1721,7 +1320,6 @@ function renderTaskCard(r, now) {
         <div class="task-vehicle-sub">
           ${color || ''}${note ? ' · '+note : ''}<br>
           ${battery || '—'}
-          ${speedSetting ? `<br><span style="display:inline-block;margin-top:3px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${speedSetting==='已依客戶要求調整'?'#FFF3E5':'#E1F5EE'};color:${speedSetting==='已依客戶要求調整'?'#854F0B':'#085041'};">⚙️ ${speedSetting}</span>` : ''}
         </div>
       </div>
       <div class="task-addons">
@@ -1729,7 +1327,6 @@ function renderTaskCard(r, now) {
         ${addonHtml}
       </div>
     </div>
-    ${speedHtml}
     <div class="task-card-footer">
       <div class="task-customer">
         <strong>${name}</strong>${phone}
@@ -1750,175 +1347,27 @@ function renderTaskCard(r, now) {
         </div>
       </div>
     </div>
-    ${prepSummaryHtml}
-    <div style="padding:.5rem 1rem .75rem;border-top:1px solid var(--gray2);background:var(--gray1);display:flex;justify-content:flex-end;">
-      <button class="btn-prep" onclick="openPrepModal('${id}')">📦 編輯備車資訊</button>
-    </div>
   </div>`;
 }
 
-// ====== 商品主檔讀取 ======
-async function loadProductMaster() {
-  try {
-    const res  = await fetch(PRODUCT_API_URL + '&t=' + Date.now(), { cache: 'no-store' });
-    const text = await res.text();
-    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-    const cols = json.table.cols.map(c => (c.label || c.id).replace(/\s+/g, ''));
-    const rows = (json.table.rows || []).map(row => {
-      const obj = {};
-      cols.forEach((col, i) => {
-        obj[col] = row.c[i] ? (row.c[i].v !== undefined ? String(row.c[i].v).trim() : '') : '';
-      });
-      return obj;
-    });
-
-    batteryOptions = rows
-      .filter(r => r['大分類'] === '電池' && r['是否啟用'] === 'Y')
-      .map(r => ({ code: r['商品編號'], label: r['商品編號'] + '｜' + r['商品名稱'] }))
-      .filter(r => r.code);
-
-    chargerOptions = rows
-      .filter(r => r['大分類'] === '充電器' && r['是否啟用'] === 'Y')
-      .map(r => ({ code: r['商品編號'], label: r['商品編號'] + '｜' + r['商品名稱'] }))
-      .filter(r => r.code);
-
-    productMasterLoaded = true;
-  } catch(e) {
-    console.warn('商品主檔讀取失敗', e);
-    productMasterLoaded = false;
-  }
-}
-
-function fillPrepSelects(currentBattery, currentCharger) {
-  const batSel = document.getElementById('prep-battery');
-  const chgSel = document.getElementById('prep-charger');
-
-  if (!productMasterLoaded) {
-    batSel.innerHTML = '<option value="">商品主檔載入失敗，請稍後再試</option>';
-    chgSel.innerHTML = '<option value="">商品主檔載入失敗，請稍後再試</option>';
-    return;
-  }
-
-  batSel.innerHTML = '<option value="">尚未選擇</option>' +
-    batteryOptions.map(o => `<option value="${o.code}"${o.code===currentBattery?' selected':''}>${o.label}</option>`).join('');
-
-  chgSel.innerHTML = '<option value="">尚未選擇</option>' +
-    chargerOptions.map(o => `<option value="${o.code}"${o.code===currentCharger?' selected':''}>${o.label}</option>`).join('');
-}
-
-// ====== 備車資訊 Modal ======
-let prepOrderId = null;
-
-function openPrepModal(orderId) {
-  const r = allData.find(row => getVal(row,'單號') === orderId);
-  if (!r) return;
-  prepOrderId = orderId;
-
-  document.getElementById('prep-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
-  document.getElementById('prep-modal-sub').textContent  = getVal(r,'車款') + '　' + getVal(r,'顏色') + '　' + orderId;
-
-  const currentBattery = getVal(r,'實際出貨電池編號');
-  const currentCharger = getVal(r,'充電器商品編號');
-  fillPrepSelects(currentBattery, currentCharger);
-
-  document.getElementById('prep-purchase').value = getVal(r,'採購狀態');
-  document.getElementById('prep-assemble').value = getVal(r,'組裝狀態');
-  document.getElementById('prep-staff').value    = getVal(r,'處理人員');
-  document.getElementById('prep-note').value     = getVal(r,'內部備註');
-
-  document.getElementById('prep-err').classList.remove('show');
-  document.getElementById('prep-submit-btn').disabled = false;
-  document.getElementById('prep-submit-btn').textContent = '✅ 儲存備車資訊';
-  document.getElementById('prep-modal').style.display = 'flex';
-}
-
-function closePrepModal() {
-  document.getElementById('prep-modal').style.display = 'none';
-  prepOrderId = null;
-}
-
-function submitPrep() {
-  if (!prepOrderId) return;
-  const btn = document.getElementById('prep-submit-btn');
-  const errEl = document.getElementById('prep-err');
-  errEl.classList.remove('show');
-  btn.disabled = true;
-  btn.textContent = '儲存中...';
-
-  const battery  = document.getElementById('prep-battery').value;
-  const charger  = document.getElementById('prep-charger').value;
-  const purchase = document.getElementById('prep-purchase').value;
-  const assemble = document.getElementById('prep-assemble').value;
-  const staff    = document.getElementById('prep-staff').value.trim();
-  const note     = document.getElementById('prep-note').value.trim();
-
-  const cbName = 'cb_' + Date.now();
-  const url = `${APPS_SCRIPT_URL}?action=updatePrep`
-    + `&orderId=${encodeURIComponent(prepOrderId)}`
-    + `&battery=${encodeURIComponent(battery)}`
-    + `&charger=${encodeURIComponent(charger)}`
-    + `&purchase=${encodeURIComponent(purchase)}`
-    + `&assemble=${encodeURIComponent(assemble)}`
-    + `&staff=${encodeURIComponent(staff)}`
-    + `&note=${encodeURIComponent(note)}`
-    + `&callback=${cbName}`;
-
-  window[cbName] = function(data) {
-    delete window[cbName]; script.remove();
-    if (data.status === 'ok') {
-      // 更新本地 allData
-      const r = allData.find(row => getVal(row,'單號') === prepOrderId);
-      if (r) {
-        r['實際出貨電池編號'] = battery;
-        r['充電器商品編號']   = charger;
-        r['採購狀態']         = purchase;
-        r['組裝狀態']         = assemble;
-        r['處理人員']         = staff;
-        r['內部備註']         = note;
-      }
-      closePrepModal();
-      renderTasks(); // 即時更新卡片，不整頁重整
-    } else {
-      errEl.textContent = data.message || '儲存失敗，請稍後再試';
-      errEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = '✅ 儲存備車資訊';
-    }
-  };
-  const script = document.createElement('script');
-  script.src = url;
-  script.onerror = () => {
-    errEl.textContent = '網路異常，請再試一次';
-    errEl.classList.add('show');
-    btn.disabled = false;
-    btn.textContent = '✅ 儲存備車資訊';
-  };
-  document.body.appendChild(script);
-  setTimeout(() => {
-    if (window[cbName]) {
-      delete window[cbName]; script.remove();
-      errEl.textContent = '送出逾時，請再試一次';
-      errEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = '✅ 儲存備車資訊';
-    }
-  }, 12000);
-}
-
 function toggleTaskCheck(orderId, field, checked) {
+  // 找到 allData 對應列更新本地狀態
   const r = allData.find(row => getVal(row,'單號') === orderId);
   if (!r) return;
 
-  const fieldParam = field === '已安裝' ? 'installed' : 'registered';
-  const colName = field;   // 「已安裝」或「已掛牌」，直接用原始欄位名
+  // 呼叫 Apps Script 寫回 Sheets
   const cbName = 'cb_' + Date.now();
+  const fieldParam = field === '已安裝' ? 'installed' : 'registered';
   const url = `${APPS_SCRIPT_URL}?action=updateCheck&orderId=${encodeURIComponent(orderId)}&field=${fieldParam}&value=${checked}&callback=${cbName}`;
 
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (data.status === 'ok') {
-      r[colName] = checked;   // 先更新本地資料
-      renderTasks();          // 再重渲染，畫面才會保留勾勾
+      // 更新本地資料
+      const idx = allData.indexOf(r);
+      const headers = Object.keys(allData[0] || {});
+      // 重新渲染這張卡片
+      renderTasks();
     }
   };
   const script = document.createElement('script');
@@ -1930,179 +1379,6 @@ function toggleTaskCheck(orderId, field, checked) {
 // 若已在 session 中驗證過，直接載入
 if (sessionStorage.getItem('98go_auth') === '1') loadData();
 </script>
-
-<!-- 備車資訊 Modal -->
-<div id="prep-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closePrepModal()">
-  <div class="modal-box" style="max-width:500px;">
-    <div class="modal-header">
-      <h3>📦 備車資訊</h3>
-      <button class="modal-close" onclick="closePrepModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-order-info">
-        <div class="name" id="prep-modal-name">—</div>
-        <div class="sub" id="prep-modal-sub" style="font-size:12px;color:var(--gray4);margin-top:2px;"></div>
-      </div>
-      <div class="modal-err" id="prep-err"></div>
-      <div class="prep-modal-grid">
-        <div class="prep-section-title">🔋 實際出貨商品</div>
-        <div class="prep-field full">
-          <label>實際出貨電池</label>
-          <select id="prep-battery">
-            <option value="">尚未選擇</option>
-          </select>
-        </div>
-        <div class="prep-field full">
-          <label>充電器商品</label>
-          <select id="prep-charger">
-            <option value="">尚未選擇</option>
-          </select>
-        </div>
-        <div class="prep-section-title">📋 採購 ／ 組裝狀態</div>
-        <div class="prep-field">
-          <label>採購狀態</label>
-          <select id="prep-purchase">
-            <option value="">請選擇</option>
-            <option value="待採購">待採購</option>
-            <option value="已採購">已採購</option>
-            <option value="已到貨">已到貨</option>
-          </select>
-        </div>
-        <div class="prep-field">
-          <label>組裝狀態</label>
-          <select id="prep-assemble">
-            <option value="">請選擇</option>
-            <option value="待組裝">待組裝</option>
-            <option value="組裝中">組裝中</option>
-            <option value="已完成">已完成</option>
-          </select>
-        </div>
-        <div class="prep-section-title">👤 處理人員 ／ 備註</div>
-        <div class="prep-field">
-          <label>處理人員</label>
-          <input type="text" id="prep-staff" placeholder="處理人員姓名">
-        </div>
-        <div class="prep-field full">
-          <label>內部備註</label>
-          <textarea id="prep-note" rows="2" placeholder="內部備註，不對外顯示" style="resize:vertical;"></textarea>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn-cancel" onclick="closePrepModal()">取消</button>
-      <button class="modal-btn-submit" id="prep-submit-btn" onclick="submitPrep()">✅ 儲存備車資訊</button>
-    </div>
-  </div>
-</div>
-
-<!-- 編輯訂單 Modal -->
-<div id="edit-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeEditModal()">
-  <div class="modal-box" style="max-width:560px;">
-    <div class="modal-header">
-      <h3>✏️ 編輯訂單資料</h3>
-      <button class="modal-close" onclick="closeEditModal()">✕</button>
-    </div>
-    <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
-      <div class="modal-order-info">
-        <div class="name" id="edit-modal-name">—</div>
-        <div class="sub" id="edit-modal-sub" style="font-size:11px;font-family:monospace;color:var(--gray4);"></div>
-      </div>
-      <div class="modal-err" id="edit-err"></div>
-      <div class="edit-modal-grid">
-
-        <div class="edit-section-title">🏍 車輛資料</div>
-
-        <div class="edit-field">
-          <label>車種類型</label>
-          <select id="edit-vehicleType">
-            <option value="">請選擇</option>
-            <option value="微型電動二輪車">微型電動二輪車</option>
-            <option value="電動輔助自行車">電動輔助自行車</option>
-            <option value="電動自行車">電動自行車</option>
-            <option value="電動機車">電動機車</option>
-          </select>
-        </div>
-
-        <div class="edit-field">
-          <label>車款</label>
-          <input type="text" id="edit-model" placeholder="車款名稱">
-        </div>
-
-        <div class="edit-field">
-          <label>顏色</label>
-          <input type="text" id="edit-color" placeholder="顏色">
-        </div>
-
-        <div class="edit-field">
-          <label>車輛備註</label>
-          <input type="text" id="edit-modelNote" placeholder="選配、特殊規格等">
-        </div>
-
-        <div class="edit-section-title">🔋 電池規格</div>
-
-        <div class="edit-field">
-          <label>電池類型</label>
-          <select id="edit-batType">
-            <option value="">請選擇</option>
-            <option value="鋰電池">鋰電池</option>
-            <option value="鉛酸電池">鉛酸電池</option>
-          </select>
-        </div>
-
-        <div class="edit-field">
-          <label>電壓（V）</label>
-          <select id="edit-batV">
-            <option value="">請選擇</option>
-            <option value="48V">48V</option>
-            <option value="60V">60V</option>
-            <option value="72V">72V</option>
-          </select>
-        </div>
-
-        <div class="edit-field">
-          <label>容量（Ah）</label>
-          <input type="text" id="edit-batAh" placeholder="例：20ah">
-        </div>
-
-        <div class="edit-field">
-          <label>電池備註</label>
-          <input type="text" id="edit-batNote" placeholder="電池備註">
-        </div>
-
-        <div class="edit-section-title">📅 訂單日期</div>
-
-        <div class="edit-field">
-          <label>成交日期</label>
-          <input type="date" id="edit-date">
-        </div>
-
-        <div class="edit-field">
-          <label>預計交車日</label>
-          <input type="date" id="edit-delivery">
-        </div>
-
-        <div class="edit-section-title">🛍 加購項目</div>
-
-        <div style="grid-column:1/-1;">
-          <div id="edit-addon-list" style="margin-bottom:8px;"></div>
-          <button onclick="addEditAddon()" style="padding:5px 14px;border-radius:6px;border:1.5px dashed var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;color:var(--gray5);">＋ 新增加購項目</button>
-        </div>
-
-        <div class="edit-section-title">👤 Sale</div>
-
-        <div class="edit-field">
-          <label>Sale</label>
-          <input type="text" id="edit-staff" placeholder="Sale 姓名">
-        </div>
-
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn-cancel" onclick="closeEditModal()">取消</button>
-      <button class="modal-btn-submit" id="edit-submit-btn" onclick="submitEditOrder()">✅ 儲存修改</button>
-    </div>
-  </div>
-</div>
 
 <!-- 登記收款 Modal -->
 <div id="delivery-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeDeliveryModal()">
@@ -2249,135 +1525,6 @@ function submitDelivery() {
   document.body.appendChild(script);
   setTimeout(() => {
     if (window[cbName]) { delete window[cbName]; script.remove(); showModalErr('送出逾時，請再試一次'); btn.disabled=false; btn.textContent='✅ 確認收款完成交車'; }
-  }, 15000);
-}
-
-// ====== 編輯訂單 ======
-let editOrderId = null;
-let editAddonCount = 0;
-
-function openEditModal(orderId) {
-  const r = allData.find(row => getVal(row,'單號') === orderId);
-  if (!r) return;
-  editOrderId = orderId;
-  editAddonCount = 0;
-
-  document.getElementById('edit-modal-name').textContent = getVal(r,'姓名') + '　' + getVal(r,'手機號碼');
-  document.getElementById('edit-modal-sub').textContent = fmtOrderId(orderId);
-
-  // 填入現有資料
-  document.getElementById('edit-vehicleType').value = getVal(r,'車種類型') || '';
-  document.getElementById('edit-model').value = getVal(r,'車款') || '';
-  document.getElementById('edit-color').value = getVal(r,'顏色') || '';
-  document.getElementById('edit-modelNote').value = getVal(r,'車輛備註') || '';
-  document.getElementById('edit-batType').value = getVal(r,'電池類型') || '';
-  document.getElementById('edit-batV').value = getVal(r,'電池規格(V)') || '';
-  document.getElementById('edit-batAh').value = getVal(r,'電池規格(ah)') || '';
-  document.getElementById('edit-batNote').value = getVal(r,'電池備註') || '';
-  document.getElementById('edit-date').value = fmtDate(getVal(r,'成交日期'));
-  document.getElementById('edit-delivery').value = fmtDate(getVal(r,'預計交車日'));
-  document.getElementById('edit-staff').value = getVal(r,'Sale') || '';
-
-  // 填入加購項目
-  const addonList = document.getElementById('edit-addon-list');
-  addonList.innerHTML = '';
-  const addonItems = getVal(r,'加價購項目');
-  if (addonItems) {
-    addonItems.split('、').filter(Boolean).forEach(item => {
-      const parts = item.split(':');
-      addEditAddonRow(parts[0].trim(), parts[1] ? parseFloat(parts[1]) : '');
-    });
-  }
-
-  document.getElementById('edit-err').classList.remove('show');
-  document.getElementById('edit-submit-btn').disabled = false;
-  document.getElementById('edit-submit-btn').textContent = '✅ 儲存修改';
-  document.getElementById('edit-modal').style.display = 'flex';
-}
-
-function addEditAddonRow(name, price) {
-  editAddonCount++;
-  const id = editAddonCount;
-  const div = document.createElement('div');
-  div.id = 'edit-addon-' + id;
-  div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:6px;';
-  div.innerHTML = `
-    <input type="text" placeholder="項目名稱" value="${name||''}" style="flex:1;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;">
-    <input type="number" placeholder="金額" value="${price||''}" style="width:110px;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;text-align:right;">
-    <button onclick="document.getElementById('edit-addon-${id}').remove()" style="width:28px;height:28px;border:1px solid var(--gray3);border-radius:6px;background:#fff;cursor:pointer;font-size:14px;color:var(--gray4);flex-shrink:0;">×</button>`;
-  document.getElementById('edit-addon-list').appendChild(div);
-}
-
-function addEditAddon() { addEditAddonRow('', ''); }
-
-function closeEditModal() {
-  document.getElementById('edit-modal').style.display = 'none';
-  editOrderId = null;
-}
-
-function submitEditOrder() {
-  if (!editOrderId) return;
-  const btn = document.getElementById('edit-submit-btn');
-  btn.disabled = true;
-  btn.textContent = '儲存中...';
-
-  // 收集加購項目
-  const addonRows = document.querySelectorAll('#edit-addon-list > div');
-  const addonItems = Array.from(addonRows).map(row => {
-    const inputs = row.querySelectorAll('input');
-    const name = inputs[0].value.trim();
-    const price = inputs[1].value.trim();
-    if (!name) return null;
-    return price ? name + ':' + price : name;
-  }).filter(Boolean).join('、');
-
-  const addonTotal = Array.from(addonRows).reduce((s, row) => {
-    const p = parseFloat(row.querySelectorAll('input')[1].value) || 0;
-    return s + p;
-  }, 0);
-
-  const payload = {
-    action: 'editOrder',
-    orderId: editOrderId,
-    vehicleType: document.getElementById('edit-vehicleType').value,
-    model:       document.getElementById('edit-model').value.trim(),
-    color:       document.getElementById('edit-color').value.trim(),
-    modelNote:   document.getElementById('edit-modelNote').value.trim(),
-    batType:     document.getElementById('edit-batType').value,
-    batV:        document.getElementById('edit-batV').value,
-    batAh:       document.getElementById('edit-batAh').value.trim(),
-    batNote:     document.getElementById('edit-batNote').value.trim(),
-    date:        document.getElementById('edit-date').value,
-    delivery:    document.getElementById('edit-delivery').value,
-    staff:       document.getElementById('edit-staff').value.trim(),
-    addonItems,
-    addonTotal,
-  };
-
-  const cbName = 'cb_' + Date.now();
-  const url = window._SCRIPT_URL + '?action=editOrder&orderId=' + encodeURIComponent(editOrderId)
-    + '&data=' + encodeURIComponent(JSON.stringify(payload)) + '&callback=' + cbName;
-
-  window[cbName] = function(res) {
-    delete window[cbName]; script.remove();
-    if (res.status === 'ok') {
-      closeEditModal();
-      alert('✅ 訂單已更新！');
-      loadData();
-    } else {
-      const errEl = document.getElementById('edit-err');
-      errEl.textContent = '儲存失敗：' + (res.message || '請稍後再試');
-      errEl.classList.add('show');
-      btn.disabled = false;
-      btn.textContent = '✅ 儲存修改';
-    }
-  };
-  const script = document.createElement('script');
-  script.src = url;
-  script.onerror = () => { btn.disabled=false; btn.textContent='✅ 儲存修改'; };
-  document.body.appendChild(script);
-  setTimeout(() => {
-    if (window[cbName]) { delete window[cbName]; script.remove(); btn.disabled=false; btn.textContent='✅ 儲存修改'; }
   }, 15000);
 }
 </script>
