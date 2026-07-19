@@ -2139,6 +2139,19 @@ ${url}
 }
 
 // ====== PDF GENERATION ======
+function maskIdNo(v){
+  if(!v) return '—';
+  const s = v.toString().trim();
+  if (s.length <= 7) return s;
+  const midLen = s.length - 3 - 4;
+  return s.slice(0,3) + '*'.repeat(midLen) + s.slice(-4);
+}
+function maskPhone(v){
+  if(!v) return '—';
+  const s = v.toString().trim().replace(/\D/g,'');
+  if (s.length < 8) return v;
+  return s.slice(0,4) + '-***-' + s.slice(-3);
+}
 function generatePDF(r) {
   // addons 陣列可能因為 payload 清理而不存在，用 addonItems 字串備援
   const addonsArr = (r.addons && Array.isArray(r.addons)) ? r.addons : [];
@@ -2249,8 +2262,8 @@ body::before {
 <table class="info">
 <tr><td class="lbl">車主姓名</td><td>${r.name}</td><td class="lbl">車種類型</td><td>${r.vehicleType||'—'}</td></tr>
 <tr><td class="lbl">車款</td><td>${r.model}</td><td class="lbl">車輛備註</td><td>${r.modelNote||'—'}</td></tr>
-<tr><td class="lbl">身份證字號</td><td>${r.idNo}</td><td class="lbl">車架號碼</td><td>${r.frame||'—'}</td></tr>
-<tr><td class="lbl">手機號碼</td><td>${r.phone}</td><td class="lbl">顏色</td><td>${r.color}</td></tr>
+<tr><td class="lbl">身份證字號</td><td>${maskIdNo(r.idNo)}</td><td class="lbl">車架號碼</td><td>${r.frame||'—'}</td></tr>
+<tr><td class="lbl">手機號碼</td><td>${maskPhone(r.phone)}</td><td class="lbl">顏色</td><td>${r.color}</td></tr>
 <tr><td class="lbl">生日</td><td>${r.birthday || '—'}</td><td class="lbl">車架號碼</td><td>${r.frame || '—'}</td></tr>
 <tr><td class="lbl">通訊地址</td><td colspan="3" class="info-full">${r.city || ''}${r.district || ''} ${r.addr || '—'}</td></tr>
 <tr><td class="lbl">電池規格</td><td>${r.batType}｜${r.batV} ${r.batAh}</td><td class="lbl">馬達編號</td><td>${r.motor || '—'}</td></tr>
