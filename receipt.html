@@ -292,6 +292,19 @@ function fmtDate(val){
   return val.toString().split('T')[0]||val;
 }
 function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val||'—';}
+function maskIdNo(v){
+  if(!v) return '—';
+  const s = v.toString().trim();
+  if (s.length <= 7) return s;
+  const midLen = s.length - 3 - 4;
+  return s.slice(0,3) + '*'.repeat(midLen) + s.slice(-4);
+}
+function maskPhone(v){
+  if(!v) return '—';
+  const s = v.toString().trim().replace(/\D/g,'');
+  if (s.length < 8) return v;
+  return s.slice(0,4) + '-***-' + s.slice(-3);
+}
 
 async function loadReceipt(){
   const params=new URLSearchParams(window.location.search);
@@ -343,8 +356,8 @@ async function loadReceipt(){
 
       // 買方
       set('r-name',data.name);
-      set('r-idNo',data.idNo||'—');
-      set('r-phone', data.phone || '—');
+      set('r-idNo',maskIdNo(data.idNo));
+      set('r-phone', maskPhone(data.phone));
       set('r-addr',[data.city,data.district,data.addr].filter(Boolean).join(' '));
       if(data.gender){document.getElementById('r-gender-row').style.display='';set('r-gender',data.gender);}
       if(data.birthday){document.getElementById('r-birthday-row').style.display='';set('r-birthday',fmtDate(data.birthday));}
