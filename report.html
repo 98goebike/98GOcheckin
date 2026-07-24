@@ -685,10 +685,28 @@ function renderOverview() {
     return true;
   };
 
-  const thisMonth = allData.filter(r => {
+  // 營收認列日期：優先用「實際交車日」，沒有的話退回「完款日期」（歷史舊資料可能沒有實際交車日）
+  const getRecognitionDate = r => getDate(r, '實際交車日') || getDate(r, '完款日期') || null;
+
+  const thisMonthOrdered = allData.filter(r => {
     const d = getDate(r,'成交日期');
     return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
+  const yearOrdered = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return d && d.getFullYear()===now.getFullYear();
+  });
+  const monthDelivered = allData.filter(r => {
+    if (getVal(r,'訂單狀態') !== '已交車') return false;
+    const d = getRecognitionDate(r);
+    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  });
+  const yearDelivered = allData.filter(r => {
+    if (getVal(r,'訂單狀態') !== '已交車') return false;
+    const d = getRecognitionDate(r);
+    return d && d.getFullYear()===now.getFullYear();
+  });
+
   const today = allData.filter(r => {
     const d = getDate(r,'成交日期');
     if (!d) return false;
@@ -696,12 +714,11 @@ function renderOverview() {
     return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
   });
   const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const monthRevenue = monthDelivered.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const monthOrderedRevenue = thisMonthOrdered.reduce((s,r) => s+getNum(r,'總金額'),0);
   const todayRevenue = today.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const yearRevenue = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    return d && d.getFullYear()===now.getFullYear();
-  }).reduce((s,r) => s+getNum(r,'總金額'),0);
+  const yearRevenue = yearDelivered.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const yearOrderedRevenue = yearOrdered.reduce((s,r) => s+getNum(r,'總金額'),0);
 
   // 今日現金總額
   const today2 = new Date();
@@ -719,8 +736,10 @@ function renderOverview() {
 
   document.getElementById('metrics-overview').innerHTML = `
     <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
-    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
-    <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
+    <div class="metric"><div class="lbl">本月營收（已交車）</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${monthDelivered.length} 筆已交車</div></div>
+    <div class="metric" style="border:1.5px dashed var(--gray3);"><div class="lbl">本月已成交金額</div><div class="val" style="font-size:20px;color:var(--gray5);">${fmtMoney(monthOrderedRevenue)}</div><div class="sub">本月成交 ${thisMonthOrdered.length} 筆（含未交車）</div></div>
+    <div class="metric"><div class="lbl">年度營收（已交車）</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年 ${yearDelivered.length} 筆已交車</div></div>
+    <div class="metric" style="border:1.5px dashed var(--gray3);"><div class="lbl">年度已成交金額</div><div class="val" style="font-size:20px;color:var(--gray5);">${fmtMoney(yearOrderedRevenue)}</div><div class="sub">${now.getFullYear()} 年成交 ${yearOrdered.length} 筆（含未交車）</div></div>
     <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
     <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
   `;
@@ -1363,16 +1382,31 @@ function toggleTaskCheck(orderId, field, checked) {
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (data.status === 'ok') {
-      // 更新本地資料
-      const idx = allData.indexOf(r);
-      const headers = Object.keys(allData[0] || {});
+      // 更新本地資料：把剛剛勾選的新狀態實際寫回 allData，畫面才會正確反映
+      r[field] = checked;
       // 重新渲染這張卡片
+      renderTasks();
+    } else {
+      // 寫入失敗，把畫面上的勾選框恢復成原本的狀態（沒有真的變更）
+      alert('更新失敗，請稍後再試');
       renderTasks();
     }
   };
   const script = document.createElement('script');
   script.src = url;
+  script.onerror = () => {
+    delete window[cbName]; script.remove();
+    alert('網路異常，請稍後再試');
+    renderTasks();
+  };
   document.head.appendChild(script);
+  setTimeout(() => {
+    if (window[cbName]) {
+      delete window[cbName]; script.remove();
+      alert('更新逾時，請稍後再試');
+      renderTasks();
+    }
+  }, 10000);
 }
 
 // loadData() 由密碼驗證通過後呼叫
