@@ -52,6 +52,20 @@ body{font-family:'Noto Sans TC',sans-serif;background:#f0f2f5;color:var(--text);
 .metric.accent .lbl{opacity:.6;}
 .metric.accent .sub{opacity:.5;}
 
+/* 分區指標（本月／年度） */
+.metric-section{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:1rem;}
+.metric-section-title{font-size:14px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px;}
+.metric-section-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;}
+@media(max-width:560px){.metric-section-grid{grid-template-columns:1fr;}}
+.metric-primary{background:var(--gray1);border-radius:8px;padding:1rem 1.25rem;}
+.metric-primary .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+.metric-primary .val{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.metric-primary .sub{font-size:11px;color:var(--gray4);margin-top:4px;}
+.metric-secondary{background:#fff;border:1.5px dashed var(--gray3);border-radius:8px;padding:1rem 1.25rem;}
+.metric-secondary .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+.metric-secondary .val{font-size:20px;font-weight:700;color:var(--gray5);line-height:1;}
+.metric-secondary .sub{font-size:11px;color:var(--gray4);margin-top:4px;}
+
 /* Cards */
 .card{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:1rem;}
 .card-title{font-size:14px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px;}
@@ -266,7 +280,7 @@ tr:last-child td{border-bottom:none;}
 
     <!-- 業績總覽 -->
     <div id="tab-overview">
-      <div class="metrics" id="metrics-overview"></div>
+      <div id="metrics-overview"></div>
 
       <div id="missing-baldate-card" class="card" style="display:none;border-left:4px solid #E63946;">
         <div class="card-title" style="color:#E63946;">⚠️ 尾款收款日期未填寫</div>
@@ -735,13 +749,27 @@ function renderOverview() {
   }, 0);
 
   document.getElementById('metrics-overview').innerHTML = `
-    <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
-    <div class="metric"><div class="lbl">本月營收（已交車）</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${monthDelivered.length} 筆已交車</div></div>
-    <div class="metric" style="border:1.5px dashed var(--gray3);"><div class="lbl">本月已成交金額</div><div class="val" style="font-size:20px;color:var(--gray5);">${fmtMoney(monthOrderedRevenue)}</div><div class="sub">本月成交 ${thisMonthOrdered.length} 筆（含未交車）</div></div>
-    <div class="metric"><div class="lbl">年度營收（已交車）</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年 ${yearDelivered.length} 筆已交車</div></div>
-    <div class="metric" style="border:1.5px dashed var(--gray3);"><div class="lbl">年度已成交金額</div><div class="val" style="font-size:20px;color:var(--gray5);">${fmtMoney(yearOrderedRevenue)}</div><div class="sub">${now.getFullYear()} 年成交 ${yearOrdered.length} 筆（含未交車）</div></div>
-    <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
-    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
+    <div class="metrics" style="margin-bottom:1rem;">
+      <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
+      <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
+      <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
+    </div>
+
+    <div class="metric-section">
+      <div class="metric-section-title">📅 本月</div>
+      <div class="metric-section-grid">
+        <div class="metric-primary"><div class="lbl">本月營收（已交車）</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${monthDelivered.length} 筆已交車</div></div>
+        <div class="metric-secondary"><div class="lbl">本月已成交金額</div><div class="val">${fmtMoney(monthOrderedRevenue)}</div><div class="sub">本月成交 ${thisMonthOrdered.length} 筆（含未交車）</div></div>
+      </div>
+    </div>
+
+    <div class="metric-section">
+      <div class="metric-section-title">📊 ${now.getFullYear()} 年度</div>
+      <div class="metric-section-grid">
+        <div class="metric-primary"><div class="lbl">年度營收（已交車）</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年 ${yearDelivered.length} 筆已交車</div></div>
+        <div class="metric-secondary"><div class="lbl">年度已成交金額</div><div class="val">${fmtMoney(yearOrderedRevenue)}</div><div class="sub">${now.getFullYear()} 年成交 ${yearOrdered.length} 筆（含未交車）</div></div>
+      </div>
+    </div>
   `;
 
   // 現金流表格
