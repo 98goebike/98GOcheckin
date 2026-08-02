@@ -670,6 +670,7 @@
       <div class="price-row">
         <label>車輛售價（車＋電池）</label>
         <input type="number" id="p-bike" placeholder="0" min="0" oninput="calcAll()">
+        <div id="price-lookup-hint" style="font-size:12px;margin-top:4px;color:#185FA5;min-height:18px;"></div>
       </div>
       <div class="price-row">
         <label>加價購小計</label>
@@ -1110,6 +1111,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrr
 const PRODUCT_SHEET_ID   = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
 const PRODUCT_API_URL    = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
 const SPEC_API_URL       = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('銷售規格表')}`;
+const PRICE_API_URL      = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('價格表')}`;
 
 // ====== STATE ======
 let currentStep = 0;
@@ -1121,6 +1123,7 @@ let sigCanvas, sigCtx, drawing = false;
 // 商品資料暫存
 let vehicleMap    = {};   // { 小分類: { 型號: [{color, code}, ...] } }
 let batterySpecs  = [];   // [{ label, type, v, ah, note }, ...]
+let priceMap      = {};   // { '型號|電池銷售規格': 售價 }
 
 // ====== INIT ======
 document.getElementById('s1-date').value = new Date().toISOString().split('T')[0];
@@ -1131,9 +1134,10 @@ loadProductData();
 // ====== 商品主檔讀取 ======
 async function loadProductData() {
   try {
-    const [vRes, sRes] = await Promise.all([fetch(PRODUCT_API_URL), fetch(SPEC_API_URL)]);
+    const [vRes, sRes, pRes] = await Promise.all([fetch(PRODUCT_API_URL), fetch(SPEC_API_URL), fetch(PRICE_API_URL)]);
     const vText = await vRes.text();
     const sText = await sRes.text();
+    const pText = await pRes.text();
 
     // 解析 gviz JSON
     const parseGviz = text => {
@@ -1151,6 +1155,18 @@ async function loadProductData() {
 
     const vRows = parseGviz(vText);
     const sRows = parseGviz(sText);
+
+    // ── 價格表：型號 × 電池銷售規格 → 售價 ──
+    const pRows = parseGviz(pText);
+    priceMap = {};
+    pRows.forEach(r => {
+      const model = (r['型號'] || '').trim();
+      const spec  = (r['電池銷售規格'] || '').trim();
+      const price = parseFloat(r['售價']);
+      if (model && spec && !isNaN(price)) {
+        priceMap[model + '|' + spec] = price;
+      }
+    });
 
     // ── 車輛三層結構 ──
     vehicleMap = {};
@@ -1262,6 +1278,7 @@ function onModelChange() {
     opt.value = item.color; opt.textContent = item.color;
     colorSel.appendChild(opt);
   });
+  lookupPrice();
 }
 
 function onColorChange() {
@@ -1297,6 +1314,33 @@ function onBatterySpecChange() {
   document.getElementById('s1-batv').value    = opt?.dataset.v    || '';
   document.getElementById('s1-batah').value   = opt?.dataset.ah   || '';
   document.getElementById('s1-bat-note').value = opt?.dataset.note || '';
+  lookupPrice();
+}
+
+// ── 價格查詢：型號 + 電池規格 → 自動填入車輛售價 ──
+function lookupPrice() {
+  const model = document.getElementById('s1-model').value;
+  const spec  = document.getElementById('s1-battery-spec').value;
+  const bikeEl = document.getElementById('p-bike');
+  const hintEl = document.getElementById('price-lookup-hint');
+
+  if (!model || !spec) {
+    if (hintEl) hintEl.textContent = '';
+    return;
+  }
+
+  const key   = model + '|' + spec;
+  const price = priceMap[key];
+
+  if (price !== undefined) {
+    bikeEl.value = price;
+    if (hintEl) hintEl.textContent = '✅ 已自動帶入售價，可手動修改';
+    calcAll();
+  } else {
+    bikeEl.value = '';
+    if (hintEl) hintEl.textContent = '⚠️ 查無預設價格，請人工輸入';
+    calcAll();
+  }
 }
 
 // ── 生日：文字輸入與 date picker 雙向同步 ──
