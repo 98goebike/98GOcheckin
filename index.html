@@ -1574,9 +1574,23 @@ function toggleChk(id, wrapId) {
 // ====== ADDON ======
 // ====== 遠距訂購：產生客戶連結 ======
 async function generateRemoteLink() {
-  // 驗證車款和金額必填
+  // 驗證車輛基本資料是否已選齊（遠距客人會直接跳到 Step3，
+  // 不會經過 validateStep(1)，這裡沒擋到的欄位會永久空白，
+  // 直接影響進銷存的車種類型／車輛商品編號／電池銷售規格統計）
+  if (!document.getElementById('s1-vehicle-type').value) {
+    alert('請先選擇車種類型再產生連結');
+    return;
+  }
   if (!document.getElementById('s1-model').value.trim()) {
     alert('請先填寫車款再產生連結');
+    return;
+  }
+  if (!document.getElementById('s1-color').value) {
+    alert('請先選擇顏色再產生連結（否則車輛商品編號會是空的）');
+    return;
+  }
+  if (!document.getElementById('s1-battery-spec').value) {
+    alert('請先選擇電池銷售規格再產生連結（遠距客人不會看到此欄位，漏選會永久空白）');
     return;
   }
   if (!document.getElementById('p-bike').value) {
