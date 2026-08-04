@@ -558,7 +558,10 @@ let currentTab = 'overview';
 async function loadData() {  document.getElementById('loading').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
-    const res = await fetch(API_URL);
+    // 加上時間戳參數 + cache:'no-store'，強制瀏覽器每次都發出全新請求，
+    // 避免瀏覽器把先前同一條網址的回應快取重複拿來用，
+    // 造成「Sheets 已經寫入新值，但畫面重新整理後還是顯示舊值」的假象。
+    const res = await fetch(API_URL + '&_ts=' + Date.now(), { cache: 'no-store' });
     const text = await res.text();
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const rows = json.table.rows;
