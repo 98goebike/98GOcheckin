@@ -167,6 +167,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
         <div class="field">
           <label>車架號碼 <span class="req">*</span></label>
           <input type="text" id="d-frame" placeholder="請輸入車架號碼" autocomplete="off">
+          <div class="hint" id="d-frame-hint"></div>
         </div>
         <div class="field">
           <label>馬達編號 <span style="color:var(--gray4);font-weight:400;">（選填）</span></label>
@@ -178,6 +179,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--gray1);color:var(--t
         <div class="field">
           <label>車牌號碼 <span style="color:var(--gray4);font-weight:400;">（選填）</span></label>
           <input type="text" id="d-plate" placeholder="例：ABC-1234" autocomplete="off">
+          <div class="hint" id="d-plate-hint"></div>
         </div>
         <div class="field">
           <label>實際交車日 <span class="req">*</span></label>
@@ -320,6 +322,14 @@ function showStep2(data){
 
   // 實際交車日預設今天
   document.getElementById('d-delivery-date').value = new Date().toISOString().split('T')[0];
+
+  // 自動帶入既有的車架號碼／馬達編號／車牌號碼（若訂單助手或先前流程已登記過）
+  // 門市仍可直接在欄位內修正，不要求重複輸入
+  document.getElementById('d-frame').value = data.frame || '';
+  document.getElementById('d-motor').value = data.motor || '';
+  document.getElementById('d-plate').value = data.plate || '';
+  document.getElementById('d-frame-hint').textContent = data.frame ? '已自動帶入既有資料，如有誤可直接修正' : '';
+  document.getElementById('d-plate-hint').textContent = data.plate ? '已自動帶入既有資料，如有誤可直接修正' : '';
 
   const bal=parseFloat(data.balance)||0;
   const balSection=document.getElementById('balance-section');
