@@ -1582,13 +1582,23 @@ function fallbackCopyMessage(ta, onDone) {
 }
 
 // ── 呼叫 GAS：擴充後的 action=editOrder（車架/馬達/車牌）──
-function callUpdateOrderTools(orderId, updates, callback) {
+function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
   const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼' };
   const cbName = 'cb_tools_' + Date.now() + '_' + Math.floor(Math.random()*100000);
   const qs = Object.keys(updates).map(k => `${k}=${encodeURIComponent(updates[k])}`).join('&');
   const url = `${APPS_SCRIPT_URL}?action=editOrder&orderId=${encodeURIComponent(orderId)}&${qs}&callback=${cbName}`;
   let finished = false;
   const script = document.createElement('script');
+  script.src = url;
+  const fail = (msg) => {
+    // Apps Script 冷啟動或短暫忙碌都可能造成第一次逾時/網路異常，
+    // 先自動重試一次，避免使用者明明資料存得進去，卻被誤判成失敗。
+    if (!_isRetry) {
+      callUpdateOrderTools(orderId, updates, callback, true);
+    } else {
+      callback(false, msg);
+    }
+  };
   window[cbName] = function(data) {
     finished = true;
     delete window[cbName]; script.remove();
@@ -1599,14 +1609,15 @@ function callUpdateOrderTools(orderId, updates, callback) {
       }
       callback(true);
     } else {
+      // 這種情況是「有回應但狀態不是 ok」（例如找不到訂單），不算網路逾時，不重試，直接回報
       callback(false, data && data.message);
     }
   };
-  script.onerror = () => { if (!finished) { finished = true; delete window[cbName]; script.remove(); callback(false, '網路異常，請再試一次'); } };
+  script.onerror = () => { if (!finished) { finished = true; delete window[cbName]; script.remove(); fail('網路異常，請再試一次'); } };
   document.head.appendChild(script);
   setTimeout(() => {
-    if (!finished && window[cbName]) { finished = true; delete window[cbName]; script.remove(); callback(false, '送出逾時，請再試一次'); }
-  }, 10000);
+    if (!finished && window[cbName]) { finished = true; delete window[cbName]; script.remove(); fail('送出逾時，請再試一次'); }
+  }, 20000);
 }
 
 // ── 儲存車架號碼／馬達編號 ──
