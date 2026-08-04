@@ -52,20 +52,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:#f0f2f5;color:var(--text);
 .metric.accent .lbl{opacity:.6;}
 .metric.accent .sub{opacity:.5;}
 
-/* 分區指標（本月／年度） */
-.metric-section{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:1rem;}
-.metric-section-title{font-size:14px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px;}
-.metric-section-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;}
-@media(max-width:560px){.metric-section-grid{grid-template-columns:1fr;}}
-.metric-primary{background:var(--gray1);border-radius:8px;padding:1rem 1.25rem;}
-.metric-primary .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
-.metric-primary .val{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
-.metric-primary .sub{font-size:11px;color:var(--gray4);margin-top:4px;}
-.metric-secondary{background:#fff;border:1.5px dashed var(--gray3);border-radius:8px;padding:1rem 1.25rem;}
-.metric-secondary .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
-.metric-secondary .val{font-size:20px;font-weight:700;color:var(--gray5);line-height:1;}
-.metric-secondary .sub{font-size:11px;color:var(--gray4);margin-top:4px;}
-
 /* Cards */
 .card{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:1rem;}
 .card-title{font-size:14px;font-weight:700;color:var(--brand);margin-bottom:1rem;padding-bottom:.625rem;border-bottom:1px solid var(--gray2);display:flex;align-items:center;gap:6px;}
@@ -227,6 +213,47 @@ tr:last-child td{border-bottom:none;}
 .task-status-badge.s-working { background:#CCE5FF; color:#004085; }
 .task-status-badge.s-ready   { background:#C6EFCE; color:#1D6B3E; }
 .task-filter-bar { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
+
+/* ── 訂單助手（所有記錄展開） ── */
+.record-row { cursor:pointer; }
+.record-row:hover td { background:var(--gray1); }
+.record-expand-cell { width:28px; text-align:center; color:var(--gray4); font-size:11px; user-select:none; }
+.tools-row td { padding:0; border-top:none; }
+.order-tools { padding:14px 16px; background:var(--gray1); border-top:1px solid var(--gray2); border-bottom:2px solid var(--gray3); }
+.order-tools-title { font-size:12px; font-weight:700; color:var(--gray5); letter-spacing:.05em; margin-bottom:10px; }
+.tool-card { background:#fff; border:1.5px solid var(--gray3); border-radius:10px; margin-bottom:8px; overflow:hidden; }
+.tool-card:last-child { margin-bottom:0; }
+.tool-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; cursor:pointer; user-select:none; }
+.tool-card-head:hover { background:var(--gray1); }
+.tool-card-title { font-size:13px; font-weight:700; color:var(--brand); display:flex; align-items:center; gap:6px; }
+.tool-card-arrow { font-size:11px; color:var(--gray4); flex-shrink:0; }
+.tool-card-summary { font-size:12px; color:var(--gray5); margin-left:auto; margin-right:8px; text-align:right; }
+.tool-card-summary.ok { color:var(--green); font-weight:600; }
+.tool-card-body { padding:0 14px 14px; border-top:1px solid var(--gray2); }
+.tool-field { display:flex; flex-direction:column; gap:5px; margin:12px 0; }
+.tool-field label { font-size:12px; font-weight:600; color:var(--gray5); }
+.tool-field input { padding:9px 12px; border:1.5px solid var(--gray3); border-radius:6px; font-size:14px; font-family:inherit; color:var(--text); width:100%; box-sizing:border-box; }
+.tool-field input:focus { outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(43,45,66,.08); }
+.tool-readonly-list { font-size:13px; color:var(--text); background:var(--gray1); border-radius:8px; padding:10px 12px; margin:12px 0; line-height:1.9; }
+.tool-readonly-list .lbl { color:var(--gray5); margin-right:4px; }
+.msg-preview { width:100%; box-sizing:border-box; min-height:180px; padding:10px 12px; border:1.5px solid var(--gray3); border-radius:8px; font-size:13px; font-family:inherit; line-height:1.7; color:var(--text); resize:vertical; margin:10px 0; }
+.msg-preview:focus { outline:none; border-color:var(--brand); }
+.tool-btn-row { display:flex; gap:8px; flex-wrap:wrap; }
+.tool-btn { padding:8px 16px; border-radius:6px; font-size:13px; font-family:inherit; font-weight:600; cursor:pointer; border:1.5px solid var(--gray3); background:#fff; color:var(--text); transition:all .15s; }
+.tool-btn:hover { background:var(--gray1); }
+.tool-btn:disabled { opacity:.6; cursor:not-allowed; }
+.tool-btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+.tool-btn.primary:hover { background:#1a1c2e; }
+.tool-btn.copy { background:var(--green); border-color:var(--green); color:#fff; }
+.tool-btn.copy:hover { background:#178a65; }
+.tool-btn.link { background:#E6F1FB; border-color:#B5D4F4; color:var(--blue); text-decoration:none; display:inline-block; }
+.tool-field-err { font-size:12px; color:var(--accent); min-height:16px; }
+@media(max-width:640px){
+  .order-tools { padding:10px; }
+  .tool-card-body { padding:0 10px 10px; }
+  .tool-card-summary { display:block; margin-left:0; text-align:left; margin-top:2px; }
+  .tool-card-head { flex-wrap:wrap; }
+}
 </style>
 </head>
 <body>
@@ -280,7 +307,7 @@ tr:last-child td{border-bottom:none;}
 
     <!-- 業績總覽 -->
     <div id="tab-overview">
-      <div id="metrics-overview"></div>
+      <div class="metrics" id="metrics-overview"></div>
 
       <div id="missing-baldate-card" class="card" style="display:none;border-left:4px solid #E63946;">
         <div class="card-title" style="color:#E63946;">⚠️ 尾款收款日期未填寫</div>
@@ -467,7 +494,7 @@ tr:last-child td{border-bottom:none;}
         <div class="tbl-wrap">
           <table>
             <thead><tr>
-              <th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
+              <th></th><th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
               <th>車種</th><th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>訂金付款</th><th>尾款</th><th>尾款付款</th><th>Sale</th>
             </tr></thead>
             <tbody id="tbody-records"></tbody>
@@ -539,8 +566,7 @@ async function loadData() {  document.getElementById('loading').style.display = 
     allData = rows.map(row => {
       const obj = {};
       cols.forEach((col, i) => {
-        const key = (col.label || col.id || '').replace(/\s+/g,'');
-        obj[key] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
+        obj[col.label || col.id] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
       });
       return obj;
     }).filter(r => r['單號']);
@@ -685,8 +711,8 @@ function renderOverview() {
   const fromVal = document.getElementById('cf-from')?.value;
   const toVal = document.getElementById('cf-to')?.value;
 
-  // 查帳區間判斷（訂金與尾款分別用各自的日期欄位來判斷，不能共用同一個篩選）
-  const inCFRange = d => {
+  const filtered = allData.filter(r => {
+    const d = getDate(r, '成交日期');
     if (!d || isNaN(d.getTime())) return false;
     if (fromVal) {
       const from = new Date(fromVal); from.setHours(0,0,0,0);
@@ -697,30 +723,12 @@ function renderOverview() {
       if (d > to) return false;
     }
     return true;
-  };
+  });
 
-  // 營收認列日期：優先用「實際交車日」，沒有的話退回「完款日期」（歷史舊資料可能沒有實際交車日）
-  const getRecognitionDate = r => getDate(r, '實際交車日') || getDate(r, '完款日期') || null;
-
-  const thisMonthOrdered = allData.filter(r => {
+  const thisMonth = allData.filter(r => {
     const d = getDate(r,'成交日期');
     return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   });
-  const yearOrdered = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    return d && d.getFullYear()===now.getFullYear();
-  });
-  const monthDelivered = allData.filter(r => {
-    if (getVal(r,'訂單狀態') !== '已交車') return false;
-    const d = getRecognitionDate(r);
-    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
-  });
-  const yearDelivered = allData.filter(r => {
-    if (getVal(r,'訂單狀態') !== '已交車') return false;
-    const d = getRecognitionDate(r);
-    return d && d.getFullYear()===now.getFullYear();
-  });
-
   const today = allData.filter(r => {
     const d = getDate(r,'成交日期');
     if (!d) return false;
@@ -728,11 +736,12 @@ function renderOverview() {
     return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
   });
   const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const monthRevenue = monthDelivered.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const monthOrderedRevenue = thisMonthOrdered.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
   const todayRevenue = today.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const yearRevenue = yearDelivered.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const yearOrderedRevenue = yearOrdered.reduce((s,r) => s+getNum(r,'總金額'),0);
+  const yearRevenue = allData.filter(r => {
+    const d = getDate(r,'成交日期');
+    return d && d.getFullYear()===now.getFullYear();
+  }).reduce((s,r) => s+getNum(r,'總金額'),0);
 
   // 今日現金總額
   const today2 = new Date();
@@ -749,44 +758,27 @@ function renderOverview() {
   }, 0);
 
   document.getElementById('metrics-overview').innerHTML = `
-    <div class="metrics" style="margin-bottom:1rem;">
-      <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
-      <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
-      <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
-    </div>
-
-    <div class="metric-section">
-      <div class="metric-section-title">📅 本月</div>
-      <div class="metric-section-grid">
-        <div class="metric-primary"><div class="lbl">本月營收（已交車）</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${monthDelivered.length} 筆已交車</div></div>
-        <div class="metric-secondary"><div class="lbl">本月已成交金額</div><div class="val">${fmtMoney(monthOrderedRevenue)}</div><div class="sub">本月成交 ${thisMonthOrdered.length} 筆（含未交車）</div></div>
-      </div>
-    </div>
-
-    <div class="metric-section">
-      <div class="metric-section-title">📊 ${now.getFullYear()} 年度</div>
-      <div class="metric-section-grid">
-        <div class="metric-primary"><div class="lbl">年度營收（已交車）</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年 ${yearDelivered.length} 筆已交車</div></div>
-        <div class="metric-secondary"><div class="lbl">年度已成交金額</div><div class="val">${fmtMoney(yearOrderedRevenue)}</div><div class="sub">${now.getFullYear()} 年成交 ${yearOrdered.length} 筆（含未交車）</div></div>
-      </div>
-    </div>
+    <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
+    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
+    <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
+    <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
+    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
   `;
 
   // 現金流表格
   const methods = ['現金','匯款/轉帳','刷卡','無卡分期'];
   const cfMap = {};
   methods.forEach(m => cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0});
-  allData.forEach(r => {
+  filtered.forEach(r => {
     const dm = getVal(r,'訂金支付方式') || '現金';
     const bm = getVal(r,'尾款支付方式') || '現金';
     const dep = getNum(r,'訂金');
     const bal = getNum(r,'尾款');
     if (!cfMap[dm]) cfMap[dm] = {depCount:0,dep:0,balCount:0,bal:0};
     if (!cfMap[bm]) cfMap[bm] = {depCount:0,dep:0,balCount:0,bal:0};
-    // 訂金：用「成交日期」判斷是否落在查帳區間
-    if (dep > 0 && inCFRange(getDate(r,'成交日期'))) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
-    // 尾款：只有「尾款已收✅」才計入，且用「尾款收款日期」判斷是否落在查帳區間（不是用成交日期）
-    if (bal > 0 && isChecked(r,'尾款已收') && inCFRange(getDate(r,'尾款收款日期'))) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
+    if (dep > 0) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
+    // 尾款只有「尾款已收✅」才計入現金流
+    if (bal > 0 && isChecked(r,'尾款已收')) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
   });
 
   const colorMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
@@ -1208,9 +1200,13 @@ function filterRecords() {
     return true;
   });
   const pmMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
-  document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記'))).map(r => `<tr>
+  document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記'))).map(r => {
+    const orderId = getVal(r,'單號');
+    const safeId = domSafeId(orderId);
+    return `<tr class="record-row" onclick="toggleOrderTools('${escAttr(orderId)}')">
+    <td class="record-expand-cell" id="arrow-${safeId}">▶</td>
     <td>${getVal(r,'成交日期')}</td>
-    <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(getVal(r,'單號'))}</td>
+    <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(orderId)}</td>
     <td>${getVal(r,'姓名')}</td>
     <td>${getVal(r,'手機號碼')}</td>
     <td style="font-size:11px;">${getVal(r,'車種類型')||'—'}</td>
@@ -1222,7 +1218,11 @@ function filterRecords() {
     <td>${fmtMoney(getNum(r,'尾款'))}</td>
     <td><span class="badge ${pmMap[getVal(r,'尾款支付方式')]||'badge-green'}">${getVal(r,'尾款支付方式')||'—'}</span></td>
     <td>${getVal(r,'Sale')||'—'}</td>
-  </tr>`).join('') || '<tr><td colspan="13" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+  </tr>
+  <tr class="tools-row" id="tools-${safeId}" style="display:none;" data-order-id="${escAttr(orderId)}">
+    <td colspan="14"></td>
+  </tr>`;
+  }).join('') || '<tr><td colspan="14" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
@@ -1410,31 +1410,390 @@ function toggleTaskCheck(orderId, field, checked) {
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (data.status === 'ok') {
-      // 更新本地資料：把剛剛勾選的新狀態實際寫回 allData，畫面才會正確反映
-      r[field] = checked;
+      // 更新本地資料
+      const idx = allData.indexOf(r);
+      const headers = Object.keys(allData[0] || {});
       // 重新渲染這張卡片
-      renderTasks();
-    } else {
-      // 寫入失敗，把畫面上的勾選框恢復成原本的狀態（沒有真的變更）
-      alert('更新失敗，請稍後再試');
       renderTasks();
     }
   };
   const script = document.createElement('script');
   script.src = url;
-  script.onerror = () => {
-    delete window[cbName]; script.remove();
-    alert('網路異常，請稍後再試');
-    renderTasks();
+  document.head.appendChild(script);
+}
+
+// ====================================================================
+// 📋 訂單助手（在「所有記錄」每筆訂單展開內顯示）
+// 原則：只做「查看資料／輸入車架車牌／產生LINE訊息／複製」，
+// 不做流程判斷、不做已通知/未通知記錄、不自動切換下一筆。
+// ====================================================================
+
+// 訂單單號可能含符號，組 DOM id 時只保留英數字/底線/連字號
+function domSafeId(orderId) {
+  return String(orderId).replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+// 嵌入 HTML 屬性（onclick 參數、data-* 等）前的簡易跳脫，避免特殊字元破版
+function escAttr(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/'/g,'&#39;')
+    .replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// 插入 innerHTML 純文字內容前的簡易跳脫（車架/車牌/車款/顏色等資料）
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// 收據網址：沿用 index.html 既有的組法（同目錄下 receipt.html?id=原始單號）
+function buildOrderToolsReceiptLink(orderId) {
+  const base = window.location.href.replace(/\/[^/]*$/, '/');
+  return base + 'receipt.html?id=' + encodeURIComponent(orderId);
+}
+
+// ── 展開／收合「訂單助手」列 ──
+function toggleOrderTools(orderId) {
+  const safeId = domSafeId(orderId);
+  const row = document.getElementById('tools-' + safeId);
+  const arrow = document.getElementById('arrow-' + safeId);
+  if (!row) return;
+  const isOpen = row.style.display !== 'none';
+  if (isOpen) {
+    row.style.display = 'none';
+    if (arrow) arrow.textContent = '▶';
+  } else {
+    if (row.dataset.rendered !== '1') {
+      renderOrderTools(orderId);
+      row.dataset.rendered = '1';
+    }
+    row.style.display = '';
+    if (arrow) arrow.textContent = '▼';
+  }
+}
+
+// 單張工作卡展開／收合（可同時展開多張）
+function toggleToolCard(bodyId) {
+  const body = document.getElementById(bodyId);
+  const arrow = document.getElementById('arrow-' + bodyId);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : '';
+  if (arrow) arrow.textContent = isOpen ? '▶' : '▼';
+}
+
+// ── 4 則 LINE 訊息模板 ──
+function buildOrderCreatedMessage(orderId) {
+  const link = buildOrderToolsReceiptLink(orderId);
+  const displayId = fmtOrderId(orderId);
+  return `您好，感謝您訂購 98GO 電動車 😊
+
+您的訂單編號：${displayId}
+
+接下來我們會開始為您準備車輛及相關安裝作業。
+
+以下為您的購車保固收據：
+${link}
+
+收據內包含：
+・車輛及電池資訊
+・交易金額明細
+・保固範圍
+・日常保養注意事項
+
+您可以撥空點擊連結詳閱。
+
+待車輛準備完成後，我們會再通知您安排交車，請留意 LINE 訊息，謝謝您。`;
+}
+
+function buildPreLicenseMessage() {
+  return `您好，您的車輛即將安排辦理驗車及領牌。
+
+再麻煩您撥空攜帶以下資料至門市：
+
+・車主身分證正本
+・車主印章
+
+收到資料後，我們會接續安排驗車及領牌作業。
+
+送件前可以先傳 LINE 與我們確認，謝謝您。`;
+}
+
+function buildPickupMessage(order, orderId) {
+  const model = getVal(order,'車款') || '＿＿＿＿＿＿';
+  const color = getVal(order,'顏色') || '＿＿＿＿＿＿';
+  const frame = getVal(order,'車架號碼');
+  const plate = getVal(order,'車牌號碼');
+  const displayId = fmtOrderId(orderId);
+  const frameLine = '・車架號碼：' + (frame || '＿＿＿＿＿＿');
+  const plateLine = plate ? ('\n・車牌號碼：' + plate) : '';
+  return `您好，您的車輛已準備完成，可以安排交車囉 😊
+
+您的訂單編號：${displayId}
+
+車輛資料如下：
+・車款：${model}
+・顏色：${color}
+${frameLine}${plateLine}
+
+再麻煩您回覆預計前來取車的時間，方便我們提前為您準備。
+以下提供交車前車況檢查影片`;
+}
+
+function buildDeliveryDoneMessage(orderId) {
+  const link = buildOrderToolsReceiptLink(orderId);
+  const displayId = fmtOrderId(orderId);
+  return `您好，今天已順利完成交車 😊
+
+您的訂單編號：${displayId}
+
+感謝您選擇 98GO 電動車，希望您會喜歡這台新車。
+
+您的購車資料、保固內容及保養注意事項，都可以隨時透過以下收據連結查看：
+${link}
+
+日後使用上如有任何問題，歡迎透過 LINE 與我們聯繫，謝謝您的支持。`;
+}
+
+// ── 複製訊息（共用函式）──
+function copyOrderMessage(textareaId, btnEl) {
+  const ta = document.getElementById(textareaId);
+  if (!ta) return;
+  const text = ta.value;
+  const showCopied = () => {
+    const original = btnEl.textContent;
+    btnEl.textContent = '✅ 已複製';
+    btnEl.disabled = true;
+    setTimeout(() => { btnEl.textContent = original; btnEl.disabled = false; }, 1500);
   };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopyMessage(ta, showCopied));
+  } else {
+    fallbackCopyMessage(ta, showCopied);
+  }
+}
+function fallbackCopyMessage(ta, onDone) {
+  try {
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    if (ok) { onDone(); } else { alert('複製失敗，請手動選取文字後自行複製'); }
+  } catch (e) {
+    alert('複製失敗，請手動選取文字後自行複製');
+  }
+}
+
+// ── 呼叫 GAS：擴充後的 action=editOrder（車架/馬達/車牌）──
+function callUpdateOrderTools(orderId, updates, callback) {
+  const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼' };
+  const cbName = 'cb_tools_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+  const qs = Object.keys(updates).map(k => `${k}=${encodeURIComponent(updates[k])}`).join('&');
+  const url = `${APPS_SCRIPT_URL}?action=editOrder&orderId=${encodeURIComponent(orderId)}&${qs}&callback=${cbName}`;
+  let finished = false;
+  const script = document.createElement('script');
+  window[cbName] = function(data) {
+    finished = true;
+    delete window[cbName]; script.remove();
+    if (data && data.status === 'ok') {
+      const row = allData.find(r => getVal(r,'單號') === orderId);
+      if (row) {
+        Object.keys(updates).forEach(k => { if (fieldMap[k]) row[fieldMap[k]] = updates[k]; });
+      }
+      callback(true);
+    } else {
+      callback(false, data && data.message);
+    }
+  };
+  script.onerror = () => { if (!finished) { finished = true; delete window[cbName]; script.remove(); callback(false, '網路異常，請再試一次'); } };
   document.head.appendChild(script);
   setTimeout(() => {
-    if (window[cbName]) {
-      delete window[cbName]; script.remove();
-      alert('更新逾時，請稍後再試');
-      renderTasks();
-    }
+    if (!finished && window[cbName]) { finished = true; delete window[cbName]; script.remove(); callback(false, '送出逾時，請再試一次'); }
   }, 10000);
+}
+
+// ── 儲存車架號碼／馬達編號 ──
+function saveOrderFrame(orderId) {
+  const safeId = domSafeId(orderId);
+  const frameInput = document.getElementById('frame-input-' + safeId);
+  const motorInput = document.getElementById('motor-input-' + safeId);
+  const errEl = document.getElementById('frame-err-' + safeId);
+  const btn = document.getElementById('frame-save-btn-' + safeId);
+  const frame = (frameInput.value || '').trim();
+  const motor = (motorInput.value || '').trim();
+  errEl.textContent = '';
+  if (!frame) { errEl.textContent = '請輸入車架號碼'; return; }
+  frameInput.value = frame; motorInput.value = motor;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '儲存中...';
+  callUpdateOrderTools(orderId, { frame, motor }, (ok, msg) => {
+    btn.disabled = false; btn.textContent = orig;
+    if (ok) {
+      refreshOrderToolsCard(orderId);
+    } else {
+      errEl.textContent = '儲存失敗：' + (msg || '請稍後再試，資料尚未存入');
+    }
+  });
+}
+
+// ── 儲存車牌號碼 ──
+function saveOrderPlate(orderId) {
+  const safeId = domSafeId(orderId);
+  const plateInput = document.getElementById('plate-input-' + safeId);
+  const errEl = document.getElementById('plate-err-' + safeId);
+  const btn = document.getElementById('plate-save-btn-' + safeId);
+  let plate = (plateInput.value || '').trim().toUpperCase();
+  plateInput.value = plate;
+  errEl.textContent = '';
+  errEl.style.color = 'var(--accent)';
+  if (plate && !/^[A-Z0-9]{2,4}-?[A-Z0-9]{2,4}$/.test(plate)) {
+    errEl.textContent = '⚠️ 格式看起來不太一樣，確認無誤仍可直接儲存';
+    errEl.style.color = 'var(--amber)';
+  }
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '儲存中...';
+  callUpdateOrderTools(orderId, { plate }, (ok, msg) => {
+    btn.disabled = false; btn.textContent = orig;
+    if (ok) {
+      refreshOrderToolsCard(orderId);
+    } else {
+      errEl.style.color = 'var(--accent)';
+      errEl.textContent = '儲存失敗：' + (msg || '請稍後再試，資料尚未存入');
+    }
+  });
+}
+
+// 儲存成功後，只重繪這一筆訂單的訂單助手內容（保持展開、不影響其他列）
+function refreshOrderToolsCard(orderId) {
+  renderOrderTools(orderId);
+}
+
+// ── 渲染「訂單助手」6 張工作卡 ──
+function renderOrderTools(orderId) {
+  const safeId = domSafeId(orderId);
+  const row = document.getElementById('tools-' + safeId);
+  if (!row) return;
+  const order = allData.find(r => getVal(r,'單號') === orderId);
+  if (!order) { row.querySelector('td').innerHTML = '<div class="order-tools">找不到訂單資料</div>'; return; }
+
+  const frame = getVal(order,'車架號碼');
+  const motor = getVal(order,'馬達編號');
+  const plate = getVal(order,'車牌號碼');
+
+  const frameSummary = frame ? `<span class="tool-card-summary ok">✅ ${escHtml(frame)}</span>` : `<span class="tool-card-summary">尚未填寫</span>`;
+  const plateSummary = plate ? `<span class="tool-card-summary ok">✅ ${escHtml(plate)}</span>` : `<span class="tool-card-summary">尚未填寫</span>`;
+  const pickupSummary = frame ? `<span class="tool-card-summary ok">✅ 可產生通知</span>` : `<span class="tool-card-summary">尚未填寫車架號碼</span>`;
+
+  const c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c3 = 'c3-' + safeId, c4 = 'c4-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
+  const msg1id = 'msg1-' + safeId, msg2id = 'msg2-' + safeId, msg5id = 'msg5-' + safeId, msg6id = 'msg6-' + safeId;
+  const receiptLink = buildOrderToolsReceiptLink(orderId);
+
+  row.querySelector('td').innerHTML = `
+    <div class="order-tools">
+      <div class="order-tools-title">📋 訂單助手</div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c1}')">
+          <span class="tool-card-title"><span id="arrow-${c1}">▶</span> 🚗 訂車完成</span>
+          <span class="tool-card-summary ok">✅ 保固收據已建立</span>
+        </div>
+        <div class="tool-card-body" id="${c1}" style="display:none;">
+          <div class="tool-btn-row" style="margin-top:12px;">
+            <a class="tool-btn link" href="${escAttr(receiptLink)}" target="_blank" rel="noopener">開啟收據</a>
+          </div>
+          <textarea class="msg-preview" id="${msg1id}"></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('${msg1id}', this)">複製訊息</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c2}')">
+          <span class="tool-card-title"><span id="arrow-${c2}">▶</span> 📄 領牌前通知</span>
+        </div>
+        <div class="tool-card-body" id="${c2}" style="display:none;">
+          <textarea class="msg-preview" id="${msg2id}"></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('${msg2id}', this)">複製訊息</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c3}')">
+          <span class="tool-card-title"><span id="arrow-${c3}">▶</span> 🔩 車架號碼</span>
+          ${frameSummary}
+        </div>
+        <div class="tool-card-body" id="${c3}" style="display:none;">
+          <div class="tool-field">
+            <label>車架號碼</label>
+            <input type="text" id="frame-input-${safeId}" value="${escAttr(frame)}" placeholder="請輸入車架號碼">
+          </div>
+          <div class="tool-field">
+            <label>馬達編號（選填）</label>
+            <input type="text" id="motor-input-${safeId}" value="${escAttr(motor)}" placeholder="請輸入馬達編號">
+          </div>
+          <div class="tool-field-err" id="frame-err-${safeId}"></div>
+          <div class="tool-btn-row">
+            <button class="tool-btn primary" id="frame-save-btn-${safeId}" onclick="saveOrderFrame('${escAttr(orderId)}')">儲存</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c4}')">
+          <span class="tool-card-title"><span id="arrow-${c4}">▶</span> 🏷 車牌號碼</span>
+          ${plateSummary}
+        </div>
+        <div class="tool-card-body" id="${c4}" style="display:none;">
+          <div class="tool-field">
+            <label>車牌號碼</label>
+            <input type="text" id="plate-input-${safeId}" value="${escAttr(plate)}" placeholder="例：ABC-1234">
+          </div>
+          <div class="tool-field-err" id="plate-err-${safeId}"></div>
+          <div class="tool-btn-row">
+            <button class="tool-btn primary" id="plate-save-btn-${safeId}" onclick="saveOrderPlate('${escAttr(orderId)}')">儲存</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c5}')">
+          <span class="tool-card-title"><span id="arrow-${c5}">▶</span> 🎥 通知取車</span>
+          ${pickupSummary}
+        </div>
+        <div class="tool-card-body" id="${c5}" style="display:none;">
+          <div class="tool-readonly-list">
+            <div><span class="lbl">車款</span>${escHtml(getVal(order,'車款'))||'—'}</div>
+            <div><span class="lbl">顏色</span>${escHtml(getVal(order,'顏色'))||'—'}</div>
+            <div><span class="lbl">車架號碼</span>${escHtml(frame)||'尚未填寫'}</div>
+            <div><span class="lbl">車牌號碼</span>${escHtml(plate)||'尚未填寫'}</div>
+          </div>
+          <textarea class="msg-preview" id="${msg5id}"></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('${msg5id}', this)">複製訊息</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c6}')">
+          <span class="tool-card-title"><span id="arrow-${c6}">▶</span> 🎉 交車完成</span>
+        </div>
+        <div class="tool-card-body" id="${c6}" style="display:none;">
+          <div class="tool-btn-row" style="margin-top:12px;">
+            <a class="tool-btn link" href="${escAttr(receiptLink)}" target="_blank" rel="noopener">開啟收據</a>
+          </div>
+          <textarea class="msg-preview" id="${msg6id}"></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('${msg6id}', this)">複製訊息</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  // 訊息內容一律用 .value 賦值（不走 innerHTML），避免資料中的 < > & 等符號破壞畫面
+  document.getElementById(msg1id).value = buildOrderCreatedMessage(orderId);
+  document.getElementById(msg2id).value = buildPreLicenseMessage();
+  document.getElementById(msg5id).value = buildPickupMessage(order, orderId);
+  document.getElementById(msg6id).value = buildDeliveryDoneMessage(orderId);
 }
 
 // loadData() 由密碼驗證通過後呼叫
