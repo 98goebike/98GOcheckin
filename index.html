@@ -1124,6 +1124,9 @@ let sigCanvas, sigCtx, drawing = false;
 let vehicleMap    = {};   // { 小分類: { 型號: [{color, code}, ...] } }
 let batterySpecs  = [];   // [{ label, type, v, ah, note }, ...]
 let priceMap      = {};   // { '型號|電池銷售規格': 售價 }
+const PAY_METHODS = ['現金','匯款/轉帳','信用卡','無卡分期','蝦皮','官網','其他'];
+let _depRowId = 0;   // 提前宣告：initRemoteMode() 會在頁面載入時就呼叫 addDepRow()，
+                      // 必須確保這個變數在那之前已經初始化，否則會噴 TDZ 錯誤
 
 // ====== INIT ======
 document.getElementById('s1-date').value = new Date().toISOString().split('T')[0];
@@ -1494,11 +1497,31 @@ function initFallbackSelects() {
     setLockedNum('p-discount', data.discount || 0);
     setLockedNum('p-deposit', data.deposit || 0);
 
-    // 鎖定訂金付款方式
-    if (data.depositMethod) {
-      const depSel = document.getElementById('p-dep-method');
-      if (depSel) { depSel.value = data.depositMethod; depSel.disabled = true; depSel.style.background = '#f8f8f8'; }
+    // [修正] 重建「訂金付款明細」列，而不是只設定隱藏欄位——
+    // 因為最終送出訂單時，訂金支付方式／訂金日期是重新從 #dep-detail-list
+    // 的實際明細列算出來的（getDepDetails()），不是讀這裡設定的隱藏欄位。
+    // 之前只設定隱藏欄位、沒有真的塞明細列進去，導致遠端客人送出的訂單
+    // 訂金支付方式／訂金日期永遠是空的。
+    const lockDepRow = (row) => {
+      if (!row) return;
+      row.querySelectorAll('select, input').forEach(el => { el.disabled = true; el.style.background = '#f8f8f8'; el.style.color = '#666'; });
+      const rmBtn = row.querySelector('.dep-row-remove');
+      if (rmBtn) rmBtn.style.display = 'none';
+    };
+    if (data.depositDetail) {
+      // 多元付款：格式為 "方式:金額:日期｜方式:金額:日期"
+      data.depositDetail.split('｜').filter(Boolean).forEach(item => {
+        const parts = item.split(':');
+        const m = parts[0], amt = parseFloat(parts[1]) || 0, dt = parts[2] || data.depDate || '';
+        addDepRow(m, amt, dt);
+        lockDepRow(document.getElementById('dep-r-' + _depRowId));
+      });
+    } else if (data.depositMethod && (data.deposit || 0) > 0) {
+      // 單一付款方式
+      addDepRow(data.depositMethod, data.deposit, data.depDate || '');
+      lockDepRow(document.getElementById('dep-r-' + _depRowId));
     }
+    // 鎖定尾款付款方式（此欄位在最終送出時是直接讀取，不需要重建明細列）
     if (data.balanceMethod) {
       const balSel = document.getElementById('p-bal-method');
       if (balSel) { balSel.value = data.balanceMethod; balSel.disabled = true; balSel.style.background = '#f8f8f8'; }
@@ -1520,8 +1543,7 @@ function initFallbackSelects() {
       });
     }
 
-    // 鎖定訂金日期、尾款日期、完款日期
-    setLocked('p-dep-date', data.depDate || '');
+    // 鎖定尾款日期、完款日期（訂金日期已透過上面重建的明細列自動同步，不需要在這裡再設一次）
     setLocked('p-bal-date', data.balDate || '');
     setLocked('p-full-date', data.fullDate || '');
 
@@ -1798,11 +1820,9 @@ function getAddons() {
 }
 
 // ====== 多筆訂金付款明細 ======
-const PAY_METHODS = ['現金','匯款/轉帳','信用卡','無卡分期','蝦皮','官網','其他'];
 function _payOpts(sel) {
   return PAY_METHODS.map(m => `<option value="${m}"${m===sel?' selected':''}>${m}</option>`).join('');
 }
-let _depRowId = 0;
 
 function addDepRow(method, amount, date) {
   _depRowId++;
