@@ -714,58 +714,39 @@ function renderOverview() {
   const fromVal = document.getElementById('cf-from')?.value;
   const toVal = document.getElementById('cf-to')?.value;
 
-  const filtered = allData.filter(r => {
-    const d = getDate(r, '成交日期');
-    if (!d || isNaN(d.getTime())) return false;
-    if (fromVal) {
-      const from = new Date(fromVal); from.setHours(0,0,0,0);
-      if (d < from) return false;
-    }
-    if (toVal) {
-      const to = new Date(toVal); to.setHours(23,59,59,999);
-      if (d > to) return false;
-    }
-    return true;
-  });
+  const isSameDay = (d, ref) => d && d.getFullYear()===ref.getFullYear() && d.getMonth()===ref.getMonth() && d.getDate()===ref.getDate();
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
 
-  const thisMonth = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
-  });
-  const today = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    if (!d) return false;
-    const t = new Date(); 
-    return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate();
-  });
-  const totalRevenue = allData.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const monthRevenue = thisMonth.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const todayRevenue = today.reduce((s,r) => s+getNum(r,'總金額'),0);
-  const yearRevenue = allData.filter(r => {
-    const d = getDate(r,'成交日期');
-    return d && d.getFullYear()===now.getFullYear();
-  }).reduce((s,r) => s+getNum(r,'總金額'),0);
+  const dealToday = allData.filter(r => isSameDay(getDate(r,'成交日期'), now));
+  const deliveredToday = allData.filter(r => isSameDay(getDate(r,'實際交車日'), now));
+  const deliveryTomorrow = allData.filter(r => isSameDay(getDate(r,'預計交車日'), tomorrow));
 
-  // 今日現金總額
-  const today2 = new Date();
-  const isToday = d => d && d.getFullYear()===today2.getFullYear() && d.getMonth()===today2.getMonth() && d.getDate()===today2.getDate();
-  const todayCash = allData.reduce((s,r) => {
-    let cash = 0;
-    // 訂金：用訂金日期判斷（沒有訂金日期的舊資料，退回用成交日期，避免整筆消失）
+  // 各付款方式今日總額：訂金依「訂金日期」（無則退回成交日期），尾款依「尾款收款日期」
+  const sumTodayByMethod = matchMethod => allData.reduce((s,r) => {
+    let amt = 0;
     const depDate = getDate(r,'訂金日期') || getDate(r,'成交日期');
-    if (isToday(depDate) && getVal(r,'訂金支付方式')==='現金') cash += getNum(r,'訂金');
-    // 尾款：用尾款收款日期判斷（AP欄）
+    if (isSameDay(depDate, now) && matchMethod(getVal(r,'訂金支付方式'))) amt += getNum(r,'訂金');
     const balDate = getDate(r,'尾款收款日期');
-    if (isToday(balDate) && getVal(r,'尾款支付方式')==='現金') cash += getNum(r,'尾款');
-    return s + cash;
+    if (isSameDay(balDate, now) && matchMethod(getVal(r,'尾款支付方式'))) amt += getNum(r,'尾款');
+    return s + amt;
   }, 0);
 
+  const todayCash = sumTodayByMethod(m => m === '現金');
+  // 相容舊資料標籤「刷卡」（現行表單已改用「信用卡」）
+  const todayCredit = sumTodayByMethod(m => m === '信用卡' || m === '刷卡');
+  const todayInstallment = sumTodayByMethod(m => m === '無卡分期');
+  const todayTransfer = sumTodayByMethod(m => m === '匯款/轉帳');
+  const todayOnline = sumTodayByMethod(m => m === '蝦皮' || m === '官網');
+
   document.getElementById('metrics-overview').innerHTML = `
-    <div class="metric accent"><div class="lbl">今日成交</div><div class="val">${today.length} 筆</div><div class="sub">今日營收 ${fmtMoney(todayRevenue)}</div></div>
-    <div class="metric"><div class="lbl">本月營收</div><div class="val">${fmtMoney(monthRevenue)}</div><div class="sub">本月 ${thisMonth.length} 筆</div></div>
-    <div class="metric"><div class="lbl">年度營收</div><div class="val">${fmtMoney(yearRevenue)}</div><div class="sub">${now.getFullYear()} 年</div></div>
-    <div class="metric"><div class="lbl">平均客單價</div><div class="val">${fmtMoney(allData.length ? totalRevenue/allData.length : 0)}</div><div class="sub">共 ${allData.length} 筆訂單</div></div>
-    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div><div class="sub" style="color:rgba(255,255,255,.6);">訂金＋尾款現金合計</div></div>
+    <div class="metric accent"><div class="lbl">當日成交數</div><div class="val">${dealToday.length} 筆</div></div>
+    <div class="metric"><div class="lbl">當日實際交車數</div><div class="val">${deliveredToday.length} 筆</div></div>
+    <div class="metric"><div class="lbl">明日預計交車數</div><div class="val">${deliveryTomorrow.length} 筆</div></div>
+    <div class="metric" style="border:2px solid var(--green);background:var(--green);"><div class="lbl" style="color:rgba(255,255,255,.7);">今日現金總額</div><div class="val" style="color:#fff;">${fmtMoney(todayCash)}</div></div>
+    <div class="metric"><div class="lbl">今日信用卡總額</div><div class="val">${fmtMoney(todayCredit)}</div></div>
+    <div class="metric"><div class="lbl">今日無卡分期總額</div><div class="val">${fmtMoney(todayInstallment)}</div></div>
+    <div class="metric"><div class="lbl">今日匯款總額</div><div class="val">${fmtMoney(todayTransfer)}</div></div>
+    <div class="metric"><div class="lbl">今日線上平台總額</div><div class="val">${fmtMoney(todayOnline)}</div></div>
   `;
 
   // 現金流表格
