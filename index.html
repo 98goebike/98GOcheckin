@@ -1604,6 +1604,23 @@ async function generateRemoteLink() {
     if (e2) { e2.textContent = '請先填寫車輛售價再產生連結'; e2.classList.add('show'); }
     return;
   }
+  // [新增] 訂金付款明細完整性檢查：遠距客人看不到「訂金付款明細」子表單，
+  // 這裡漏填，訂金支付方式、訂金日期就會永久空白，直接影響業績總覽的現金流對帳。
+  const depositAmt = parseFloat(document.getElementById('p-deposit').value) || 0;
+  if (depositAmt > 0) {
+    const depDetails = getDepDetails().filter(x => x.method && x.amount > 0);
+    if (depDetails.length === 0) {
+      const e2b = document.getElementById('err2');
+      if (e2b) { e2b.textContent = '訂金金額已填，但「訂金付款明細」是空的，請先在下方新增一筆訂金付款明細（付款方式／金額／日期）再產生連結'; e2b.classList.add('show'); }
+      return;
+    }
+    const depSum = depDetails.reduce((s,d) => s+d.amount, 0);
+    if (Math.abs(depSum - depositAmt) >= 1) {
+      const e2b = document.getElementById('err2');
+      if (e2b) { e2b.textContent = `訂金付款明細加總（NT$ ${Math.round(depSum).toLocaleString()}）與訂金金額（NT$ ${Math.round(depositAmt).toLocaleString()}）不符，請確認後再產生連結`; e2b.classList.add('show'); }
+      return;
+    }
+  }
   const e2 = document.getElementById('err2');
   if (e2) e2.classList.remove('show');
 
