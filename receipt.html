@@ -113,8 +113,7 @@ table.info tr:last-child{border-bottom:none;}
       </div>
     </div>
     <div class="hdr-meta">
-      <strong id="r-id">單號：—</strong><br>
-      <span id="r-timestamp">—</span>
+      <strong id="r-id">單號：—</strong>
     </div>
   </div>
 
@@ -327,7 +326,6 @@ async function loadReceipt(){
 
       set('r-id','單號：'+orderId);
       set('footer-id',orderId);
-      set('r-timestamp',fmtDate(data.date));
 
       const isDone=data.orderStatus==='已交車';
       const bar=document.getElementById('status-bar');
