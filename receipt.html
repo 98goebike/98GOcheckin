@@ -333,7 +333,12 @@ async function loadReceipt(){
       const bar=document.getElementById('status-bar');
       bar.className='status-bar '+(isDone?'done':'pending');
       set('status-text',isDone?'✅ 已交車':'⏳ 待交車');
-      if(isDone&&data.frame)set('status-sub','車架號碼：'+data.frame);
+      if(isDone){
+        const subParts=[];
+        if(data.frame)subParts.push('車架號碼：'+data.frame);
+        if(data.actualDelivery)subParts.push('交車日：'+fmtDate(data.actualDelivery));
+        set('status-sub',subParts.join('　｜　'));
+      }
 
       // 車輛
       set('r-vehicleType',data.vehicleType);
