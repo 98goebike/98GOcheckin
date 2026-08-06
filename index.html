@@ -1237,6 +1237,10 @@ async function loadProductData() {
 
 // ── 車輛選單初始化 ──
 function initVehicleSelects() {
+  // [修正] 遠端連結客人：車種類型已由 initRemoteMode() 鎖定填好，
+  // 這裡如果照常重設，會在 loadProductData() 非同步回來的那一刻，
+  // 把客人畫面上原本正確的車種類型洗成空白（客人完全不會發現）。
+  if (window._remoteMode) return;
   const vtSel = document.getElementById('s1-vehicle-type');
   vtSel.innerHTML = '<option value="">請選擇車種類型</option>';
   Object.keys(vehicleMap).sort().forEach(cat => {
@@ -1292,6 +1296,8 @@ function onColorChange() {
 
 // ── 電池選單初始化 ──
 function initBatterySelect() {
+  // [修正] 同上，遠端連結客人的電池銷售規格已鎖定，跳過重設，避免被 loadProductData() 洗掉
+  if (window._remoteMode) return;
   const sel = document.getElementById('s1-battery-spec');
   sel.innerHTML = '<option value="">請選擇電池銷售規格</option>';
   batterySpecs.forEach(item => {
