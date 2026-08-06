@@ -751,8 +751,8 @@ function renderOverview() {
   const isToday = d => d && d.getFullYear()===today2.getFullYear() && d.getMonth()===today2.getMonth() && d.getDate()===today2.getDate();
   const todayCash = allData.reduce((s,r) => {
     let cash = 0;
-    // 訂金：用成交日期判斷
-    const depDate = getDate(r,'成交日期');
+    // 訂金：用訂金日期判斷（沒有訂金日期的舊資料，退回用成交日期，避免整筆消失）
+    const depDate = getDate(r,'訂金日期') || getDate(r,'成交日期');
     if (isToday(depDate) && getVal(r,'訂金支付方式')==='現金') cash += getNum(r,'訂金');
     // 尾款：用尾款收款日期判斷（AP欄）
     const balDate = getDate(r,'尾款收款日期');
@@ -769,19 +769,31 @@ function renderOverview() {
   `;
 
   // 現金流表格
+  // [修正] 訂金要用「訂金日期」判斷是否落在查帳區間、尾款要用「尾款收款日期」判斷，
+  // 不能沿用上面依「成交日期」篩出的 filtered——因為交車（收尾款）常常跟成交日期不同天，
+  // 之前寫法會讓「今天收的尾款」因為訂單的成交日期不是今天，而整筆從今日現金流消失。
+  const inDateRange = (d) => {
+    if (!d || isNaN(d.getTime())) return false;
+    if (fromVal) { const from = new Date(fromVal); from.setHours(0,0,0,0); if (d < from) return false; }
+    if (toVal) { const to = new Date(toVal); to.setHours(23,59,59,999); if (d > to) return false; }
+    return true;
+  };
   const methods = ['現金','匯款/轉帳','刷卡','無卡分期'];
   const cfMap = {};
   methods.forEach(m => cfMap[m] = {depCount:0,dep:0,balCount:0,bal:0});
-  filtered.forEach(r => {
+  allData.forEach(r => {
     const dm = getVal(r,'訂金支付方式') || '現金';
     const bm = getVal(r,'尾款支付方式') || '現金';
     const dep = getNum(r,'訂金');
     const bal = getNum(r,'尾款');
     if (!cfMap[dm]) cfMap[dm] = {depCount:0,dep:0,balCount:0,bal:0};
     if (!cfMap[bm]) cfMap[bm] = {depCount:0,dep:0,balCount:0,bal:0};
-    if (dep > 0) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
-    // 尾款只有「尾款已收✅」才計入現金流
-    if (bal > 0 && isChecked(r,'尾款已收')) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
+    // 訂金：依「訂金日期」是否落在查帳區間內（沒有訂金日期就退回用成交日期，避免舊資料整筆消失）
+    const depDate = getDate(r,'訂金日期') || getDate(r,'成交日期');
+    if (dep > 0 && inDateRange(depDate)) { cfMap[dm].depCount++; cfMap[dm].dep += dep; }
+    // 尾款：依「尾款收款日期」是否落在查帳區間內，且「尾款已收」已勾選才計入現金流
+    const balDate = getDate(r,'尾款收款日期');
+    if (bal > 0 && isChecked(r,'尾款已收') && inDateRange(balDate)) { cfMap[bm].balCount++; cfMap[bm].bal += bal; }
   });
 
   const colorMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
