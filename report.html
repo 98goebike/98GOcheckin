@@ -43,6 +43,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:#f0f2f5;color:var(--text);
 
 /* Metric cards */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:1.5rem;}
+#metrics-overview{grid-template-columns:repeat(4,1fr);}
+@media(max-width:900px){#metrics-overview{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){#metrics-overview{grid-template-columns:1fr;}}
 .metric{background:#fff;border-radius:10px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
 .metric .lbl{font-size:11px;color:var(--gray4);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
 .metric .val{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
@@ -307,7 +310,6 @@ tr:last-child td{border-bottom:none;}
 
     <!-- 業績總覽 -->
     <div id="tab-overview">
-      <h1 style="color:red;">測試版本 001</h1>
       <div class="metrics" id="metrics-overview"></div>
 
       <div id="missing-baldate-card" class="card" style="display:none;border-left:4px solid #E63946;">
