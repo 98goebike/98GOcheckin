@@ -408,15 +408,43 @@ tr:last-child td{border-bottom:none;}
         <button onclick="setPurchaseMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
         <button onclick="setPurchaseYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
         <button onclick="clearPurchase()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>到貨狀態：</label>
+        <select id="purchase-arrival" onchange="renderPurchase()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">全部</option>
+          <option value="pending">🚚 已訂購，待到貨（尚未到貨）</option>
+          <option value="partial">🚚 到貨中（缺一項）</option>
+          <option value="arrived">✅ 已到貨（車輛＋電池都到）</option>
+        </select>
       </div>
       <div class="grid2">
         <div class="card">
-          <div class="card-title">📦 車款銷售數量</div>
+          <div class="card-title">📦 車款銷售數量（含顏色）</div>
           <div id="purchase-model"></div>
         </div>
         <div class="card">
-          <div class="card-title">🔋 電池需求數量</div>
+          <div class="card-title">🔋 電池需求數量（含類型／規格／備註）</div>
           <div id="purchase-battery"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🧩 供應商群組加總（勾選同一供應商的車款＋顏色，合併統計採購量）</div>
+        <div id="purchase-group-list" style="max-height:240px;overflow-y:auto;border:1px solid var(--gray2);border-radius:8px;padding:10px;"></div>
+        <div id="purchase-group-total" style="margin-top:10px;font-size:14px;font-weight:700;color:var(--brand);"></div>
+        <textarea class="msg-preview" id="purchase-group-text" style="min-height:90px;" readonly></textarea>
+        <div class="tool-btn-row">
+          <button class="tool-btn copy" onclick="copyOrderMessage('purchase-group-text', this)">複製採購清單</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 待處理訂單明細</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>成交日期</th><th>預計交車日</th><th>客戶</th><th>手機</th><th>車款</th><th>顏色</th><th>電池規格</th><th>到貨狀態</th>
+            </tr></thead>
+            <tbody id="tbody-purchase-detail"></tbody>
+          </table>
         </div>
       </div>
       <div class="card">
@@ -955,24 +983,64 @@ function clearPurchase() {
   renderPurchase();
 }
 
+// 到貨狀態（車輛到貨／電池到貨）：採購計算跟任務清單共用 getPurchaseFlags() 判斷
+function getArrivalStatus(r) {
+  const flags = getPurchaseFlags(r);
+  const count = (flags.vehicle?1:0) + (flags.battery?1:0);
+  if (count === 2) return 'arrived';
+  if (count === 1) return 'partial';
+  return 'pending';
+}
+
+// 供應商群組勾選狀態：用 Set 記住已勾選的「車款 - 顏色」組合，篩選條件變動時盡量保留
+const purchaseGroupChecked = new Set();
+let purchaseGroupMap = {};
+
+function updatePurchaseGroupTotal() {
+  document.querySelectorAll('#purchase-group-list input[type=checkbox]').forEach(cb => {
+    if (cb.checked) purchaseGroupChecked.add(cb.value); else purchaseGroupChecked.delete(cb.value);
+  });
+  let total = 0;
+  const pickedLines = [];
+  // 依照目前排序（數量多到少）輸出，跟畫面上勾選清單的順序一致
+  Object.entries(purchaseGroupMap).forEach(([key, v]) => {
+    if (purchaseGroupChecked.has(key)) { total += v; pickedLines.push(`${key} x${v}`); }
+  });
+  const el = document.getElementById('purchase-group-total');
+  const textEl = document.getElementById('purchase-group-text');
+  el.textContent = pickedLines.length > 0 ? `已勾選 ${pickedLines.length} 種車款／顏色組合，合計 ${total} 台，可合併下單給同一供應商` : '勾選上方項目來合併統計同供應商的採購量';
+  textEl.value = pickedLines.length > 0 ? `採購清單（合計 ${total} 台）：\n` + pickedLines.join('\n') : '';
+}
+
 function renderPurchase() {
   const fromVal = document.getElementById('purchase-from').value;
   const toVal = document.getElementById('purchase-to').value;
   const fromD = fromVal ? new Date(fromVal) : null;
   const toD = toVal ? new Date(toVal + 'T23:59:59') : null;
+  const arrivalVal = document.getElementById('purchase-arrival').value;
 
   const filtered = allData.filter(r => {
     const d = getDate(r, '成交日期');
     if (!d) return false;
     if (fromD && d < fromD) return false;
     if (toD && d > toD) return false;
+    // 到貨狀態篩選只在有選的時候才生效，且只看未交車/未取消的訂單
+    // （不影響「全部」時原本涵蓋所有訂單的統計行為）
+    if (arrivalVal) {
+      const status = getVal(r,'訂單狀態');
+      if (status === '已交車' || status === '已取消') return false;
+      if (getArrivalStatus(r) !== arrivalVal) return false;
+    }
     return true;
   });
 
-  // 車款統計
+  // 車款統計（含顏色，同時也是供應商群組清單的資料來源）
   const modelMap = {};
   filtered.forEach(r => {
-    const m = getVal(r,'車款'); if(m) modelMap[m]=(modelMap[m]||0)+1;
+    const m = getVal(r,'車款'); if (!m) return;
+    const c = getVal(r,'顏色');
+    const key = c ? `${m} - ${c}` : m;
+    modelMap[key] = (modelMap[key]||0)+1;
   });
   const mEntries = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]);
   const mMax = mEntries[0]?.[1]||1;
@@ -982,11 +1050,24 @@ function renderPurchase() {
       <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:#854F0B;"><span>${v} 台</span></div></div></div>`).join('') :
     '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
 
-  // 電池統計
+  // 供應商群組勾選清單：跟車款統計用同一份 modelMap
+  purchaseGroupMap = modelMap;
+  const groupListEl = document.getElementById('purchase-group-list');
+  groupListEl.innerHTML = mEntries.length ?
+    mEntries.map(([l,v]) => `
+      <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" value="${escAttr(l)}" ${purchaseGroupChecked.has(l)?'checked':''} onchange="updatePurchaseGroupTotal()">
+        <span style="flex:1;">${escHtml(l)}</span>
+        <span style="color:var(--gray5);">${v} 台</span>
+      </label>`).join('') :
+    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  updatePurchaseGroupTotal();
+
+  // 電池統計（電池類型／規格(V)／規格(ah)／備註 完整呈現，跟任務清單共用 getBatteryLabel）
   const batMap = {};
   filtered.forEach(r => {
-    const b = (getVal(r,'電池規格(V)')+' '+getVal(r,'電池規格(ah)')).trim();
-    if(b) batMap[b]=(batMap[b]||0)+1;
+    const b = getBatteryLabel(r);
+    if (b) batMap[b] = (batMap[b]||0)+1;
   });
   const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
   const bMax = bEntries[0]?.[1]||1;
@@ -995,6 +1076,43 @@ function renderPurchase() {
       <div class="bar-item"><div class="bar-label">${l}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('') :
     '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 待處理訂單明細：跟上面圖表共用同一份 filtered，依預計交車日排序（快到的排前面），
+  // 快逾期／已逾期用顏色標出來，方便採購優先處理
+  const arrivalBadgeMap = { pending:'🚚 待到貨', partial:'🚚 到貨中(1/2)', arrived:'✅ 已到貨' };
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  const detailRows = [...filtered].sort((a,b) => {
+    const da = getDate(a,'預計交車日'), db = getDate(b,'預計交車日');
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da - db;
+  }).map(r => {
+    const deliveryRaw = getVal(r,'預計交車日');
+    const arrival = getArrivalStatus(r);
+    let urgency = '';
+    if (arrival !== 'arrived') {
+      const dd = getDate(r,'預計交車日');
+      if (dd) {
+        dd.setHours(0,0,0,0);
+        const diffDays = Math.round((dd - today0) / 86400000);
+        if (diffDays < 0) urgency = ` <span style="color:#E63946;font-weight:700;">⚠️已逾期${Math.abs(diffDays)}天</span>`;
+        else if (diffDays <= 3) urgency = ` <span style="color:#854F0B;font-weight:700;">🔥${diffDays}天內交車</span>`;
+      }
+    }
+    return `<tr>
+      <td>${getVal(r,'成交日期')}</td>
+      <td>${deliveryRaw?fmtDate(deliveryRaw):'—'}${urgency}</td>
+      <td>${getVal(r,'姓名')}</td>
+      <td>${getVal(r,'手機號碼')}</td>
+      <td>${getVal(r,'車款')||'—'}</td>
+      <td>${getVal(r,'顏色')||'—'}</td>
+      <td>${getBatteryLabel(r)||'—'}</td>
+      <td>${arrivalBadgeMap[arrival]}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tbody-purchase-detail').innerHTML = detailRows ||
+    '<tr><td colspan="8" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合條件的訂單</td></tr>';
 
   // 加價購統計
   const addonMap = {};
