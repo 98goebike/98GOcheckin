@@ -526,6 +526,22 @@ tr:last-child td{border-bottom:none;}
         <button class="filter-btn" onclick="setTaskFilter('today')" id="tf-today">今日交車</button>
         <button class="filter-btn" onclick="setTaskFilter('overdue')" id="tf-overdue">逾期</button>
         <button class="filter-btn" onclick="setTaskFilter('all')" id="tf-all">全部</button>
+        <span style="color:var(--gray3);margin:0 2px;">｜</span>
+        <select id="task-filter-model" onchange="renderTasks()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">所有車型</option>
+        </select>
+        <select id="task-filter-battery" onchange="renderTasks()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">所有電池規格</option>
+        </select>
+        <select id="task-filter-status" onchange="renderTasks()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">所有狀態</option>
+          <option value="pending_arrival">🚚 待到貨</option>
+          <option value="partial_arrival">🚚 到貨中(1/2)</option>
+          <option value="pending_assembly">🔧 待整備</option>
+          <option value="pending_plate">🏷 待掛牌</option>
+          <option value="plating">🏷 掛牌中</option>
+          <option value="ready">✅ 可交車</option>
+        </select>
         <span style="margin-left:auto;font-size:12px;color:var(--gray5);" id="task-count"></span>
       </div>
       <div id="task-grid" class="task-grid"></div>
@@ -1275,13 +1291,61 @@ function setTaskFilter(f) {
   renderTasks();
 }
 
+// 電池規格完整字串：類型＋規格(V)＋規格(ah)＋備註，任務卡片跟篩選器共用同一套
+function getBatteryLabel(r) {
+  return [getVal(r,'電池類型'), getVal(r,'電池規格(V)'), getVal(r,'電池規格(ah)'), getVal(r,'電池備註')].filter(Boolean).join(' ');
+}
+
+// 5階段流程目前卡在哪一關，任務卡片的狀態徽章跟「狀態」篩選器共用同一套判斷
+function getTaskStage(flags, isInstalled, isRegistered) {
+  const arrivedCount = (flags.vehicle?1:0) + (flags.battery?1:0);
+  if (arrivedCount===2 && isInstalled && isRegistered) return { key:'ready',            cls:'s-ready',   label:'✅ 可交車' };
+  if (isRegistered)                                    return { key:'plating',          cls:'s-working', label:'🏷 掛牌中' };
+  if (isInstalled)                                     return { key:'pending_plate',    cls:'s-working', label:'🏷 待掛牌' };
+  if (arrivedCount===2)                                return { key:'pending_assembly', cls:'s-working', label:'🔧 待整備' };
+  if (arrivedCount===1)                                return { key:'partial_arrival',  cls:'s-working', label:'🚚 到貨中(1/2)' };
+  return                                                      { key:'pending_arrival',  cls:'s-none',    label:'🚚 待到貨' };
+}
+
+// 車型／電池規格下拉選單：用目前「待處理」範圍內實際出現過的值動態產生選項，
+// 並保留使用者原本選的值（不會因為重繪而被重置成「所有車型」）
+function populateTaskFilterDropdowns(pool) {
+  const modelSel = document.getElementById('task-filter-model');
+  const batterySel = document.getElementById('task-filter-battery');
+  if (!modelSel || !batterySel) return;
+  const prevModel = modelSel.value, prevBattery = batterySel.value;
+
+  const models = [...new Set(pool.map(r => getVal(r,'車款')).filter(Boolean))].sort();
+  const batteries = [...new Set(pool.map(r => getBatteryLabel(r)).filter(Boolean))].sort();
+
+  modelSel.innerHTML = '<option value="">所有車型</option>' + models.map(m => `<option value="${escAttr(m)}">${escHtml(m)}</option>`).join('');
+  batterySel.innerHTML = '<option value="">所有電池規格</option>' + batteries.map(b => `<option value="${escAttr(b)}">${escHtml(b)}</option>`).join('');
+
+  if (models.includes(prevModel)) modelSel.value = prevModel;
+  if (batteries.includes(prevBattery)) batterySel.value = prevBattery;
+}
+
 function renderTasks() {
   if (!allData.length) return;
   const now = new Date(); now.setHours(0,0,0,0);
 
-  const filtered = allData.filter(r => {
+  // 篩選器的下拉選項只從「待處理範圍」（排除已交車/已取消）內的資料產生
+  const pendingPool = allData.filter(r => {
     const status = getVal(r,'訂單狀態');
-    if (status === '已交車' || status === '已取消') return false;
+    return status !== '已交車' && status !== '已取消';
+  });
+  populateTaskFilterDropdowns(pendingPool);
+  const modelFilter = document.getElementById('task-filter-model')?.value || '';
+  const batteryFilter = document.getElementById('task-filter-battery')?.value || '';
+  const statusFilter = document.getElementById('task-filter-status')?.value || '';
+
+  const filtered = pendingPool.filter(r => {
+    if (modelFilter && getVal(r,'車款') !== modelFilter) return false;
+    if (batteryFilter && getBatteryLabel(r) !== batteryFilter) return false;
+    if (statusFilter) {
+      const stage = getTaskStage(getPurchaseFlags(r), isChecked(r,'已安裝'), isChecked(r,'已掛牌'));
+      if (stage.key !== statusFilter) return false;
+    }
     const raw = getVal(r,'預計交車日');
     const d = raw ? new Date(raw) : null;
     if (d) d.setHours(0,0,0,0);
@@ -1314,10 +1378,6 @@ function renderTaskCard(r, now) {
   const model    = getVal(r,'車款');
   const color    = getVal(r,'顏色');
   const note     = getVal(r,'車輛備註');
-  const batType  = getVal(r,'電池類型');
-  const batV     = getVal(r,'電池規格(V)');
-  const batAh    = getVal(r,'電池規格(ah)');
-  const batNote  = getVal(r,'電池備註');
   const addons   = getVal(r,'加價購項目');
   const name     = getVal(r,'姓名');
   const phone    = getVal(r,'手機號碼');
@@ -1330,7 +1390,6 @@ function renderTaskCard(r, now) {
   const isInstalled  = isChecked(r,'已安裝') || false;
   const isRegistered = isChecked(r,'已掛牌') || false;
   const flags = getPurchaseFlags(r);
-  const arrivedCount = (flags.vehicle?1:0) + (flags.battery?1:0);
 
   // 日期判斷
   let cardClass = '', dateClass = 'future-date', dateLabel = '';
@@ -1350,17 +1409,13 @@ function renderTaskCard(r, now) {
   }
 
   // 狀態（依「訂單產生→到貨→整備組裝→掛牌作業→準備交車」5階段判斷目前卡在哪一關）
-  let statusClass = 's-none', statusLabel = '🚚 待到貨';
-  if (arrivedCount===2 && isInstalled && isRegistered) { statusClass='s-ready';   statusLabel='✅ 可交車'; }
-  else if (isRegistered)                               { statusClass='s-working'; statusLabel='🏷 掛牌中'; }
-  else if (isInstalled)                                { statusClass='s-working'; statusLabel='🏷 待掛牌'; }
-  else if (arrivedCount===2)                           { statusClass='s-working'; statusLabel='🔧 待整備'; }
-  else if (arrivedCount===1)                           { statusClass='s-working'; statusLabel='🚚 到貨中(1/2)'; }
+  const stage = getTaskStage(flags, isInstalled, isRegistered);
+  const statusClass = stage.cls, statusLabel = stage.label;
 
   const stepperHtml = buildProgressStepper(flags, isInstalled, isRegistered);
 
   // 電池
-  const battery = [batType, batV, batAh, batNote].filter(Boolean).join(' ');
+  const battery = getBatteryLabel(r);
 
   // 加購項目
   let addonHtml = '';
