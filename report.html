@@ -229,15 +229,15 @@ tr:last-child td{border-bottom:none;}
 .record-row { cursor:pointer; }
 .record-row:hover td { background:var(--gray1); }
 .record-expand-cell { width:28px; text-align:center; color:var(--gray4); font-size:11px; user-select:none; }
-.inline-edit-cell { cursor:default; white-space:normal; min-width:150px; }
+.inline-edit-cell { cursor:default; white-space:normal; min-width:170px; }
 .inline-edit-row { display:flex; gap:4px; align-items:center; }
+.inline-edit-row + .inline-edit-row, .inline-err + .inline-edit-row { margin-top:6px; }
 .inline-input { flex:1; min-width:0; padding:5px 8px; border:1.5px solid var(--gray3); border-radius:6px; font-size:12px; font-family:inherit; color:var(--text); box-sizing:border-box; }
 .inline-input:focus { outline:none; border-color:var(--brand); }
-.inline-input-sub { margin-top:4px; width:100%; }
 .inline-save-btn { flex-shrink:0; padding:5px 8px; border-radius:6px; border:1.5px solid var(--gray3); background:#fff; font-size:13px; cursor:pointer; line-height:1; }
 .inline-save-btn:hover { background:var(--gray1); }
 .inline-save-btn:disabled { opacity:.5; cursor:not-allowed; }
-.inline-err { font-size:11px; color:var(--accent); margin-top:3px; }
+.inline-err { font-size:11px; color:var(--accent); margin-top:2px; }
 .tools-row td { padding:0; border-top:none; }
 .order-tools { padding:14px 16px; background:var(--gray1); border-top:1px solid var(--gray2); border-bottom:2px solid var(--gray3); }
 .order-tools-title { font-size:12px; font-weight:700; color:var(--gray5); letter-spacing:.05em; margin-bottom:10px; }
@@ -538,7 +538,7 @@ tr:last-child td{border-bottom:none;}
           <table>
             <thead><tr>
               <th></th><th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
-              <th>車款</th><th>電池</th><th>總金額</th><th>車架號碼</th><th>車牌號碼</th>
+              <th>車款</th><th>電池</th><th>總金額</th><th>車架／車牌／馬達</th>
             </tr></thead>
             <tbody id="tbody-records"></tbody>
           </table>
@@ -1267,8 +1267,9 @@ function renderDelivery() {
     } else {
       status = '<span class="status-pending">待交車</span>';
     }
+    const safeId = domSafeId(getVal(r,'單號'));
     return `<tr${isDone ? ' style="opacity:.6;"' : ''}>
-      <td>${fmtDate(getVal(r,'預計交車日'))}</td>
+      <td><input type="date" class="inline-input" id="delivery-date-${safeId}" value="${escAttr(getVal(r,'預計交車日'))}" onchange="saveDeliveryDate('${escAttr(getVal(r,'單號'))}',this.value)" style="width:130px;"></td>
       <td>${status}</td>
       <td>${getVal(r,'姓名')}</td>
       <td>${getVal(r,'手機號碼')}</td>
@@ -1281,6 +1282,21 @@ function renderDelivery() {
       <td>${!isDone ? `<button onclick="openDeliveryModal('${getVal(r,'單號')}')" style="padding:5px 12px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">登記收款</button>` : '<span style="color:var(--gray4);font-size:12px;">—</span>'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">尚無資料</td></tr>';
+}
+
+// 直接在「出貨進度」表格改預計交車日，改完立即拋回 Sheet（action=editOrder）
+function saveDeliveryDate(orderId, value) {
+  const safeId = domSafeId(orderId);
+  const input = document.getElementById('delivery-date-' + safeId);
+  const orig = input.value;
+  callUpdateOrderTools(orderId, { delivery: value }, (ok, msg) => {
+    if (ok) {
+      renderDelivery(); // 日期改變可能影響逾期／本週分類跟排序，重繪讓畫面跟 Sheet 同步
+    } else {
+      if (input) input.value = orig;
+      alert('儲存失敗：' + (msg || '請稍後再試，日期尚未存入'));
+    }
+  });
 }
 
 // ====== CUSTOMER ======
@@ -1363,23 +1379,24 @@ function filterRecords() {
     <td class="inline-edit-cell" onclick="event.stopPropagation()">
       <div class="inline-edit-row">
         <input type="text" class="inline-input" id="frame-input-${safeId}" value="${escAttr(frame)}" placeholder="車架號碼">
-        <button class="inline-save-btn" id="frame-save-btn-${safeId}" onclick="saveOrderFrame('${escAttr(orderId)}')" title="儲存車架／馬達編號">💾</button>
+        <button class="inline-save-btn" id="frame-save-btn-${safeId}" onclick="saveOrderFrame('${escAttr(orderId)}')" title="儲存車架號碼">💾</button>
       </div>
-      <input type="text" class="inline-input inline-input-sub" id="motor-input-${safeId}" value="${escAttr(motor)}" placeholder="馬達編號（選填）">
       <div class="inline-err" id="frame-err-${safeId}"></div>
-    </td>
-    <td class="inline-edit-cell" onclick="event.stopPropagation()">
       <div class="inline-edit-row">
         <input type="text" class="inline-input" id="plate-input-${safeId}" value="${escAttr(plate)}" placeholder="車牌號碼">
         <button class="inline-save-btn" id="plate-save-btn-${safeId}" onclick="saveOrderPlate('${escAttr(orderId)}')" title="儲存車牌號碼">💾</button>
       </div>
       <div class="inline-err" id="plate-err-${safeId}"></div>
+      <div class="inline-edit-row">
+        <input type="text" class="inline-input" id="motor-input-${safeId}" value="${escAttr(motor)}" placeholder="馬達編號（選填）">
+        <button class="inline-save-btn" id="motor-save-btn-${safeId}" onclick="saveOrderMotor('${escAttr(orderId)}')" title="儲存馬達編號">💾</button>
+      </div>
     </td>
   </tr>
   <tr class="tools-row" id="tools-${safeId}" style="display:none;" data-order-id="${escAttr(orderId)}">
-    <td colspan="10"></td>
+    <td colspan="9"></td>
   </tr>`;
-  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
@@ -1844,7 +1861,7 @@ function fallbackCopyMessage(ta, onDone) {
 
 // ── 呼叫 GAS：擴充後的 action=editOrder（車架/馬達/車牌）──
 function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
-  const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼' };
+  const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼', delivery:'預計交車日' };
   const cbName = 'cb_tools_' + Date.now() + '_' + Math.floor(Math.random()*100000);
   const qs = Object.keys(updates).map(k => `${k}=${encodeURIComponent(updates[k])}`).join('&');
   const url = `${APPS_SCRIPT_URL}?action=editOrder&orderId=${encodeURIComponent(orderId)}&${qs}&callback=${cbName}`;
@@ -1881,21 +1898,19 @@ function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
   }, 20000);
 }
 
-// ── 儲存車架號碼／馬達編號 ──
+// ── 儲存車架號碼 ──
 function saveOrderFrame(orderId) {
   const safeId = domSafeId(orderId);
   const frameInput = document.getElementById('frame-input-' + safeId);
-  const motorInput = document.getElementById('motor-input-' + safeId);
   const errEl = document.getElementById('frame-err-' + safeId);
   const btn = document.getElementById('frame-save-btn-' + safeId);
   const frame = (frameInput.value || '').trim();
-  const motor = (motorInput.value || '').trim();
   errEl.textContent = '';
   if (!frame) { errEl.textContent = '請輸入車架號碼'; return; }
-  frameInput.value = frame; motorInput.value = motor;
+  frameInput.value = frame;
   const orig = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
-  callUpdateOrderTools(orderId, { frame, motor }, (ok, msg) => {
+  callUpdateOrderTools(orderId, { frame }, (ok, msg) => {
     if (ok) {
       btn.textContent = '✅';
       setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1200);
@@ -1903,6 +1918,27 @@ function saveOrderFrame(orderId) {
     } else {
       btn.disabled = false; btn.textContent = orig;
       errEl.textContent = '儲存失敗：' + (msg || '請稍後再試，資料尚未存入');
+    }
+  });
+}
+
+// ── 儲存馬達編號 ──
+function saveOrderMotor(orderId) {
+  const safeId = domSafeId(orderId);
+  const motorInput = document.getElementById('motor-input-' + safeId);
+  const btn = document.getElementById('motor-save-btn-' + safeId);
+  const motor = (motorInput.value || '').trim();
+  motorInput.value = motor;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '…';
+  callUpdateOrderTools(orderId, { motor }, (ok, msg) => {
+    if (ok) {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1200);
+      refreshOrderToolsCard(orderId);
+    } else {
+      btn.disabled = false; btn.textContent = orig;
+      alert('儲存失敗：' + (msg || '請稍後再試，資料尚未存入'));
     }
   });
 }
