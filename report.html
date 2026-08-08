@@ -81,6 +81,13 @@ tr:last-child td{border-bottom:none;}
 .bar-track{flex:1;height:22px;background:var(--gray2);border-radius:4px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding:0 8px;}
 .bar-fill span{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;}
+.pgroup-block{margin-bottom:10px;}
+.pgroup-block:last-child{margin-bottom:0;}
+.pgroup-header{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--brand);padding:5px 4px;border-bottom:1.5px solid var(--gray2);margin-bottom:2px;}
+.pgroup-item{display:flex;align-items:center;gap:8px;padding:5px 4px 5px 18px;font-size:13px;cursor:pointer;border-radius:6px;}
+.pgroup-item:hover{background:var(--gray1);}
+.pbat-item{display:flex;justify-content:space-between;padding:5px 4px 5px 18px;font-size:13px;color:var(--text);}
+.pbat-item:nth-child(even){background:var(--gray1);border-radius:6px;}
 
 /* Status pills */
 .status-pending{background:#FFF3E5;color:#633806;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
@@ -419,21 +426,17 @@ tr:last-child td{border-bottom:none;}
       </div>
       <div class="grid2">
         <div class="card">
-          <div class="card-title">📦 車款銷售數量（含顏色）</div>
-          <div id="purchase-model"></div>
+          <div class="card-title">📦 車款＋顏色數量（勾選可合併同供應商採購清單）</div>
+          <div id="purchase-group-list" style="max-height:320px;overflow-y:auto;"></div>
+          <div id="purchase-group-total" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--brand);"></div>
+          <textarea class="msg-preview" id="purchase-group-text" style="min-height:80px;" readonly></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('purchase-group-text', this)">複製採購清單</button>
+          </div>
         </div>
         <div class="card">
           <div class="card-title">🔋 電池需求數量（含類型／規格／備註）</div>
-          <div id="purchase-battery"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">🧩 供應商群組加總（勾選同一供應商的車款＋顏色，合併統計採購量）</div>
-        <div id="purchase-group-list" style="max-height:240px;overflow-y:auto;border:1px solid var(--gray2);border-radius:8px;padding:10px;"></div>
-        <div id="purchase-group-total" style="margin-top:10px;font-size:14px;font-weight:700;color:var(--brand);"></div>
-        <textarea class="msg-preview" id="purchase-group-text" style="min-height:90px;" readonly></textarea>
-        <div class="tool-btn-row">
-          <button class="tool-btn copy" onclick="copyOrderMessage('purchase-group-text', this)">複製採購清單</button>
+          <div id="purchase-battery" style="max-height:320px;overflow-y:auto;"></div>
         </div>
       </div>
       <div class="card">
@@ -1034,48 +1037,66 @@ function renderPurchase() {
     return true;
   });
 
-  // 車款統計（含顏色，同時也是供應商群組清單的資料來源）
+  // 車款＋顏色統計：集中依車款分組，顏色在底下列出數量（比長條圖省空間、方便一眼比對）
+  // modelMap 是攤平的 flat 版本，key跟以前一樣是「車款 - 顏色」，供應商群組勾選／複製清單沿用同一份 key
   const modelMap = {};
+  const modelColorMap = {};
   filtered.forEach(r => {
     const m = getVal(r,'車款'); if (!m) return;
     const c = getVal(r,'顏色');
     const key = c ? `${m} - ${c}` : m;
     modelMap[key] = (modelMap[key]||0)+1;
+    if (!modelColorMap[m]) modelColorMap[m] = {};
+    const colorLabel = c || '（未填顏色）';
+    if (!modelColorMap[m][colorLabel]) modelColorMap[m][colorLabel] = { key, count:0 };
+    modelColorMap[m][colorLabel].count++;
   });
-  const mEntries = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]);
-  const mMax = mEntries[0]?.[1]||1;
-  document.getElementById('purchase-model').innerHTML = mEntries.length ?
-    mEntries.map(([l,v])=>`
-      <div class="bar-item"><div class="bar-label">${l}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:#854F0B;"><span>${v} 台</span></div></div></div>`).join('') :
-    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  const modelTotal = {};
+  Object.entries(modelColorMap).forEach(([m, colors]) => {
+    modelTotal[m] = Object.values(colors).reduce((s,c)=>s+c.count,0);
+  });
+  const modelOrder = Object.keys(modelColorMap).sort((a,b)=>modelTotal[b]-modelTotal[a]);
 
-  // 供應商群組勾選清單：跟車款統計用同一份 modelMap
+  // 供應商群組勾選清單：跟車款＋顏色統計用同一份資料
   purchaseGroupMap = modelMap;
   const groupListEl = document.getElementById('purchase-group-list');
-  groupListEl.innerHTML = mEntries.length ?
-    mEntries.map(([l,v]) => `
-      <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:13px;cursor:pointer;">
-        <input type="checkbox" value="${escAttr(l)}" ${purchaseGroupChecked.has(l)?'checked':''} onchange="updatePurchaseGroupTotal()">
-        <span style="flex:1;">${escHtml(l)}</span>
-        <span style="color:var(--gray5);">${v} 台</span>
-      </label>`).join('') :
-    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  groupListEl.innerHTML = modelOrder.length ? modelOrder.map(m => {
+    const colors = Object.entries(modelColorMap[m]).sort((a,b)=>b[1].count-a[1].count);
+    const rows = colors.map(([colorLabel, info]) => `
+      <label class="pgroup-item">
+        <input type="checkbox" value="${escAttr(info.key)}" ${purchaseGroupChecked.has(info.key)?'checked':''} onchange="updatePurchaseGroupTotal()">
+        <span style="flex:1;">${escHtml(colorLabel)}</span>
+        <span style="color:var(--gray5);">${info.count} 台</span>
+      </label>`).join('');
+    return `<div class="pgroup-block">
+      <div class="pgroup-header"><span>${escHtml(m)}</span><span>小計 ${modelTotal[m]} 台</span></div>
+      ${rows}
+    </div>`;
+  }).join('') : '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
   updatePurchaseGroupTotal();
 
-  // 電池統計（電池類型／規格(V)／規格(ah)／備註 完整呈現，跟任務清單共用 getBatteryLabel）
-  const batMap = {};
+  // 電池統計：集中依電池類型分組，規格(V)／規格(ah)／備註在底下列出數量
+  const batTypeMap = {};
   filtered.forEach(r => {
-    const b = getBatteryLabel(r);
-    if (b) batMap[b] = (batMap[b]||0)+1;
+    const type = getVal(r,'電池類型') || '（未填類型）';
+    const spec = [getVal(r,'電池規格(V)'), getVal(r,'電池規格(ah)'), getVal(r,'電池備註')].filter(Boolean).join(' ') || '（未填規格）';
+    if (!batTypeMap[type]) batTypeMap[type] = {};
+    batTypeMap[type][spec] = (batTypeMap[type][spec]||0)+1;
   });
-  const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
-  const bMax = bEntries[0]?.[1]||1;
-  document.getElementById('purchase-battery').innerHTML = bEntries.length ?
-    bEntries.map(([l,v])=>`
-      <div class="bar-item"><div class="bar-label">${l}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('') :
-    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  const batTypeTotal = {};
+  Object.entries(batTypeMap).forEach(([t, specs]) => {
+    batTypeTotal[t] = Object.values(specs).reduce((s,v)=>s+v,0);
+  });
+  const batTypeOrder = Object.keys(batTypeMap).sort((a,b)=>batTypeTotal[b]-batTypeTotal[a]);
+  document.getElementById('purchase-battery').innerHTML = batTypeOrder.length ? batTypeOrder.map(t => {
+    const specs = Object.entries(batTypeMap[t]).sort((a,b)=>b[1]-a[1]);
+    const rows = specs.map(([spec,count]) => `
+      <div class="pbat-item"><span>${escHtml(spec)}</span><span style="color:var(--gray5);">${count} 顆</span></div>`).join('');
+    return `<div class="pgroup-block">
+      <div class="pgroup-header"><span>🔋 ${escHtml(t)}</span><span>小計 ${batTypeTotal[t]} 顆</span></div>
+      ${rows}
+    </div>`;
+  }).join('') : '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
 
   // 待處理訂單明細：跟上面圖表共用同一份 filtered，依預計交車日排序（快到的排前面），
   // 快逾期／已逾期用顏色標出來，方便採購優先處理
