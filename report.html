@@ -228,6 +228,8 @@ tr:last-child td{border-bottom:none;}
 .tool-card:last-child { margin-bottom:0; }
 .tool-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; cursor:pointer; user-select:none; }
 .tool-card-head:hover { background:var(--gray1); }
+.tool-card-head.static { cursor:default; }
+.tool-card-head.static:hover { background:none; }
 .tool-card-title { font-size:13px; font-weight:700; color:var(--brand); display:flex; align-items:center; gap:6px; }
 .tool-card-arrow { font-size:11px; color:var(--gray4); flex-shrink:0; }
 .tool-card-summary { font-size:12px; color:var(--gray5); margin-left:auto; margin-right:8px; text-align:right; }
@@ -498,7 +500,7 @@ tr:last-child td{border-bottom:none;}
           <table>
             <thead><tr>
               <th></th><th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
-              <th>車種</th><th>車款</th><th>電池</th><th>總金額</th><th>訂金</th><th>訂金付款</th><th>尾款</th><th>尾款付款</th><th>Sale</th>
+              <th>車款</th><th>電池</th><th>總金額</th>
             </tr></thead>
             <tbody id="tbody-records"></tbody>
           </table>
@@ -1198,30 +1200,24 @@ function filterRecords() {
     }
     return true;
   });
-  const pmMap = {'現金':'badge-green','匯款/轉帳':'badge-blue','刷卡':'badge-amber','無卡分期':'badge-purple'};
-  document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'時間戳記').localeCompare(getVal(a,'時間戳記'))).map(r => {
+  document.getElementById('tbody-records').innerHTML = filtered.sort((a,b)=>getVal(b,'單號').localeCompare(getVal(a,'單號'))).map(r => {
     const orderId = getVal(r,'單號');
     const safeId = domSafeId(orderId);
+    const battery = [getVal(r,'電池類型'), getVal(r,'電池規格(V)'), getVal(r,'電池規格(ah)'), getVal(r,'電池備註')].filter(Boolean).join(' ');
     return `<tr class="record-row" onclick="toggleOrderTools('${escAttr(orderId)}')">
     <td class="record-expand-cell" id="arrow-${safeId}">▶</td>
     <td>${getVal(r,'成交日期')}</td>
     <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(orderId)}</td>
     <td>${getVal(r,'姓名')}</td>
     <td>${getVal(r,'手機號碼')}</td>
-    <td style="font-size:11px;">${getVal(r,'車種類型')||'—'}</td>
     <td>${getVal(r,'車款')}</td>
-    <td>${getVal(r,'電池規格(V)')} ${getVal(r,'電池規格(ah)')}</td>
+    <td>${battery||'—'}</td>
     <td style="font-weight:600;">${fmtMoney(getNum(r,'總金額'))}</td>
-    <td>${fmtMoney(getNum(r,'訂金'))}</td>
-    <td><span class="badge ${pmMap[getVal(r,'訂金支付方式')]||'badge-green'}">${getVal(r,'訂金支付方式')||'—'}</span></td>
-    <td>${fmtMoney(getNum(r,'尾款'))}</td>
-    <td><span class="badge ${pmMap[getVal(r,'尾款支付方式')]||'badge-green'}">${getVal(r,'尾款支付方式')||'—'}</span></td>
-    <td>${getVal(r,'Sale')||'—'}</td>
   </tr>
   <tr class="tools-row" id="tools-${safeId}" style="display:none;" data-order-id="${escAttr(orderId)}">
-    <td colspan="14"></td>
+    <td colspan="8"></td>
   </tr>`;
-  }).join('') || '<tr><td colspan="14" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
@@ -1688,13 +1684,53 @@ function renderOrderTools(orderId) {
   const plateSummary = plate ? `<span class="tool-card-summary ok">✅ ${escHtml(plate)}</span>` : `<span class="tool-card-summary">尚未填寫</span>`;
   const pickupSummary = frame ? `<span class="tool-card-summary ok">✅ 可產生通知</span>` : `<span class="tool-card-summary">尚未填寫車架號碼</span>`;
 
-  const c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c3 = 'c3-' + safeId, c4 = 'c4-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
+  const c0 = 'c0-' + safeId, c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c3 = 'c3-' + safeId, c4 = 'c4-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
   const msg1id = 'msg1-' + safeId, msg2id = 'msg2-' + safeId, msg5id = 'msg5-' + safeId, msg6id = 'msg6-' + safeId;
   const receiptLink = buildOrderToolsReceiptLink(orderId);
+
+  // 訂單詳情卡：訂車日／交車日／訂單狀態／金額／付款方式／加價購項目
+  const dealDate = getVal(order,'成交日期');
+  const expectedDelivery = getVal(order,'預計交車日');
+  const actualDelivery = getVal(order,'實際交車日');
+  const orderStatus = getVal(order,'訂單狀態');
+  const bikePrice = getNum(order,'車輛售價');
+  const addonTotal = getNum(order,'加價購金額');
+  const grandTotal = getNum(order,'總金額');
+  const depositMethod = getVal(order,'訂金支付方式');
+  const balanceMethod = getVal(order,'尾款支付方式');
+  const addons = getVal(order,'加價購項目');
+  const addonListHtml = addons
+    ? addons.split('、').filter(Boolean).map(i => {
+        const parts = i.split(':');
+        const aName = escHtml(parts[0].trim());
+        const aPrice = parts[1] ? ' NT$ ' + parseFloat(parts[1]).toLocaleString() : '';
+        return `<div><span class="lbl">加購</span>${aName}${aPrice}</div>`;
+      }).join('')
+    : '<div><span class="lbl">加購</span>無加購項目</div>';
 
   row.querySelector('td').innerHTML = `
     <div class="order-tools">
       <div class="order-tools-title">📋 訂單助手</div>
+
+      <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c0}')">
+          <span class="tool-card-title"><span id="arrow-${c0}">▶</span> 📋 訂單詳情</span>
+        </div>
+        <div class="tool-card-body" id="${c0}" style="display:none;">
+          <div class="tool-readonly-list">
+            <div><span class="lbl">訂車日</span>${escHtml(dealDate)||'—'}</div>
+            <div><span class="lbl">預計交車日</span>${escHtml(expectedDelivery)||'—'}</div>
+            <div><span class="lbl">實際交車日</span>${escHtml(actualDelivery)||'尚未交車'}</div>
+            <div><span class="lbl">訂單狀態</span>${escHtml(orderStatus)||'—'}</div>
+            <div><span class="lbl">車輛售價</span>NT$ ${bikePrice.toLocaleString()}</div>
+            <div><span class="lbl">加價購金額</span>NT$ ${addonTotal.toLocaleString()}</div>
+            <div><span class="lbl">總金額</span>NT$ ${grandTotal.toLocaleString()}</div>
+            <div><span class="lbl">訂金支付方式</span>${escHtml(depositMethod)||'—'}</div>
+            <div><span class="lbl">尾款支付方式</span>${escHtml(balanceMethod)||'—'}</div>
+            ${addonListHtml}
+          </div>
+        </div>
+      </div>
 
       <div class="tool-card">
         <div class="tool-card-head" onclick="toggleToolCard('${c1}')">
@@ -1725,11 +1761,11 @@ function renderOrderTools(orderId) {
       </div>
 
       <div class="tool-card">
-        <div class="tool-card-head" onclick="toggleToolCard('${c3}')">
-          <span class="tool-card-title"><span id="arrow-${c3}">▶</span> 🔩 車架號碼</span>
+        <div class="tool-card-head static">
+          <span class="tool-card-title">🔩 車架號碼</span>
           ${frameSummary}
         </div>
-        <div class="tool-card-body" id="${c3}" style="display:none;">
+        <div class="tool-card-body" id="${c3}">
           <div class="tool-field">
             <label>車架號碼</label>
             <input type="text" id="frame-input-${safeId}" value="${escAttr(frame)}" placeholder="請輸入車架號碼">
@@ -1746,11 +1782,11 @@ function renderOrderTools(orderId) {
       </div>
 
       <div class="tool-card">
-        <div class="tool-card-head" onclick="toggleToolCard('${c4}')">
-          <span class="tool-card-title"><span id="arrow-${c4}">▶</span> 🏷 車牌號碼</span>
+        <div class="tool-card-head static">
+          <span class="tool-card-title">🏷 車牌號碼</span>
           ${plateSummary}
         </div>
-        <div class="tool-card-body" id="${c4}" style="display:none;">
+        <div class="tool-card-body" id="${c4}">
           <div class="tool-field">
             <label>車牌號碼</label>
             <input type="text" id="plate-input-${safeId}" value="${escAttr(plate)}" placeholder="例：ABC-1234">
