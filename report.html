@@ -665,6 +665,8 @@ async function loadData() {  document.getElementById('loading').style.display = 
 // ====== 商品主檔（僅供「出貨配置」用，只抓需要的分頁/欄位，不搬 index.html 整套邏輯）======
 // 只在 report.html 載入時讀一次、存在記憶體，不會每次展開任務卡都重新 fetch
 async function loadReportProductMaster() {
+  console.log('[商品主檔] 開始載入');
+  console.log('[商品主檔] URL:', PRODUCT_API_URL);
   try {
     const res = await fetch(PRODUCT_API_URL + '&_ts=' + Date.now(), { cache: 'no-store' });
     const text = await res.text();
@@ -674,14 +676,35 @@ async function loadReportProductMaster() {
       const obj = {};
       cols.forEach((col, i) => {
         const key = (col.label || col.id || '').trim();
-        obj[key] = row.c[i] ? (row.c[i].v !== undefined ? String(row.c[i].v).trim() : '') : '';
+        const cell = row.c[i];
+        const raw = cell ? cell.v : undefined;
+        // [除錯] 保留原始型別，只有真的是字串才 trim。
+        // Sheets 核取方塊欄位 gviz 會回傳 boolean true/false，
+        // 如果之前無條件用 String() 轉型，會變成文字 "true"/"false"，
+        // 跟程式裡比對的 'Y' 永遠對不上——這正是目前懷疑的頭號嫌疑對象，
+        // 保留原始型別才能讓下面的 typeof 診斷 log 顯示真正的資料型態
+        obj[key] = raw === undefined ? '' : (typeof raw === 'string' ? raw.trim() : raw);
       });
       return obj;
     });
     reportProductMasterLoaded = true;
     reportProductMasterError = false;
+    console.log('[商品主檔] 載入筆數:', reportProductMaster.length);
+    console.log('[商品主檔] 第一筆資料的欄位名稱:', Object.keys(reportProductMaster[0] || {}));
+    console.log('[商品主檔] 電池大分類筆數:', reportProductMaster.filter(x => x['大分類'] === '電池').length);
+    console.log('[商品主檔] 充電器大分類筆數:', reportProductMaster.filter(x => x['大分類'] === '充電器').length);
+    const sampleBattery = reportProductMaster.find(x => x['大分類'] === '電池');
+    if (sampleBattery) {
+      console.log('[商品主檔] 電池商品範例（完整原始物件）:', sampleBattery);
+      console.log('[商品主檔] 該筆「是否可販售」值與型別:', sampleBattery['是否可販售'], typeof sampleBattery['是否可販售']);
+      console.log('[商品主檔] 該筆「是否啟用」值與型別:', sampleBattery['是否啟用'], typeof sampleBattery['是否啟用']);
+    }
+    const sampleCharger = reportProductMaster.find(x => x['大分類'] === '充電器');
+    if (sampleCharger) {
+      console.log('[商品主檔] 充電器商品範例（完整原始物件）:', sampleCharger);
+    }
   } catch (e) {
-    console.warn('商品主檔讀取失敗', e);
+    console.warn('[商品主檔] 讀取失敗', e);
     reportProductMasterLoaded = true;
     reportProductMasterError = true;
   }
