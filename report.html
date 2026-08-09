@@ -675,7 +675,11 @@ async function loadReportProductMaster() {
     reportProductMaster = (json.table.rows || []).map(row => {
       const obj = {};
       cols.forEach((col, i) => {
-        const key = (col.label || col.id || '').trim();
+        // [修正] 商品主檔標題列有多行標題、內含換行符號（跟 index.html 的 parseGviz 註解一致：
+        // 「Sheets 多行標題會有 \n」），只 trim() 頭尾空白不會清掉欄位名稱中間的換行，
+        // 會導致 key 永遠對不上程式裡寫死的 '大分類'／'是否可販售' 等字面值，篩選整批落空。
+        // 這裡改成跟 index.html 完全一樣的 replace(/\s+/g,'') 去除所有空白（含中間換行）。
+        const key = (col.label || col.id || '').replace(/\s+/g, '');
         const cell = row.c[i];
         const raw = cell ? cell.v : undefined;
         // [除錯] 保留原始型別，只有真的是字串才 trim。
@@ -704,7 +708,7 @@ async function loadReportProductMaster() {
       console.log('[商品主檔] 充電器商品範例（完整原始物件）:', sampleCharger);
     }
   } catch (e) {
-    console.warn('[商品主檔] 讀取失敗', e);
+    console.error('[商品主檔] 載入失敗:', e);
     reportProductMasterLoaded = true;
     reportProductMasterError = true;
   }
