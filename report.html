@@ -81,6 +81,13 @@ tr:last-child td{border-bottom:none;}
 .bar-track{flex:1;height:22px;background:var(--gray2);border-radius:4px;overflow:hidden;}
 .bar-fill{height:100%;border-radius:4px;transition:width .6s ease;display:flex;align-items:center;padding:0 8px;}
 .bar-fill span{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;}
+.pgroup-block{margin-bottom:10px;}
+.pgroup-block:last-child{margin-bottom:0;}
+.pgroup-header{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:var(--brand);padding:5px 4px;border-bottom:1.5px solid var(--gray2);margin-bottom:2px;}
+.pgroup-item{display:flex;align-items:center;gap:8px;padding:5px 4px 5px 18px;font-size:13px;cursor:pointer;border-radius:6px;}
+.pgroup-item:hover{background:var(--gray1);}
+.pbat-item{display:flex;justify-content:space-between;padding:5px 4px 5px 18px;font-size:13px;color:var(--text);}
+.pbat-item:nth-child(even){background:var(--gray1);border-radius:6px;}
 
 /* Status pills */
 .status-pending{background:#FFF3E5;color:#633806;border-radius:99px;font-size:11px;padding:2px 10px;font-weight:500;}
@@ -215,12 +222,29 @@ tr:last-child td{border-bottom:none;}
 .task-status-badge.s-none    { background:#EEEEEE; color:#888888; }
 .task-status-badge.s-working { background:#CCE5FF; color:#004085; }
 .task-status-badge.s-ready   { background:#C6EFCE; color:#1D6B3E; }
+.task-stepper { display:flex; align-items:flex-start; padding:.6rem 1rem; background:var(--gray1); border-top:1px solid var(--gray2); border-bottom:1px solid var(--gray2); }
+.step { display:flex; flex-direction:column; align-items:center; gap:4px; flex:0 0 auto; width:52px; }
+.step-dot { width:14px; height:14px; border-radius:50%; background:var(--gray3); border:2px solid var(--gray3); box-sizing:border-box; }
+.step-dot.partial { background:#9FD8BE; border-color:#9FD8BE; }
+.step-dot.done { background:var(--green); border-color:var(--green); }
+.step-label { font-size:10px; color:var(--gray5); text-align:center; line-height:1.3; white-space:nowrap; }
+.step-connector { flex:1 1 auto; height:2px; background:var(--gray3); margin-top:8px; min-width:6px; }
+.step-connector.done { background:var(--green); }
 .task-filter-bar { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
 
 /* ── 訂單助手（所有記錄展開） ── */
 .record-row { cursor:pointer; }
 .record-row:hover td { background:var(--gray1); }
 .record-expand-cell { width:28px; text-align:center; color:var(--gray4); font-size:11px; user-select:none; }
+.inline-edit-cell { cursor:default; white-space:normal; min-width:170px; }
+.inline-edit-row { display:flex; gap:4px; align-items:center; }
+.inline-edit-row + .inline-edit-row, .inline-err + .inline-edit-row { margin-top:6px; }
+.inline-input { flex:1; min-width:0; padding:5px 8px; border:1.5px solid var(--gray3); border-radius:6px; font-size:12px; font-family:inherit; color:var(--text); box-sizing:border-box; }
+.inline-input:focus { outline:none; border-color:var(--brand); }
+.inline-save-btn { flex-shrink:0; padding:5px 8px; border-radius:6px; border:1.5px solid var(--gray3); background:#fff; font-size:13px; cursor:pointer; line-height:1; }
+.inline-save-btn:hover { background:var(--gray1); }
+.inline-save-btn:disabled { opacity:.5; cursor:not-allowed; }
+.inline-err { font-size:11px; color:var(--accent); margin-top:2px; }
 .tools-row td { padding:0; border-top:none; }
 .order-tools { padding:14px 16px; background:var(--gray1); border-top:1px solid var(--gray2); border-bottom:2px solid var(--gray3); }
 .order-tools-title { font-size:12px; font-weight:700; color:var(--gray5); letter-spacing:.05em; margin-bottom:10px; }
@@ -235,10 +259,6 @@ tr:last-child td{border-bottom:none;}
 .tool-card-summary { font-size:12px; color:var(--gray5); margin-left:auto; margin-right:8px; text-align:right; }
 .tool-card-summary.ok { color:var(--green); font-weight:600; }
 .tool-card-body { padding:0 14px 14px; border-top:1px solid var(--gray2); }
-.tool-field { display:flex; flex-direction:column; gap:5px; margin:12px 0; }
-.tool-field label { font-size:12px; font-weight:600; color:var(--gray5); }
-.tool-field input { padding:9px 12px; border:1.5px solid var(--gray3); border-radius:6px; font-size:14px; font-family:inherit; color:var(--text); width:100%; box-sizing:border-box; }
-.tool-field input:focus { outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(43,45,66,.08); }
 .tool-readonly-list { font-size:13px; color:var(--text); background:var(--gray1); border-radius:8px; padding:10px 12px; margin:12px 0; line-height:1.9; }
 .tool-readonly-list .lbl { color:var(--gray5); margin-right:4px; }
 .msg-preview { width:100%; box-sizing:border-box; min-height:180px; padding:10px 12px; border:1.5px solid var(--gray3); border-radius:8px; font-size:13px; font-family:inherit; line-height:1.7; color:var(--text); resize:vertical; margin:10px 0; }
@@ -247,12 +267,9 @@ tr:last-child td{border-bottom:none;}
 .tool-btn { padding:8px 16px; border-radius:6px; font-size:13px; font-family:inherit; font-weight:600; cursor:pointer; border:1.5px solid var(--gray3); background:#fff; color:var(--text); transition:all .15s; }
 .tool-btn:hover { background:var(--gray1); }
 .tool-btn:disabled { opacity:.6; cursor:not-allowed; }
-.tool-btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
-.tool-btn.primary:hover { background:#1a1c2e; }
 .tool-btn.copy { background:var(--green); border-color:var(--green); color:#fff; }
 .tool-btn.copy:hover { background:#178a65; }
 .tool-btn.link { background:#E6F1FB; border-color:#B5D4F4; color:var(--blue); text-decoration:none; display:inline-block; }
-.tool-field-err { font-size:12px; color:var(--accent); min-height:16px; }
 @media(max-width:640px){
   .order-tools { padding:10px; }
   .tool-card-body { padding:0 10px 10px; }
@@ -398,15 +415,39 @@ tr:last-child td{border-bottom:none;}
         <button onclick="setPurchaseMonth()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本月</button>
         <button onclick="setPurchaseYear()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">本年</button>
         <button onclick="clearPurchase()" style="padding:5px 12px;border-radius:6px;border:1px solid var(--gray3);background:#fff;font-size:12px;font-family:inherit;cursor:pointer;">全部</button>
+        <span style="color:var(--gray3);margin:0 4px;">｜</span>
+        <label>到貨狀態：</label>
+        <select id="purchase-arrival" onchange="renderPurchase()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">全部</option>
+          <option value="pending">🚚 已訂購，待到貨（尚未到貨）</option>
+          <option value="partial">🚚 到貨中（缺一項）</option>
+          <option value="arrived">✅ 已到貨（車輛＋電池都到）</option>
+        </select>
       </div>
       <div class="grid2">
         <div class="card">
-          <div class="card-title">📦 車款銷售數量</div>
-          <div id="purchase-model"></div>
+          <div class="card-title">📦 車款＋顏色數量（勾選可合併同供應商採購清單）</div>
+          <div id="purchase-group-list" style="max-height:320px;overflow-y:auto;"></div>
+          <div id="purchase-group-total" style="margin-top:10px;font-size:13px;font-weight:700;color:var(--brand);"></div>
+          <textarea class="msg-preview" id="purchase-group-text" style="min-height:80px;" readonly></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('purchase-group-text', this)">複製採購清單</button>
+          </div>
         </div>
         <div class="card">
-          <div class="card-title">🔋 電池需求數量</div>
-          <div id="purchase-battery"></div>
+          <div class="card-title">🔋 電池需求數量（含類型／規格／備註）</div>
+          <div id="purchase-battery" style="max-height:320px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 待處理訂單明細</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>成交日期</th><th>預計交車日</th><th>客戶</th><th>手機</th><th>車款</th><th>顏色</th><th>電池規格</th><th>到貨狀態</th>
+            </tr></thead>
+            <tbody id="tbody-purchase-detail"></tbody>
+          </table>
         </div>
       </div>
       <div class="card">
@@ -421,10 +462,14 @@ tr:last-child td{border-bottom:none;}
       <div class="filter-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
         <label>狀態：</label>
         <select id="delivery-filter" onchange="renderDelivery()">
-          <option value="pending">待交車</option>
-          <option value="all">全部（含已交車）</option>
-          <option value="done">已交車</option>
-          <option value="overdue">已逾期</option>
+          <option value="">全部待交車</option>
+          <option value="pending_arrival">🚚 待到貨</option>
+          <option value="partial_arrival">🚚 到貨中(1/2)</option>
+          <option value="pending_assembly">🔧 待整備</option>
+          <option value="pending_plate">🏷 待掛牌</option>
+          <option value="plating">🏷 掛牌中</option>
+          <option value="ready">✅ 可交車</option>
+          <option value="done">🎉 已交車</option>
         </select>
         <span style="color:var(--gray3);margin:0 4px;">｜</span>
         <label>快速區間：</label>
@@ -499,8 +544,8 @@ tr:last-child td{border-bottom:none;}
         <div class="tbl-wrap">
           <table>
             <thead><tr>
-              <th></th><th>日期</th><th>單號</th><th>客戶</th><th>手機</th>
-              <th>車款</th><th>電池</th><th>總金額</th>
+              <th></th><th>日期</th><th>單號</th><th>狀態</th><th>客戶</th><th>手機</th>
+              <th>車款</th><th>電池</th><th>總金額</th><th>車架／車牌／馬達</th>
             </tr></thead>
             <tbody id="tbody-records"></tbody>
           </table>
@@ -516,6 +561,22 @@ tr:last-child td{border-bottom:none;}
         <button class="filter-btn" onclick="setTaskFilter('today')" id="tf-today">今日交車</button>
         <button class="filter-btn" onclick="setTaskFilter('overdue')" id="tf-overdue">逾期</button>
         <button class="filter-btn" onclick="setTaskFilter('all')" id="tf-all">全部</button>
+        <span style="color:var(--gray3);margin:0 2px;">｜</span>
+        <select id="task-filter-model" onchange="renderTasks()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">所有車型</option>
+        </select>
+        <select id="task-filter-battery" onchange="renderTasks()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">所有電池規格</option>
+        </select>
+        <select id="task-filter-status" onchange="renderTasks()" style="padding:5px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text);background:#fff;">
+          <option value="">所有狀態</option>
+          <option value="pending_arrival">🚚 待到貨</option>
+          <option value="partial_arrival">🚚 到貨中(1/2)</option>
+          <option value="pending_assembly">🔧 待整備</option>
+          <option value="pending_plate">🏷 待掛牌</option>
+          <option value="plating">🏷 掛牌中</option>
+          <option value="ready">✅ 可交車</option>
+        </select>
         <span style="margin-left:auto;font-size:12px;color:var(--gray5);" id="task-count"></span>
       </div>
       <div id="task-grid" class="task-grid"></div>
@@ -929,46 +990,154 @@ function clearPurchase() {
   renderPurchase();
 }
 
+// 到貨狀態（車輛到貨／電池到貨）：採購計算跟任務清單共用 getPurchaseFlags() 判斷
+function getArrivalStatus(r) {
+  const flags = getPurchaseFlags(r);
+  const count = (flags.vehicle?1:0) + (flags.battery?1:0);
+  if (count === 2) return 'arrived';
+  if (count === 1) return 'partial';
+  return 'pending';
+}
+
+// 供應商群組勾選狀態：用 Set 記住已勾選的「車款 - 顏色」組合，篩選條件變動時盡量保留
+const purchaseGroupChecked = new Set();
+let purchaseGroupMap = {};
+
+function updatePurchaseGroupTotal() {
+  document.querySelectorAll('#purchase-group-list input[type=checkbox]').forEach(cb => {
+    if (cb.checked) purchaseGroupChecked.add(cb.value); else purchaseGroupChecked.delete(cb.value);
+  });
+  let total = 0;
+  const pickedLines = [];
+  // 依照目前排序（數量多到少）輸出，跟畫面上勾選清單的順序一致
+  Object.entries(purchaseGroupMap).forEach(([key, v]) => {
+    if (purchaseGroupChecked.has(key)) { total += v; pickedLines.push(`${key} x${v}`); }
+  });
+  const el = document.getElementById('purchase-group-total');
+  const textEl = document.getElementById('purchase-group-text');
+  el.textContent = pickedLines.length > 0 ? `已勾選 ${pickedLines.length} 種車款／顏色組合，合計 ${total} 台，可合併下單給同一供應商` : '勾選上方項目來合併統計同供應商的採購量';
+  textEl.value = pickedLines.length > 0 ? `採購清單（合計 ${total} 台）：\n` + pickedLines.join('\n') : '';
+}
+
 function renderPurchase() {
   const fromVal = document.getElementById('purchase-from').value;
   const toVal = document.getElementById('purchase-to').value;
-  const fromD = fromVal ? new Date(fromVal) : null;
+  const fromD = fromVal ? new Date(fromVal + 'T00:00:00') : null;
   const toD = toVal ? new Date(toVal + 'T23:59:59') : null;
+  const arrivalVal = document.getElementById('purchase-arrival').value;
 
   const filtered = allData.filter(r => {
     const d = getDate(r, '成交日期');
     if (!d) return false;
     if (fromD && d < fromD) return false;
     if (toD && d > toD) return false;
+    // 到貨狀態篩選只在有選的時候才生效，且只看未交車/未取消的訂單
+    // （不影響「全部」時原本涵蓋所有訂單的統計行為）
+    if (arrivalVal) {
+      const status = getVal(r,'訂單狀態');
+      if (status === '已交車' || status === '已取消') return false;
+      if (getArrivalStatus(r) !== arrivalVal) return false;
+    }
     return true;
   });
 
-  // 車款統計
+  // 車款＋顏色統計：集中依車款分組，顏色在底下列出數量（比長條圖省空間、方便一眼比對）
+  // modelMap 是攤平的 flat 版本，key跟以前一樣是「車款 - 顏色」，供應商群組勾選／複製清單沿用同一份 key
   const modelMap = {};
+  const modelColorMap = {};
   filtered.forEach(r => {
-    const m = getVal(r,'車款'); if(m) modelMap[m]=(modelMap[m]||0)+1;
+    const m = getVal(r,'車款'); if (!m) return;
+    const c = getVal(r,'顏色');
+    const key = c ? `${m} - ${c}` : m;
+    modelMap[key] = (modelMap[key]||0)+1;
+    if (!modelColorMap[m]) modelColorMap[m] = {};
+    const colorLabel = c || '（未填顏色）';
+    if (!modelColorMap[m][colorLabel]) modelColorMap[m][colorLabel] = { key, count:0 };
+    modelColorMap[m][colorLabel].count++;
   });
-  const mEntries = Object.entries(modelMap).sort((a,b)=>b[1]-a[1]);
-  const mMax = mEntries[0]?.[1]||1;
-  document.getElementById('purchase-model').innerHTML = mEntries.length ?
-    mEntries.map(([l,v])=>`
-      <div class="bar-item"><div class="bar-label">${l}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${v/mMax*100}%;background:#854F0B;"><span>${v} 台</span></div></div></div>`).join('') :
-    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  const modelTotal = {};
+  Object.entries(modelColorMap).forEach(([m, colors]) => {
+    modelTotal[m] = Object.values(colors).reduce((s,c)=>s+c.count,0);
+  });
+  const modelOrder = Object.keys(modelColorMap).sort((a,b)=>modelTotal[b]-modelTotal[a]);
 
-  // 電池統計
-  const batMap = {};
+  // 供應商群組勾選清單：跟車款＋顏色統計用同一份資料
+  purchaseGroupMap = modelMap;
+  const groupListEl = document.getElementById('purchase-group-list');
+  groupListEl.innerHTML = modelOrder.length ? modelOrder.map(m => {
+    const colors = Object.entries(modelColorMap[m]).sort((a,b)=>b[1].count-a[1].count);
+    const rows = colors.map(([colorLabel, info]) => `
+      <label class="pgroup-item">
+        <input type="checkbox" value="${escAttr(info.key)}" ${purchaseGroupChecked.has(info.key)?'checked':''} onchange="updatePurchaseGroupTotal()">
+        <span style="flex:1;">${escHtml(colorLabel)}</span>
+        <span style="color:var(--gray5);">${info.count} 台</span>
+      </label>`).join('');
+    return `<div class="pgroup-block">
+      <div class="pgroup-header"><span>${escHtml(m)}</span><span>小計 ${modelTotal[m]} 台</span></div>
+      ${rows}
+    </div>`;
+  }).join('') : '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  updatePurchaseGroupTotal();
+
+  // 電池統計：集中依電池類型分組，規格(V)／規格(ah)／備註在底下列出數量
+  const batTypeMap = {};
   filtered.forEach(r => {
-    const b = (getVal(r,'電池規格(V)')+' '+getVal(r,'電池規格(ah)')).trim();
-    if(b) batMap[b]=(batMap[b]||0)+1;
+    const type = getVal(r,'電池類型') || '（未填類型）';
+    const spec = [getVal(r,'電池規格(V)'), getVal(r,'電池規格(ah)'), getVal(r,'電池備註')].filter(Boolean).join(' ') || '（未填規格）';
+    if (!batTypeMap[type]) batTypeMap[type] = {};
+    batTypeMap[type][spec] = (batTypeMap[type][spec]||0)+1;
   });
-  const bEntries = Object.entries(batMap).sort((a,b)=>b[1]-a[1]);
-  const bMax = bEntries[0]?.[1]||1;
-  document.getElementById('purchase-battery').innerHTML = bEntries.length ?
-    bEntries.map(([l,v])=>`
-      <div class="bar-item"><div class="bar-label">${l}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${v/bMax*100}%;background:var(--green);"><span>${v} 顆</span></div></div></div>`).join('') :
-    '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+  const batTypeTotal = {};
+  Object.entries(batTypeMap).forEach(([t, specs]) => {
+    batTypeTotal[t] = Object.values(specs).reduce((s,v)=>s+v,0);
+  });
+  const batTypeOrder = Object.keys(batTypeMap).sort((a,b)=>batTypeTotal[b]-batTypeTotal[a]);
+  document.getElementById('purchase-battery').innerHTML = batTypeOrder.length ? batTypeOrder.map(t => {
+    const specs = Object.entries(batTypeMap[t]).sort((a,b)=>b[1]-a[1]);
+    const rows = specs.map(([spec,count]) => `
+      <div class="pbat-item"><span>${escHtml(spec)}</span><span style="color:var(--gray5);">${count} 顆</span></div>`).join('');
+    return `<div class="pgroup-block">
+      <div class="pgroup-header"><span>🔋 ${escHtml(t)}</span><span>小計 ${batTypeTotal[t]} 顆</span></div>
+      ${rows}
+    </div>`;
+  }).join('') : '<p style="color:var(--gray4);font-size:13px;">尚無資料</p>';
+
+  // 待處理訂單明細：跟上面圖表共用同一份 filtered，依預計交車日排序（快到的排前面），
+  // 快逾期／已逾期用顏色標出來，方便採購優先處理
+  const arrivalBadgeMap = { pending:'🚚 待到貨', partial:'🚚 到貨中(1/2)', arrived:'✅ 已到貨' };
+  const today0 = new Date(); today0.setHours(0,0,0,0);
+  const detailRows = [...filtered].sort((a,b) => {
+    const da = getDate(a,'預計交車日'), db = getDate(b,'預計交車日');
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da - db;
+  }).map(r => {
+    const deliveryRaw = getVal(r,'預計交車日');
+    const arrival = getArrivalStatus(r);
+    let urgency = '';
+    if (arrival !== 'arrived') {
+      const dd = getDate(r,'預計交車日');
+      if (dd) {
+        dd.setHours(0,0,0,0);
+        const diffDays = Math.round((dd - today0) / 86400000);
+        if (diffDays < 0) urgency = ` <span style="color:#E63946;font-weight:700;">⚠️已逾期${Math.abs(diffDays)}天</span>`;
+        else if (diffDays <= 3) urgency = ` <span style="color:#854F0B;font-weight:700;">🔥${diffDays}天內交車</span>`;
+      }
+    }
+    return `<tr>
+      <td>${getVal(r,'成交日期')}</td>
+      <td>${deliveryRaw?fmtDate(deliveryRaw):'—'}${urgency}</td>
+      <td>${getVal(r,'姓名')}</td>
+      <td>${getVal(r,'手機號碼')}</td>
+      <td>${getVal(r,'車款')||'—'}</td>
+      <td>${getVal(r,'顏色')||'—'}</td>
+      <td>${getBatteryLabel(r)||'—'}</td>
+      <td>${arrivalBadgeMap[arrival]}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tbody-purchase-detail').innerHTML = detailRows ||
+    '<tr><td colspan="8" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合條件的訂單</td></tr>';
 
   // 加價購統計
   const addonMap = {};
@@ -1061,7 +1230,7 @@ function renderBalanceCell(r, isDone) {
 
 function renderDelivery() {
   const today = new Date(); today.setHours(0,0,0,0);
-  const filterVal = document.getElementById('delivery-filter')?.value || 'pending';
+  const filterVal = document.getElementById('delivery-filter')?.value || '';
   const fromVal = document.getElementById('delivery-from')?.value;
   const toVal = document.getElementById('delivery-to')?.value;
 
@@ -1070,7 +1239,7 @@ function renderDelivery() {
     if (!fromVal && !toVal) return true;
     const d = getDate(r, '預計交車日');
     if (!d) return false;
-    if (fromVal && d < new Date(fromVal)) return false;
+    if (fromVal && d < new Date(fromVal + 'T00:00:00')) return false;
     if (toVal && d > new Date(toVal + 'T23:59:59')) return false;
     return true;
   };
@@ -1095,15 +1264,20 @@ function renderDelivery() {
     if (!fromVal && !toVal) return true;
     const d = getDate(r, '成交日期');
     if (!d) return false;
-    if (fromVal && d < new Date(fromVal)) return false;
+    if (fromVal && d < new Date(fromVal + 'T00:00:00')) return false;
     if (toVal && d > new Date(toVal + 'T23:59:59')) return false;
     return true;
   };
   let showData;
-  if (filterVal === 'done') showData = delivered.filter(inRangeByDate);
-  else if (filterVal === 'all') showData = [...pending, ...delivered].filter(r => inRange(r) || inRangeByDate(r));
-  else if (filterVal === 'overdue') showData = overdue.filter(inRange);
-  else showData = pending.filter(inRange);
+  if (filterVal === 'done') {
+    showData = delivered.filter(inRangeByDate);
+  } else if (filterVal) {
+    // 跟任務清單共用同一套5階段判斷（getTaskStage），狀態篩選的意義才會一致
+    showData = pending.filter(r => inRange(r) &&
+      getTaskStage(getPurchaseFlags(r), isChecked(r,'已安裝'), isChecked(r,'已掛牌')).key === filterVal);
+  } else {
+    showData = pending.filter(inRange);
+  }
 
   const tbody = document.getElementById('tbody-delivery');
   tbody.innerHTML = showData.sort((a,b)=>{
@@ -1123,8 +1297,9 @@ function renderDelivery() {
     } else {
       status = '<span class="status-pending">待交車</span>';
     }
+    const safeId = domSafeId(getVal(r,'單號'));
     return `<tr${isDone ? ' style="opacity:.6;"' : ''}>
-      <td>${fmtDate(getVal(r,'預計交車日'))}</td>
+      <td><input type="date" class="inline-input" id="delivery-date-${safeId}" value="${escAttr(getVal(r,'預計交車日'))}" onchange="saveDeliveryDate('${escAttr(getVal(r,'單號'))}',this.value)" style="width:130px;"></td>
       <td>${status}</td>
       <td>${getVal(r,'姓名')}</td>
       <td>${getVal(r,'手機號碼')}</td>
@@ -1137,6 +1312,21 @@ function renderDelivery() {
       <td>${!isDone ? `<button onclick="openDeliveryModal('${getVal(r,'單號')}')" style="padding:5px 12px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">登記收款</button>` : '<span style="color:var(--gray4);font-size:12px;">—</span>'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">尚無資料</td></tr>';
+}
+
+// 直接在「出貨進度」表格改預計交車日，改完立即拋回 Sheet（action=editOrder）
+function saveDeliveryDate(orderId, value) {
+  const safeId = domSafeId(orderId);
+  const input = document.getElementById('delivery-date-' + safeId);
+  const orig = input.value;
+  callUpdateOrderTools(orderId, { delivery: value }, (ok, msg) => {
+    if (ok) {
+      renderDelivery(); // 日期改變可能影響逾期／本週分類跟排序，重繪讓畫面跟 Sheet 同步
+    } else {
+      if (input) input.value = orig;
+      alert('儲存失敗：' + (msg || '請稍後再試，日期尚未存入'));
+    }
+  });
 }
 
 // ====== CUSTOMER ======
@@ -1204,20 +1394,41 @@ function filterRecords() {
     const orderId = getVal(r,'單號');
     const safeId = domSafeId(orderId);
     const battery = [getVal(r,'電池類型'), getVal(r,'電池規格(V)'), getVal(r,'電池規格(ah)'), getVal(r,'電池備註')].filter(Boolean).join(' ');
+    const frame = getVal(r,'車架號碼');
+    const motor = getVal(r,'馬達編號');
+    const plate = getVal(r,'車牌號碼');
+    const isDelivered = getVal(r,'訂單狀態') === '已交車';
     return `<tr class="record-row" onclick="toggleOrderTools('${escAttr(orderId)}')">
     <td class="record-expand-cell" id="arrow-${safeId}">▶</td>
     <td>${getVal(r,'成交日期')}</td>
     <td style="font-size:11px;color:var(--gray4);">${fmtOrderId(orderId)}</td>
+    <td>${isDelivered ? '<span class="status-done">✅ 已交車</span>' : '<span class="status-pending">未交車</span>'}</td>
     <td>${getVal(r,'姓名')}</td>
     <td>${getVal(r,'手機號碼')}</td>
     <td>${getVal(r,'車款')}</td>
     <td>${battery||'—'}</td>
     <td style="font-weight:600;">${fmtMoney(getNum(r,'總金額'))}</td>
+    <td class="inline-edit-cell" onclick="event.stopPropagation()">
+      <div class="inline-edit-row">
+        <input type="text" class="inline-input" id="frame-input-${safeId}" value="${escAttr(frame)}" placeholder="車架號碼">
+        <button class="inline-save-btn" id="frame-save-btn-${safeId}" onclick="saveOrderFrame('${escAttr(orderId)}')" title="儲存車架號碼">💾</button>
+      </div>
+      <div class="inline-err" id="frame-err-${safeId}"></div>
+      <div class="inline-edit-row">
+        <input type="text" class="inline-input" id="plate-input-${safeId}" value="${escAttr(plate)}" placeholder="車牌號碼">
+        <button class="inline-save-btn" id="plate-save-btn-${safeId}" onclick="saveOrderPlate('${escAttr(orderId)}')" title="儲存車牌號碼">💾</button>
+      </div>
+      <div class="inline-err" id="plate-err-${safeId}"></div>
+      <div class="inline-edit-row">
+        <input type="text" class="inline-input" id="motor-input-${safeId}" value="${escAttr(motor)}" placeholder="馬達編號（選填）">
+        <button class="inline-save-btn" id="motor-save-btn-${safeId}" onclick="saveOrderMotor('${escAttr(orderId)}')" title="儲存馬達編號">💾</button>
+      </div>
+    </td>
   </tr>
   <tr class="tools-row" id="tools-${safeId}" style="display:none;" data-order-id="${escAttr(orderId)}">
-    <td colspan="8"></td>
+    <td colspan="10"></td>
   </tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--gray4);padding:2rem;">沒有符合的記錄</td></tr>';
 }
 
 // ====== TAB SWITCH ======
@@ -1247,13 +1458,61 @@ function setTaskFilter(f) {
   renderTasks();
 }
 
+// 電池規格完整字串：類型＋規格(V)＋規格(ah)＋備註，任務卡片跟篩選器共用同一套
+function getBatteryLabel(r) {
+  return [getVal(r,'電池類型'), getVal(r,'電池規格(V)'), getVal(r,'電池規格(ah)'), getVal(r,'電池備註')].filter(Boolean).join(' ');
+}
+
+// 5階段流程目前卡在哪一關，任務卡片的狀態徽章跟「狀態」篩選器共用同一套判斷
+function getTaskStage(flags, isInstalled, isRegistered) {
+  const arrivedCount = (flags.vehicle?1:0) + (flags.battery?1:0);
+  if (arrivedCount===2 && isInstalled && isRegistered) return { key:'ready',            cls:'s-ready',   label:'✅ 可交車' };
+  if (isRegistered)                                    return { key:'plating',          cls:'s-working', label:'🏷 掛牌中' };
+  if (isInstalled)                                     return { key:'pending_plate',    cls:'s-working', label:'🏷 待掛牌' };
+  if (arrivedCount===2)                                return { key:'pending_assembly', cls:'s-working', label:'🔧 待整備' };
+  if (arrivedCount===1)                                return { key:'partial_arrival',  cls:'s-working', label:'🚚 到貨中(1/2)' };
+  return                                                      { key:'pending_arrival',  cls:'s-none',    label:'🚚 待到貨' };
+}
+
+// 車型／電池規格下拉選單：用目前「待處理」範圍內實際出現過的值動態產生選項，
+// 並保留使用者原本選的值（不會因為重繪而被重置成「所有車型」）
+function populateTaskFilterDropdowns(pool) {
+  const modelSel = document.getElementById('task-filter-model');
+  const batterySel = document.getElementById('task-filter-battery');
+  if (!modelSel || !batterySel) return;
+  const prevModel = modelSel.value, prevBattery = batterySel.value;
+
+  const models = [...new Set(pool.map(r => getVal(r,'車款')).filter(Boolean))].sort();
+  const batteries = [...new Set(pool.map(r => getBatteryLabel(r)).filter(Boolean))].sort();
+
+  modelSel.innerHTML = '<option value="">所有車型</option>' + models.map(m => `<option value="${escAttr(m)}">${escHtml(m)}</option>`).join('');
+  batterySel.innerHTML = '<option value="">所有電池規格</option>' + batteries.map(b => `<option value="${escAttr(b)}">${escHtml(b)}</option>`).join('');
+
+  if (models.includes(prevModel)) modelSel.value = prevModel;
+  if (batteries.includes(prevBattery)) batterySel.value = prevBattery;
+}
+
 function renderTasks() {
   if (!allData.length) return;
   const now = new Date(); now.setHours(0,0,0,0);
 
-  const filtered = allData.filter(r => {
+  // 篩選器的下拉選項只從「待處理範圍」（排除已交車/已取消）內的資料產生
+  const pendingPool = allData.filter(r => {
     const status = getVal(r,'訂單狀態');
-    if (status === '已交車' || status === '已取消') return false;
+    return status !== '已交車' && status !== '已取消';
+  });
+  populateTaskFilterDropdowns(pendingPool);
+  const modelFilter = document.getElementById('task-filter-model')?.value || '';
+  const batteryFilter = document.getElementById('task-filter-battery')?.value || '';
+  const statusFilter = document.getElementById('task-filter-status')?.value || '';
+
+  const filtered = pendingPool.filter(r => {
+    if (modelFilter && getVal(r,'車款') !== modelFilter) return false;
+    if (batteryFilter && getBatteryLabel(r) !== batteryFilter) return false;
+    if (statusFilter) {
+      const stage = getTaskStage(getPurchaseFlags(r), isChecked(r,'已安裝'), isChecked(r,'已掛牌'));
+      if (stage.key !== statusFilter) return false;
+    }
     const raw = getVal(r,'預計交車日');
     const d = raw ? new Date(raw) : null;
     if (d) d.setHours(0,0,0,0);
@@ -1286,10 +1545,6 @@ function renderTaskCard(r, now) {
   const model    = getVal(r,'車款');
   const color    = getVal(r,'顏色');
   const note     = getVal(r,'車輛備註');
-  const batType  = getVal(r,'電池類型');
-  const batV     = getVal(r,'電池規格(V)');
-  const batAh    = getVal(r,'電池規格(ah)');
-  const batNote  = getVal(r,'電池備註');
   const addons   = getVal(r,'加價購項目');
   const name     = getVal(r,'姓名');
   const phone    = getVal(r,'手機號碼');
@@ -1301,6 +1556,7 @@ function renderTaskCard(r, now) {
   const balAmt   = getNum(r,'尾款');
   const isInstalled  = isChecked(r,'已安裝') || false;
   const isRegistered = isChecked(r,'已掛牌') || false;
+  const flags = getPurchaseFlags(r);
 
   // 日期判斷
   let cardClass = '', dateClass = 'future-date', dateLabel = '';
@@ -1319,13 +1575,14 @@ function renderTaskCard(r, now) {
     dateLabel = '📅 未定交車日';
   }
 
-  // 狀態
-  let statusClass = 's-none', statusLabel = '未開始';
-  if (isInstalled && isRegistered) { statusClass = 's-ready'; statusLabel = '✅ 可交車'; }
-  else if (isInstalled || isRegistered) { statusClass = 's-working'; statusLabel = '🔧 施工中'; }
+  // 狀態（依「訂單產生→到貨→整備組裝→掛牌作業→準備交車」5階段判斷目前卡在哪一關）
+  const stage = getTaskStage(flags, isInstalled, isRegistered);
+  const statusClass = stage.cls, statusLabel = stage.label;
+
+  const stepperHtml = buildProgressStepper(flags, isInstalled, isRegistered);
 
   // 電池
-  const battery = [batType, batV, batAh, batNote].filter(Boolean).join(' ');
+  const battery = getBatteryLabel(r);
 
   // 加購項目
   let addonHtml = '';
@@ -1369,6 +1626,7 @@ function renderTaskCard(r, now) {
         ${addonHtml}
       </div>
     </div>
+    <div class="task-stepper">${stepperHtml}</div>
     <div class="task-card-footer">
       <div class="task-customer">
         <strong>${name}</strong>${phone}
@@ -1379,17 +1637,56 @@ function renderTaskCard(r, now) {
         ${balHtml}
         <div class="task-checks">
           <label class="task-check-item">
+            <input type="checkbox" ${flags.vehicle?'checked':''} onchange="togglePurchaseCheck('${id}','vehicle',this.checked)">
+            車輛到貨
+          </label>
+          <label class="task-check-item">
+            <input type="checkbox" ${flags.battery?'checked':''} onchange="togglePurchaseCheck('${id}','battery',this.checked)">
+            電池到貨
+          </label>
+          <label class="task-check-item">
             <input type="checkbox" ${isInstalled?'checked':''} onchange="toggleTaskCheck('${id}','已安裝',this.checked)">
-            已安裝
+            整備組裝
           </label>
           <label class="task-check-item">
             <input type="checkbox" ${isRegistered?'checked':''} onchange="toggleTaskCheck('${id}','已掛牌',this.checked)">
-            已掛牌
+            掛牌作業
           </label>
         </div>
       </div>
     </div>
   </div>`;
+}
+
+// 採購狀態欄位編碼／解碼：用「、」分隔多個到貨項目，例如「車輛到貨、電池到貨」
+// 借用既有的「採購狀態」欄位存放，不需要新增 Sheet 欄位
+function getPurchaseFlags(row) {
+  const tokens = (getVal(row,'採購狀態') || '').split('、').map(s=>s.trim()).filter(Boolean);
+  return { vehicle: tokens.includes('車輛到貨'), battery: tokens.includes('電池到貨') };
+}
+function buildPurchaseStatusText(flags) {
+  const tokens = [];
+  if (flags.vehicle) tokens.push('車輛到貨');
+  if (flags.battery) tokens.push('電池到貨');
+  return tokens.join('、');
+}
+
+// 5階段流程圖：訂單產生／到貨／整備組裝／掛牌作業／準備交車
+// 用顏色深淺表示進度：pending淺灰、partial中間色（到貨只到一半）、done深綠
+function buildProgressStepper(flags, isInstalled, isRegistered) {
+  const arrivedCount = (flags.vehicle?1:0) + (flags.battery?1:0);
+  const steps = [
+    { label:'訂單產生', state:'done' },
+    { label:'到貨',     state: arrivedCount===2 ? 'done' : arrivedCount===1 ? 'partial' : 'pending' },
+    { label:'整備組裝', state: isInstalled  ? 'done' : 'pending' },
+    { label:'掛牌作業', state: isRegistered ? 'done' : 'pending' },
+    { label:'準備交車', state: (arrivedCount===2 && isInstalled && isRegistered) ? 'done' : 'pending' },
+  ];
+  return steps.map((s,i) => {
+    const dot = `<div class="step-dot ${s.state}"></div>`;
+    const connector = i < steps.length-1 ? `<div class="step-connector ${s.state==='done'?'done':''}"></div>` : '';
+    return `<div class="step">${dot}<div class="step-label">${s.label}</div></div>${connector}`;
+  }).join('');
 }
 
 function toggleTaskCheck(orderId, field, checked) {
@@ -1405,10 +1702,31 @@ function toggleTaskCheck(orderId, field, checked) {
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (data.status === 'ok') {
-      // 更新本地資料
-      const idx = allData.indexOf(r);
-      const headers = Object.keys(allData[0] || {});
-      // 重新渲染這張卡片
+      // 先更新本地資料，再重繪，畫面才會反映最新狀態
+      r[field] = checked;
+      renderTasks();
+    }
+  };
+  const script = document.createElement('script');
+  script.src = url;
+  document.head.appendChild(script);
+}
+
+function togglePurchaseCheck(orderId, item, checked) {
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+
+  const flags = getPurchaseFlags(r);
+  if (item === 'vehicle') flags.vehicle = checked; else flags.battery = checked;
+  const newText = buildPurchaseStatusText(flags);
+
+  const cbName = 'cb_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=updatePrep&orderId=${encodeURIComponent(orderId)}&purchase=${encodeURIComponent(newText)}&callback=${cbName}`;
+
+  window[cbName] = function(data) {
+    delete window[cbName]; script.remove();
+    if (data.status === 'ok') {
+      r['採購狀態'] = newText;
       renderTasks();
     }
   };
@@ -1575,7 +1893,7 @@ function fallbackCopyMessage(ta, onDone) {
 
 // ── 呼叫 GAS：擴充後的 action=editOrder（車架/馬達/車牌）──
 function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
-  const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼' };
+  const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼', delivery:'預計交車日' };
   const cbName = 'cb_tools_' + Date.now() + '_' + Math.floor(Math.random()*100000);
   const qs = Object.keys(updates).map(k => `${k}=${encodeURIComponent(updates[k])}`).join('&');
   const url = `${APPS_SCRIPT_URL}?action=editOrder&orderId=${encodeURIComponent(orderId)}&${qs}&callback=${cbName}`;
@@ -1612,26 +1930,47 @@ function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
   }, 20000);
 }
 
-// ── 儲存車架號碼／馬達編號 ──
+// ── 儲存車架號碼 ──
 function saveOrderFrame(orderId) {
   const safeId = domSafeId(orderId);
   const frameInput = document.getElementById('frame-input-' + safeId);
-  const motorInput = document.getElementById('motor-input-' + safeId);
   const errEl = document.getElementById('frame-err-' + safeId);
   const btn = document.getElementById('frame-save-btn-' + safeId);
   const frame = (frameInput.value || '').trim();
-  const motor = (motorInput.value || '').trim();
   errEl.textContent = '';
   if (!frame) { errEl.textContent = '請輸入車架號碼'; return; }
-  frameInput.value = frame; motorInput.value = motor;
+  frameInput.value = frame;
   const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = '儲存中...';
-  callUpdateOrderTools(orderId, { frame, motor }, (ok, msg) => {
-    btn.disabled = false; btn.textContent = orig;
+  btn.disabled = true; btn.textContent = '…';
+  callUpdateOrderTools(orderId, { frame }, (ok, msg) => {
     if (ok) {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1200);
       refreshOrderToolsCard(orderId);
     } else {
+      btn.disabled = false; btn.textContent = orig;
       errEl.textContent = '儲存失敗：' + (msg || '請稍後再試，資料尚未存入');
+    }
+  });
+}
+
+// ── 儲存馬達編號 ──
+function saveOrderMotor(orderId) {
+  const safeId = domSafeId(orderId);
+  const motorInput = document.getElementById('motor-input-' + safeId);
+  const btn = document.getElementById('motor-save-btn-' + safeId);
+  const motor = (motorInput.value || '').trim();
+  motorInput.value = motor;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '…';
+  callUpdateOrderTools(orderId, { motor }, (ok, msg) => {
+    if (ok) {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1200);
+      refreshOrderToolsCard(orderId);
+    } else {
+      btn.disabled = false; btn.textContent = orig;
+      alert('儲存失敗：' + (msg || '請稍後再試，資料尚未存入'));
     }
   });
 }
@@ -1651,12 +1990,14 @@ function saveOrderPlate(orderId) {
     errEl.style.color = 'var(--amber)';
   }
   const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = '儲存中...';
+  btn.disabled = true; btn.textContent = '…';
   callUpdateOrderTools(orderId, { plate }, (ok, msg) => {
-    btn.disabled = false; btn.textContent = orig;
     if (ok) {
+      btn.textContent = '✅';
+      setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1200);
       refreshOrderToolsCard(orderId);
     } else {
+      btn.disabled = false; btn.textContent = orig;
       errEl.style.color = 'var(--accent)';
       errEl.textContent = '儲存失敗：' + (msg || '請稍後再試，資料尚未存入');
     }
@@ -1668,7 +2009,7 @@ function refreshOrderToolsCard(orderId) {
   renderOrderTools(orderId);
 }
 
-// ── 渲染「訂單助手」6 張工作卡 ──
+// ── 渲染「訂單助手」5 張工作卡（車架／車牌已移到主列表直接編輯）──
 function renderOrderTools(orderId) {
   const safeId = domSafeId(orderId);
   const row = document.getElementById('tools-' + safeId);
@@ -1677,14 +2018,11 @@ function renderOrderTools(orderId) {
   if (!order) { row.querySelector('td').innerHTML = '<div class="order-tools">找不到訂單資料</div>'; return; }
 
   const frame = getVal(order,'車架號碼');
-  const motor = getVal(order,'馬達編號');
   const plate = getVal(order,'車牌號碼');
 
-  const frameSummary = frame ? `<span class="tool-card-summary ok">✅ ${escHtml(frame)}</span>` : `<span class="tool-card-summary">尚未填寫</span>`;
-  const plateSummary = plate ? `<span class="tool-card-summary ok">✅ ${escHtml(plate)}</span>` : `<span class="tool-card-summary">尚未填寫</span>`;
   const pickupSummary = frame ? `<span class="tool-card-summary ok">✅ 可產生通知</span>` : `<span class="tool-card-summary">尚未填寫車架號碼</span>`;
 
-  const c0 = 'c0-' + safeId, c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c3 = 'c3-' + safeId, c4 = 'c4-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
+  const c0 = 'c0-' + safeId, c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
   const msg1id = 'msg1-' + safeId, msg2id = 'msg2-' + safeId, msg5id = 'msg5-' + safeId, msg6id = 'msg6-' + safeId;
   const receiptLink = buildOrderToolsReceiptLink(orderId);
 
@@ -1698,6 +2036,8 @@ function renderOrderTools(orderId) {
   const grandTotal = getNum(order,'總金額');
   const depositMethod = getVal(order,'訂金支付方式');
   const balanceMethod = getVal(order,'尾款支付方式');
+  const depositAmt = getNum(order,'訂金');
+  const balanceAmt = getNum(order,'尾款');
   const addons = getVal(order,'加價購項目');
   const addonListHtml = addons
     ? addons.split('、').filter(Boolean).map(i => {
@@ -1725,8 +2065,8 @@ function renderOrderTools(orderId) {
             <div><span class="lbl">車輛售價</span>NT$ ${bikePrice.toLocaleString()}</div>
             <div><span class="lbl">加價購金額</span>NT$ ${addonTotal.toLocaleString()}</div>
             <div><span class="lbl">總金額</span>NT$ ${grandTotal.toLocaleString()}</div>
-            <div><span class="lbl">訂金支付方式</span>${escHtml(depositMethod)||'—'}</div>
-            <div><span class="lbl">尾款支付方式</span>${escHtml(balanceMethod)||'—'}</div>
+            <div><span class="lbl">訂金</span>${escHtml(depositMethod)||'—'} ${depositAmt.toLocaleString()}元</div>
+            <div><span class="lbl">尾款</span>${escHtml(balanceMethod)||'—'} ${balanceAmt.toLocaleString()}元</div>
             ${addonListHtml}
           </div>
         </div>
@@ -1756,44 +2096,6 @@ function renderOrderTools(orderId) {
           <textarea class="msg-preview" id="${msg2id}"></textarea>
           <div class="tool-btn-row">
             <button class="tool-btn copy" onclick="copyOrderMessage('${msg2id}', this)">複製訊息</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-card-head static">
-          <span class="tool-card-title">🔩 車架號碼</span>
-          ${frameSummary}
-        </div>
-        <div class="tool-card-body" id="${c3}">
-          <div class="tool-field">
-            <label>車架號碼</label>
-            <input type="text" id="frame-input-${safeId}" value="${escAttr(frame)}" placeholder="請輸入車架號碼">
-          </div>
-          <div class="tool-field">
-            <label>馬達編號（選填）</label>
-            <input type="text" id="motor-input-${safeId}" value="${escAttr(motor)}" placeholder="請輸入馬達編號">
-          </div>
-          <div class="tool-field-err" id="frame-err-${safeId}"></div>
-          <div class="tool-btn-row">
-            <button class="tool-btn primary" id="frame-save-btn-${safeId}" onclick="saveOrderFrame('${escAttr(orderId)}')">儲存</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="tool-card">
-        <div class="tool-card-head static">
-          <span class="tool-card-title">🏷 車牌號碼</span>
-          ${plateSummary}
-        </div>
-        <div class="tool-card-body" id="${c4}">
-          <div class="tool-field">
-            <label>車牌號碼</label>
-            <input type="text" id="plate-input-${safeId}" value="${escAttr(plate)}" placeholder="例：ABC-1234">
-          </div>
-          <div class="tool-field-err" id="plate-err-${safeId}"></div>
-          <div class="tool-btn-row">
-            <button class="tool-btn primary" id="plate-save-btn-${safeId}" onclick="saveOrderPlate('${escAttr(orderId)}')">儲存</button>
           </div>
         </div>
       </div>
