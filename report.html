@@ -723,16 +723,23 @@ async function loadReportProductMaster() {
 // ====== 電池電壓（僅供「所有記錄」訂單助手的「🔋 電池使用提醒」查表用）======
 // 獨立於商品主檔的載入狀態旗標，兩者互不影響彼此的載入中／失敗判斷
 async function loadBatteryVoltageData() {
+  console.log('[電池電壓] 開始載入');
+  console.log('[電池電壓] URL:', BATTERY_VOLTAGE_API_URL);
   try {
     const res = await fetch(BATTERY_VOLTAGE_API_URL + '&_ts=' + Date.now(), { cache: 'no-store' });
     const text = await res.text();
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const cols = json.table.cols;
+    console.log('[電池電壓] gviz 原始欄位 label:', cols.map(c => c.label));
     batteryVoltageData = (json.table.rows || []).map(row => {
       const obj = {};
       cols.forEach((col, i) => {
-        // 沿用商品主檔已經修好的「標題列多行換行」處理方式
-        const key = (col.label || col.id || '').replace(/\s+/g, '');
+        // [修正] 這份「電池電壓」分頁的標題儲存格實際打的是「F 對應商品編號」這種
+        // 「欄位代號＋空白＋欄位名稱」格式（不是純粹的「對應商品編號」），
+        // 原本的 replace(/\s+/g,'') 只會把 F 跟文字中間的空白清掉、變成「F對應商品編號」，
+        // 永遠對不上程式裡寫死的 '對應商品編號'，導致每一列都查不到資料。
+        // 這裡先去掉開頭「單一英文字母＋空白」這種欄位代號前綴，再處理其餘空白（含換行）。
+        const key = (col.label || col.id || '').replace(/^[A-Za-z]\s+/, '').replace(/\s+/g, '');
         const cell = row.c[i];
         const raw = cell ? cell.v : undefined;
         obj[key] = raw === undefined ? '' : (typeof raw === 'string' ? raw.trim() : raw);
@@ -741,6 +748,17 @@ async function loadBatteryVoltageData() {
     });
     batteryVoltageLoaded = true;
     batteryVoltageError = false;
+    console.log('[電池電壓] 載入筆數:', batteryVoltageData.length);
+    console.log('[電池電壓] 第一筆資料的欄位名稱:', Object.keys(batteryVoltageData[0] || {}));
+    const f4Row = batteryVoltageData[2]; // 第2列是表頭，第4列(F4)對應陣列索引2
+    console.log('[電池電壓] F4 那一列原始資料:', f4Row);
+    if (f4Row) {
+      const rawSkuField = f4Row['對應商品編號'] || '';
+      const skuList = rawSkuField.split('、').map(s => s.trim());
+      console.log('[電池電壓] F4「對應商品編號」原始字串:', rawSkuField);
+      console.log('[電池電壓] 用「、」拆分後的陣列:', skuList);
+      console.log('[電池電壓] "BAT-TD-72V30ah" === 拆分後第一個SKU？', 'BAT-TD-72V30ah' === skuList[0], '｜第一個SKU實際值:', JSON.stringify(skuList[0]));
+    }
   } catch (e) {
     console.error('[電池電壓] 載入失敗:', e);
     batteryVoltageLoaded = true;
