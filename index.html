@@ -2176,6 +2176,7 @@ async function submitForm() {
           if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
           if (result && result.status === 'success') {
             console.log('✅ 資料已寫入 Google Sheets，單號：' + (result.id || ''));
+            if (result.receiptToken) finalData.receiptToken = result.receiptToken;
           } else {
             console.warn('⚠️ Sheets 回應異常：', result);
           }
@@ -2208,13 +2209,18 @@ async function submitForm() {
   generatePDF(finalData);
   [1, 2, 3, 4, 5, 6].forEach(i => { const el = document.getElementById('step' + i); if (el) el.style.display = 'none'; });
   document.getElementById('step-done').style.display = '';
-  // 設定收據連結 + QR Code
+  // 設定收據連結 + QR Code（沒拿到 receiptToken 就不產生死連結）
   setTimeout(() => {
     const url = getReceiptUrl();
     const el = document.getElementById('receipt-url');
-    if (el) el.value = url;
     const qr = document.getElementById('receipt-qr');
-    if (qr && url) qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+    if (url) {
+      if (el) el.value = url;
+      if (qr) qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+    } else {
+      if (el) el.value = '⚠️ 收據連結暫時無法產生，請稍後重新嘗試或由門市協助提供。';
+      if (qr) qr.removeAttribute('src');
+    }
   }, 100);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2222,10 +2228,10 @@ async function submitForm() {
 function regenPDF() { if (finalData) generatePDF(finalData); }
 
 function getReceiptUrl() {
-  if (!finalData) return '';
+  if (!finalData || !finalData.receiptToken) return '';
   // 產生收據網址（指向同目錄下的 receipt.html）
   const base = window.location.href.replace(/\/[^/]*$/, '/');
-  return base + 'receipt.html?id=' + finalData.id;
+  return base + 'receipt.html?id=' + finalData.id + '&token=' + encodeURIComponent(finalData.receiptToken);
 }
 
 function copyReceiptUrl() {
