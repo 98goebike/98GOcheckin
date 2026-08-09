@@ -601,6 +601,7 @@ function checkPassword() {
     sessionStorage.setItem('98go_auth', '1');
     loadData();
     loadReportProductMaster();
+    loadBatteryVoltageData();
   } else {
     input.classList.add('error');
     err.textContent = '密碼錯誤，請再試一次';
@@ -624,15 +625,18 @@ window._SCRIPT_URL = APPS_SCRIPT_URL;
 // 商品主檔（跟 index.html 共用同一份 Google Sheets，只是這裡只抓出貨配置需要的分頁/欄位）
 const PRODUCT_SHEET_ID = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
 const PRODUCT_API_URL = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
-// [待確認] 商品主檔「大分類」欄位標記充電器用的實際文字，目前用「充電器」是根據使用者描述的假設，
-// 還沒有比對過實際 Sheet 資料——如果充電器下拉選單篩不出東西，第一個要檢查的就是這個常數
-const CHARGER_CATEGORY = '充電器';
+const CHARGER_CATEGORY = '充電器'; // 已跟實際商品主檔資料核對過，正確
+// 電池電壓（同一份商品清單試算表底下的分頁），只給「電池使用提醒」查表用
+const BATTERY_VOLTAGE_API_URL = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('電池電壓')}`;
 
 let allData = [];
 let currentTab = 'overview';
 let reportProductMaster = [];
 let reportProductMasterLoaded = false;
 let reportProductMasterError = false;
+let batteryVoltageData = [];
+let batteryVoltageLoaded = false;
+let batteryVoltageError = false;
 
 // ====== LOAD DATA ======
 async function loadData() {  document.getElementById('loading').style.display = 'block';
@@ -714,6 +718,87 @@ async function loadReportProductMaster() {
   }
   // 讀取完成（不論成功失敗）後重新渲染任務清單，讓已展開的「出貨配置」區塊從「載入中」更新成正確狀態
   if (typeof renderTasks === 'function') renderTasks();
+}
+
+// ====== 電池電壓（僅供「所有記錄」訂單助手的「🔋 電池使用提醒」查表用）======
+// 獨立於商品主檔的載入狀態旗標，兩者互不影響彼此的載入中／失敗判斷
+async function loadBatteryVoltageData() {
+  try {
+    const res = await fetch(BATTERY_VOLTAGE_API_URL + '&_ts=' + Date.now(), { cache: 'no-store' });
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols = json.table.cols;
+    batteryVoltageData = (json.table.rows || []).map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        // 沿用商品主檔已經修好的「標題列多行換行」處理方式
+        const key = (col.label || col.id || '').replace(/\s+/g, '');
+        const cell = row.c[i];
+        const raw = cell ? cell.v : undefined;
+        obj[key] = raw === undefined ? '' : (typeof raw === 'string' ? raw.trim() : raw);
+      });
+      return obj;
+    });
+    batteryVoltageLoaded = true;
+    batteryVoltageError = false;
+  } catch (e) {
+    console.error('[電池電壓] 載入失敗:', e);
+    batteryVoltageLoaded = true;
+    batteryVoltageError = true;
+  }
+}
+
+// AX 精確比對「電池電壓」F欄（對應商品編號），用「、」分隔逐一比對，不做包含/前綴/模糊比對
+function getBatteryVoltageInfo(ax) {
+  if (!ax) return { status: 'missing_ax' };
+  const target = ax.trim();
+  const matches = batteryVoltageData.filter(row =>
+    (row['對應商品編號'] || '').split('、').map(s => s.trim()).includes(target)
+  );
+  if (matches.length === 0) return { status: 'not_found' };
+  if (matches.length > 1) return { status: 'conflict', rows: matches };
+  return { status: 'ok', row: matches[0] };
+}
+
+// 客戶顯示名稱白名單：只認這三種，其餘一律回傳 null，禁止 fallback 成內部分類原文
+function getCustomerBatteryTypeLabel(rawType) {
+  if (rawType === '三元鋰') return '鋰電池';
+  if (rawType === '鐵鋰')   return '鐵鋰電池';
+  if (rawType === '鉛酸')   return '鉛酸電池';
+  return null;
+}
+
+// 「72V／20S」只取「／」前面給客戶看，不顯示串數
+function getCustomerVoltageLabel(specText) {
+  const idx = (specText || '').search(/[／/]/);
+  return (idx >= 0 ? specText.slice(0, idx) : (specText || '')).trim();
+}
+
+function buildBatteryReminderMessage(displayName, row) {
+  return `🔋 98GO 電池電壓使用提醒
+
+您的電池為：${displayName}
+
+🟢 充飽電後正常電壓
+約 ${row['充飽正常']}
+
+🟡 建議充電電壓
+電壓約 ${row['建議充電']} 時，即可安排充電。
+
+🔴 缺電警戒
+電壓低於約 ${row['缺電警戒']} 時，代表電量已過低，請儘快充電，避免繼續騎乘。
+
+💡 電池建議有騎乘即可充電，不需要等到電量降低至建議充電電壓才充電。
+
+避免長期低電量或深度放電，有助於延長電池使用壽命。
+
+⚠️ 請勿將電池使用至完全沒電
+
+電池過度放電、電壓過低，可能造成電池保護板啟動，發生無法正常充電或無法供電等情況。
+
+建議平時留意儀表板電壓，看到建議充電電壓時即可安排充電，不需等到快沒電才充。
+
+※ 加速、上坡或載重時，電壓可能暫時下降；建議以車輛停止、未催動油門時的電壓作為日常判斷參考。`;
 }
 
 function getNum(row, key) {
@@ -1564,6 +1649,21 @@ function populateTaskFilterDropdowns(pool) {
 // 🔋 出貨配置（任務清單）：登記實際出貨電池／充電器商品編號，寫回 AX／AY
 // ====================================================================
 
+// 訂單的「電池銷售規格」來源：優先用 AW 原始值；AW 空白（舊訂單／舊流程沒有這欄）時，
+// 退回用既有的 電池類型／電池規格(V)／電池規格(ah)／電池備註 組成同樣格式的字串。
+// 「客戶購買規格」顯示、電池候選商品篩選都要呼叫這個函式，不要一邊讀AW、一邊自己另外組
+function getOrderBatterySalesSpec(order) {
+  const aw = getVal(order,'電池銷售規格');
+  if (aw) return aw;
+  const v = getVal(order,'電池規格(V)');
+  const ah = getVal(order,'電池規格(ah)');
+  const rawType = getVal(order,'電池類型');
+  const note = getVal(order,'電池備註');
+  if (!v && !ah && !rawType) return '';
+  const type = /鉛酸/.test(rawType) ? '鉛酸' : (rawType ? '鋰電' : '');
+  return [v, ah, type, note].filter(Boolean).join(' ');
+}
+
 // 解析電池規格文字，抓電壓／Ah／是否鉛酸。抓不到 V 也抓不到 Ah 就回傳 null，
 // 呼叫端要按「無法自動篩選」處理，不能用猜的
 function parseBatterySpecText(text) {
@@ -1582,10 +1682,10 @@ function parseBatterySpecText(text) {
 // 回傳 { items, filtered, reason }：filtered=true 代表有依V/Ah篩選過；reason 是要顯示給人員看的提示文字
 function getBatteryCandidates(order) {
   const pool = reportProductMaster.filter(p => p['大分類']==='電池' && p['是否可販售']==='Y' && p['是否啟用']==='Y');
-  const aw = getVal(order,'電池銷售規格');
-  const parsed = parseBatterySpecText(aw);
+  const spec = getOrderBatterySalesSpec(order);
+  const parsed = parseBatterySpecText(spec);
   if (!parsed) {
-    return { items: pool, filtered: false, reason: aw ? '電池銷售規格格式無法解析，顯示全部電池商品' : '此訂單尚未填寫電池銷售規格，顯示全部電池商品' };
+    return { items: pool, filtered: false, reason: spec ? '電池規格格式無法解析，顯示全部電池商品' : '此訂單尚未填寫電池銷售規格，顯示全部電池商品' };
   }
   const matchOf = p => parseBatterySpecText([p['商品名稱'], p['銷售規格'], p['型號']].filter(Boolean).join(' '));
   let narrowed = pool;
@@ -1608,7 +1708,7 @@ function getBatteryCandidates(order) {
 // 例如48V電池對應54.6V充電器，硬用數字比對容易篩空或篩錯），只依鋰電／鉛酸類型排序，其餘交給人員判斷
 function getChargerCandidates(order) {
   const pool = reportProductMaster.filter(p => p['大分類']===CHARGER_CATEGORY && p['是否可販售']==='Y' && p['是否啟用']==='Y');
-  const parsed = parseBatterySpecText(getVal(order,'電池銷售規格'));
+  const parsed = parseBatterySpecText(getOrderBatterySalesSpec(order));
   if (!parsed) return { items: pool, filtered: false, reason: '顯示全部啟用充電器，請人工確認' };
   const sorted = [...pool].sort((a,b) => {
     const aLead = /鉛酸/.test(a['商品名稱']||'') ? 1 : 0;
@@ -1810,7 +1910,7 @@ function renderTaskCard(r, now) {
   } else if (reportProductMasterError) {
     shipBodyHtml = `<p style="font-size:12px;color:var(--accent);margin:6px 0 0;">⚠️ 商品主檔載入失敗，無法選擇出貨電池／充電器，請重新整理頁面再試</p>`;
   } else {
-    const awSpec = getVal(r,'電池銷售規格');
+    const awSpec = getOrderBatterySalesSpec(r);
     const batResult = getBatteryCandidates(r);
     const chgResult = getChargerCandidates(r);
     shipBodyHtml = `
@@ -2260,9 +2360,56 @@ function renderOrderTools(orderId) {
 
   const pickupSummary = frame ? `<span class="tool-card-summary ok">✅ 可產生通知</span>` : `<span class="tool-card-summary">尚未填寫車架號碼</span>`;
 
-  const c0 = 'c0-' + safeId, c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
-  const msg1id = 'msg1-' + safeId, msg2id = 'msg2-' + safeId, msg5id = 'msg5-' + safeId, msg6id = 'msg6-' + safeId;
+  const c0 = 'c0-' + safeId, c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c3 = 'c3-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
+  const msg1id = 'msg1-' + safeId, msg2id = 'msg2-' + safeId, msg5id = 'msg5-' + safeId, msg6id = 'msg6-' + safeId, msgBatId = 'msgBat-' + safeId;
   const receiptLink = buildOrderToolsReceiptLink(orderId);
+
+  // 電池使用提醒卡：用 AX（實際出貨電池編號）精確比對「電池電壓」F欄
+  const shipBatteryCode = getVal(order,'實際出貨電池編號');
+  let batterySummary = '';
+  let batteryBodyHtml = '';
+  let batteryMsgText = '';
+  if (!batteryVoltageLoaded) {
+    batterySummary = `<span class="tool-card-summary">載入中…</span>`;
+    batteryBodyHtml = `<p style="font-size:12px;color:var(--gray4);">電池電壓資料載入中…</p>`;
+  } else if (batteryVoltageError) {
+    batterySummary = `<span class="tool-card-summary">⚠️ 載入失敗</span>`;
+    batteryBodyHtml = `<p style="font-size:12px;color:var(--accent);">⚠️ 電池電壓資料載入失敗，請重新整理頁面再試</p>`;
+  } else {
+    const info = getBatteryVoltageInfo(shipBatteryCode);
+    if (info.status === 'missing_ax') {
+      batterySummary = `<span class="tool-card-summary">尚未配置電池</span>`;
+      batteryBodyHtml = `<p style="font-size:12px;color:var(--gray5);">⚠️ 請先完成實際出貨電池配置</p>`;
+    } else if (info.status === 'not_found') {
+      batterySummary = `<span class="tool-card-summary">⚠️ 查無資料</span>`;
+      batteryBodyHtml = `<p style="font-size:12px;color:var(--accent);">⚠️ 找不到此電池的電壓資料，請確認「電池電壓」分頁的對應商品編號。</p>`;
+    } else if (info.status === 'conflict') {
+      batterySummary = `<span class="tool-card-summary">⚠️ 資料衝突</span>`;
+      batteryBodyHtml = `<p style="font-size:12px;color:var(--accent);">⚠️ 電池電壓資料設定衝突，同一商品編號對應到多筆電壓規則，請檢查「電池電壓」分頁。</p>`;
+    } else {
+      const typeLabel = getCustomerBatteryTypeLabel(info.row['電池類型']);
+      if (!typeLabel) {
+        batterySummary = `<span class="tool-card-summary">⚠️ 類型未設定</span>`;
+        batteryBodyHtml = `<p style="font-size:12px;color:var(--accent);">⚠️ 此電池類型尚未設定客戶顯示名稱，請檢查「電池電壓」資料表。</p>`;
+      } else {
+        const displayName = getCustomerVoltageLabel(info.row['規格']) + ' ' + typeLabel;
+        batterySummary = `<span class="tool-card-summary ok">✅ 可產生提醒</span>`;
+        batteryBodyHtml = `
+          <div class="tool-readonly-list">
+            <div>🔋 ${escHtml(displayName)}</div>
+            <div>🟢 充飽正常：${escHtml(info.row['充飽正常'])}</div>
+            <div>🟡 建議充電：${escHtml(info.row['建議充電'])}</div>
+            <div>🔴 缺電警戒：${escHtml(info.row['缺電警戒'])}</div>
+          </div>
+          <textarea class="msg-preview" id="${msgBatId}"></textarea>
+          <div class="tool-btn-row">
+            <button class="tool-btn copy" onclick="copyOrderMessage('${msgBatId}', this)">複製訊息</button>
+          </div>
+        `;
+        batteryMsgText = buildBatteryReminderMessage(displayName, info.row);
+      }
+    }
+  }
 
   // 訂單詳情卡：訂車日／交車日／訂單狀態／金額／付款方式／加價購項目
   const dealDate = getVal(order,'成交日期');
@@ -2358,6 +2505,16 @@ function renderOrderTools(orderId) {
       </div>
 
       <div class="tool-card">
+        <div class="tool-card-head" onclick="toggleToolCard('${c3}')">
+          <span class="tool-card-title"><span id="arrow-${c3}">▶</span> 🔋 電池使用提醒</span>
+          ${batterySummary}
+        </div>
+        <div class="tool-card-body" id="${c3}" style="display:none;">
+          ${batteryBodyHtml}
+        </div>
+      </div>
+
+      <div class="tool-card">
         <div class="tool-card-head" onclick="toggleToolCard('${c6}')">
           <span class="tool-card-title"><span id="arrow-${c6}">▶</span> 🎉 交車完成</span>
         </div>
@@ -2380,11 +2537,12 @@ function renderOrderTools(orderId) {
   document.getElementById(msg2id).value = buildPreLicenseMessage();
   document.getElementById(msg5id).value = buildPickupMessage(order, orderId);
   document.getElementById(msg6id).value = buildDeliveryDoneMessage(orderId);
+  if (batteryMsgText) document.getElementById(msgBatId).value = batteryMsgText;
 }
 
 // loadData() 由密碼驗證通過後呼叫
 // 若已在 session 中驗證過，直接載入
-if (sessionStorage.getItem('98go_auth') === '1') { loadData(); loadReportProductMaster(); }
+if (sessionStorage.getItem('98go_auth') === '1') { loadData(); loadReportProductMaster(); loadBatteryVoltageData(); }
 </script>
 
 <!-- 登記收款 Modal -->
