@@ -730,7 +730,8 @@ async function loadBatteryVoltageData() {
     const text = await res.text();
     const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
     const cols = json.table.cols;
-    console.log('[電池電壓] gviz 原始欄位 label:', cols.map(c => c.label));
+    console.log('[電池電壓] gviz 原始欄位 label（純文字展開）:', JSON.stringify(cols.map(c => c.label)));
+    console.log('[電池電壓] gviz 原始欄位 id（純文字展開）:', JSON.stringify(cols.map(c => c.id)));
     batteryVoltageData = (json.table.rows || []).map(row => {
       const obj = {};
       cols.forEach((col, i) => {
@@ -749,14 +750,15 @@ async function loadBatteryVoltageData() {
     batteryVoltageLoaded = true;
     batteryVoltageError = false;
     console.log('[電池電壓] 載入筆數:', batteryVoltageData.length);
-    console.log('[電池電壓] 第一筆資料的欄位名稱:', Object.keys(batteryVoltageData[0] || {}));
+    console.log('[電池電壓] 第一筆資料的欄位名稱（純文字展開）:', JSON.stringify(Object.keys(batteryVoltageData[0] || {})));
+    console.log('[電池電壓] 全部資料（純文字展開）:', JSON.stringify(batteryVoltageData));
     const f4Row = batteryVoltageData[2]; // 第2列是表頭，第4列(F4)對應陣列索引2
-    console.log('[電池電壓] F4 那一列原始資料:', f4Row);
+    console.log('[電池電壓] F4 那一列原始資料（純文字展開）:', JSON.stringify(f4Row));
     if (f4Row) {
       const rawSkuField = f4Row['對應商品編號'] || '';
       const skuList = rawSkuField.split('、').map(s => s.trim());
-      console.log('[電池電壓] F4「對應商品編號」原始字串:', rawSkuField);
-      console.log('[電池電壓] 用「、」拆分後的陣列:', skuList);
+      console.log('[電池電壓] F4「對應商品編號」原始字串:', JSON.stringify(rawSkuField));
+      console.log('[電池電壓] 用「、」拆分後的陣列（純文字展開）:', JSON.stringify(skuList));
       console.log('[電池電壓] "BAT-TD-72V30ah" === 拆分後第一個SKU？', 'BAT-TD-72V30ah' === skuList[0], '｜第一個SKU實際值:', JSON.stringify(skuList[0]));
     }
   } catch (e) {
