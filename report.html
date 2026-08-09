@@ -627,7 +627,9 @@ const PRODUCT_SHEET_ID = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
 const PRODUCT_API_URL = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
 const CHARGER_CATEGORY = '充電器'; // 已跟實際商品主檔資料核對過，正確
 // 電池電壓（同一份商品清單試算表底下的分頁），只給「電池使用提醒」查表用
-const BATTERY_VOLTAGE_API_URL = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('電池電壓')}`;
+// [修正] 這份分頁第一列全部是文字，gviz 無法自動判斷有標題列，會把標題列當成一般資料讀進來、
+// 導致 col.label 全是空字串、改用 col.id（A/B/C/D/E/F）當 key。加上 &headers=1 明確告知第一列是標題。
+const BATTERY_VOLTAGE_API_URL = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('電池電壓')}&headers=1`;
 
 let allData = [];
 let currentTab = 'overview';
