@@ -230,6 +230,9 @@ tr:last-child td{border-bottom:none;}
 .step-label { font-size:10px; color:var(--gray5); text-align:center; line-height:1.3; white-space:nowrap; }
 .step-connector { flex:1 1 auto; height:2px; background:var(--gray3); margin-top:8px; min-width:6px; }
 .step-connector.done { background:var(--green); }
+.task-shipcfg { padding:.5rem 1rem; border-top:1px solid var(--gray2); background:#fff; }
+.task-shipcfg-head { display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; user-select:none; font-size:12px; font-weight:700; color:var(--brand); }
+.task-shipcfg-summary { font-size:11px; font-weight:500; color:var(--gray5); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .task-filter-bar { display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap; align-items:center; }
 
 /* ── 訂單助手（所有記錄展開） ── */
@@ -597,6 +600,7 @@ function checkPassword() {
     document.getElementById('app-body').style.display = 'block';
     sessionStorage.setItem('98go_auth', '1');
     loadData();
+    loadReportProductMaster();
   } else {
     input.classList.add('error');
     err.textContent = '密碼錯誤，請再試一次';
@@ -617,8 +621,18 @@ const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 window._SCRIPT_URL = APPS_SCRIPT_URL;
 
+// 商品主檔（跟 index.html 共用同一份 Google Sheets，只是這裡只抓出貨配置需要的分頁/欄位）
+const PRODUCT_SHEET_ID = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
+const PRODUCT_API_URL = `https://docs.google.com/spreadsheets/d/${PRODUCT_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('商品主檔')}`;
+// [待確認] 商品主檔「大分類」欄位標記充電器用的實際文字，目前用「充電器」是根據使用者描述的假設，
+// 還沒有比對過實際 Sheet 資料——如果充電器下拉選單篩不出東西，第一個要檢查的就是這個常數
+const CHARGER_CATEGORY = '充電器';
+
 let allData = [];
 let currentTab = 'overview';
+let reportProductMaster = [];
+let reportProductMasterLoaded = false;
+let reportProductMasterError = false;
 
 // ====== LOAD DATA ======
 async function loadData() {  document.getElementById('loading').style.display = 'block';
@@ -646,6 +660,33 @@ async function loadData() {  document.getElementById('loading').style.display = 
   } catch(e) {
     document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請確認 Google Sheets 已開放「知道連結的人可以檢視」<br><br>錯誤：${e.message}</div>`;
   }
+}
+
+// ====== 商品主檔（僅供「出貨配置」用，只抓需要的分頁/欄位，不搬 index.html 整套邏輯）======
+// 只在 report.html 載入時讀一次、存在記憶體，不會每次展開任務卡都重新 fetch
+async function loadReportProductMaster() {
+  try {
+    const res = await fetch(PRODUCT_API_URL + '&_ts=' + Date.now(), { cache: 'no-store' });
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const cols = json.table.cols;
+    reportProductMaster = (json.table.rows || []).map(row => {
+      const obj = {};
+      cols.forEach((col, i) => {
+        const key = (col.label || col.id || '').trim();
+        obj[key] = row.c[i] ? (row.c[i].v !== undefined ? String(row.c[i].v).trim() : '') : '';
+      });
+      return obj;
+    });
+    reportProductMasterLoaded = true;
+    reportProductMasterError = false;
+  } catch (e) {
+    console.warn('商品主檔讀取失敗', e);
+    reportProductMasterLoaded = true;
+    reportProductMasterError = true;
+  }
+  // 讀取完成（不論成功失敗）後重新渲染任務清單，讓已展開的「出貨配置」區塊從「載入中」更新成正確狀態
+  if (typeof renderTasks === 'function') renderTasks();
 }
 
 function getNum(row, key) {
@@ -1492,6 +1533,131 @@ function populateTaskFilterDropdowns(pool) {
   if (batteries.includes(prevBattery)) batterySel.value = prevBattery;
 }
 
+// ====================================================================
+// 🔋 出貨配置（任務清單）：登記實際出貨電池／充電器商品編號，寫回 AX／AY
+// ====================================================================
+
+// 解析電池規格文字，抓電壓／Ah／是否鉛酸。抓不到 V 也抓不到 Ah 就回傳 null，
+// 呼叫端要按「無法自動篩選」處理，不能用猜的
+function parseBatterySpecText(text) {
+  if (!text) return null;
+  const vMatch = text.match(/(\d+)\s*V/i);
+  const ahMatch = text.match(/(\d+)\s*[Aa][Hh]/);
+  if (!vMatch && !ahMatch) return null;
+  return {
+    v: vMatch ? vMatch[1] : null,
+    ah: ahMatch ? ahMatch[1] : null,
+    isLeadAcid: /鉛酸/.test(text)
+  };
+}
+
+// 依訂單「電池銷售規格」(AW) 篩選出貨電池候選清單
+// 回傳 { items, filtered, reason }：filtered=true 代表有依V/Ah篩選過；reason 是要顯示給人員看的提示文字
+function getBatteryCandidates(order) {
+  const pool = reportProductMaster.filter(p => p['大分類']==='電池' && p['是否可販售']==='Y' && p['是否啟用']==='Y');
+  const aw = getVal(order,'電池銷售規格');
+  const parsed = parseBatterySpecText(aw);
+  if (!parsed) {
+    return { items: pool, filtered: false, reason: aw ? '電池銷售規格格式無法解析，顯示全部電池商品' : '此訂單尚未填寫電池銷售規格，顯示全部電池商品' };
+  }
+  const matchOf = p => parseBatterySpecText([p['商品名稱'], p['銷售規格'], p['型號']].filter(Boolean).join(' '));
+  let narrowed = pool;
+  if (parsed.v)  narrowed = narrowed.filter(p => matchOf(p)?.v === parsed.v);
+  if (parsed.ah) narrowed = narrowed.filter(p => matchOf(p)?.ah === parsed.ah);
+  if (!narrowed.length) {
+    return { items: pool, filtered: false, reason: '找不到符合電壓／Ah的商品，顯示全部電池商品，請人工確認' };
+  }
+  // 類型（鉛酸／非鉛酸）不做硬性排除，只排序：符合的排前面，避免關鍵字沒抓準反而漏掉正確品項
+  narrowed = [...narrowed].sort((a,b) => {
+    const aLead = /鉛酸/.test([a['商品名稱'],a['銷售規格']].join(' ')) ? 1 : 0;
+    const bLead = /鉛酸/.test([b['商品名稱'],b['銷售規格']].join(' ')) ? 1 : 0;
+    const want = parsed.isLeadAcid ? 1 : 0;
+    return Math.abs(aLead-want) - Math.abs(bLead-want);
+  });
+  return { items: narrowed, filtered: true, reason: '已依電池銷售規格自動篩選' };
+}
+
+// 充電器候選清單：不用電壓數字篩選（充電器標示的是充電電壓，跟電池標稱電壓不是同一個數字，
+// 例如48V電池對應54.6V充電器，硬用數字比對容易篩空或篩錯），只依鋰電／鉛酸類型排序，其餘交給人員判斷
+function getChargerCandidates(order) {
+  const pool = reportProductMaster.filter(p => p['大分類']===CHARGER_CATEGORY && p['是否可販售']==='Y' && p['是否啟用']==='Y');
+  const parsed = parseBatterySpecText(getVal(order,'電池銷售規格'));
+  if (!parsed) return { items: pool, filtered: false, reason: '顯示全部啟用充電器，請人工確認' };
+  const sorted = [...pool].sort((a,b) => {
+    const aLead = /鉛酸/.test(a['商品名稱']||'') ? 1 : 0;
+    const bLead = /鉛酸/.test(b['商品名稱']||'') ? 1 : 0;
+    const want = parsed.isLeadAcid ? 1 : 0;
+    return Math.abs(aLead-want) - Math.abs(bLead-want);
+  });
+  return { items: sorted, filtered: false, reason: '顯示全部啟用充電器（依鋰電／鉛酸排序），請人工確認' };
+}
+
+// 商品編號 → 商品名稱（給人員看的摘要顯示用，資料庫仍存商品編號）
+function getProductName(code) {
+  if (!code) return '';
+  if (!reportProductMasterLoaded) return '載入中…';
+  const p = reportProductMaster.find(x => x['商品編號'] === code);
+  return p ? (p['商品名稱'] || code) : code;
+}
+
+function buildProductOptionsHtml(items, selectedCode) {
+  return '<option value="">請選擇</option>' + items.map(p =>
+    `<option value="${escAttr(p['商品編號'])}" ${p['商品編號']===selectedCode?'selected':''}>${escHtml(p['商品名稱']||p['商品編號'])}</option>`
+  ).join('');
+}
+
+// 記住哪些訂單的「出貨配置」是展開的，避免其他卡片觸發 renderTasks() 重繪時被收合回去
+const shipConfigExpanded = new Set();
+function toggleShipConfig(orderId) {
+  if (shipConfigExpanded.has(orderId)) shipConfigExpanded.delete(orderId); else shipConfigExpanded.add(orderId);
+  renderTasks();
+}
+
+function saveShipConfig(orderId) {
+  const safeId = domSafeId(orderId);
+  const r = allData.find(row => getVal(row,'單號') === orderId);
+  if (!r) return;
+  const batterySel = document.getElementById('battery-select-' + safeId);
+  const chargerSel = document.getElementById('charger-select-' + safeId);
+  const hintEl = document.getElementById('shipcfg-hint-' + safeId);
+  const btn = document.getElementById('shipcfg-save-' + safeId);
+  if (!batterySel || !chargerSel || !btn) return;
+  const battery = batterySel.value;
+  const charger = chargerSel.value;
+  hintEl.textContent = '';
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '儲存中…';
+
+  const cbName = 'cb_ship_' + Date.now();
+  const url = `${APPS_SCRIPT_URL}?action=updatePrep&orderId=${encodeURIComponent(orderId)}&battery=${encodeURIComponent(battery)}&charger=${encodeURIComponent(charger)}&callback=${cbName}`;
+  let finished = false;
+  const script = document.createElement('script');
+  window[cbName] = function(data) {
+    finished = true;
+    delete window[cbName]; script.remove();
+    btn.disabled = false;
+    if (data && data.status === 'ok') {
+      // 先更新本地 allData，再重繪，摘要文字才會立刻反映最新結果
+      r['實際出貨電池編號'] = battery;
+      r['充電器商品編號'] = charger;
+      btn.textContent = '✅ 已儲存';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+      renderTasks();
+    } else {
+      btn.textContent = orig;
+      hintEl.textContent = '❌ 儲存失敗：' + (data && data.message ? data.message : '請稍後再試，資料尚未存入');
+    }
+  };
+  script.src = url;
+  script.onerror = () => {
+    if (!finished) { finished = true; delete window[cbName]; script.remove(); btn.disabled = false; btn.textContent = orig; hintEl.textContent = '❌ 網路異常，請再試一次，資料尚未存入'; }
+  };
+  document.head.appendChild(script);
+  setTimeout(() => {
+    if (!finished && window[cbName]) { finished = true; delete window[cbName]; script.remove(); btn.disabled = false; btn.textContent = orig; hintEl.textContent = '❌ 送出逾時，請再試一次，資料尚未存入'; }
+  }, 20000);
+}
+
 function renderTasks() {
   if (!allData.length) return;
   const now = new Date(); now.setHours(0,0,0,0);
@@ -1542,6 +1708,7 @@ function renderTasks() {
 
 function renderTaskCard(r, now) {
   const id       = getVal(r,'單號');
+  const safeId   = domSafeId(id);
   const model    = getVal(r,'車款');
   const color    = getVal(r,'顏色');
   const note     = getVal(r,'車輛備註');
@@ -1606,6 +1773,49 @@ function renderTaskCard(r, now) {
     ? `<span style="font-size:12px;font-weight:700;color:#854F0B;">應收尾款：NT$ ${balAmt.toLocaleString()}</span>`
     : `<span style="font-size:12px;color:var(--green);font-weight:600;">✅ 已全額付清</span>`;
 
+  // 出貨配置（實際出貨電池／充電器，寫回 AX／AY）
+  const shipBatteryCode = getVal(r,'實際出貨電池編號');
+  const shipChargerCode = getVal(r,'充電器商品編號');
+  const shipExpanded = shipConfigExpanded.has(id);
+  let shipBodyHtml = '';
+  if (!reportProductMasterLoaded) {
+    shipBodyHtml = `<p style="font-size:12px;color:var(--gray4);margin:6px 0 0;">商品資料載入中…</p>`;
+  } else if (reportProductMasterError) {
+    shipBodyHtml = `<p style="font-size:12px;color:var(--accent);margin:6px 0 0;">⚠️ 商品主檔載入失敗，無法選擇出貨電池／充電器，請重新整理頁面再試</p>`;
+  } else {
+    const awSpec = getVal(r,'電池銷售規格');
+    const batResult = getBatteryCandidates(r);
+    const chgResult = getChargerCandidates(r);
+    shipBodyHtml = `
+      <div style="font-size:12px;color:var(--gray5);margin:8px 0;">客戶購買規格：${escHtml(awSpec)||'—'}</div>
+      <label style="font-size:12px;font-weight:600;color:var(--gray5);display:block;">實際出貨電池</label>
+      <select id="battery-select-${safeId}" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;margin-top:4px;box-sizing:border-box;">
+        ${buildProductOptionsHtml(batResult.items, shipBatteryCode)}
+      </select>
+      <div style="font-size:11px;color:var(--gray4);margin-top:3px;">${escHtml(batResult.reason)}</div>
+      <label style="font-size:12px;font-weight:600;color:var(--gray5);display:block;margin-top:10px;">配置充電器</label>
+      <select id="charger-select-${safeId}" style="width:100%;padding:7px 10px;border:1.5px solid var(--gray3);border-radius:6px;font-size:13px;font-family:inherit;margin-top:4px;box-sizing:border-box;">
+        ${buildProductOptionsHtml(chgResult.items, shipChargerCode)}
+      </select>
+      <div style="font-size:11px;color:var(--gray4);margin-top:3px;">${escHtml(chgResult.reason)}</div>
+      <div id="shipcfg-hint-${safeId}" style="font-size:12px;color:var(--accent);margin-top:6px;"></div>
+      <div class="tool-btn-row" style="margin-top:10px;">
+        <button class="tool-btn copy" id="shipcfg-save-${safeId}" onclick="saveShipConfig('${id}')">儲存出貨配置</button>
+      </div>
+    `;
+  }
+  const shipSummary = `🔋 ${shipBatteryCode ? escHtml(getProductName(shipBatteryCode)) : '尚未配置'}　🔌 ${shipChargerCode ? escHtml(getProductName(shipChargerCode)) : '尚未配置'}`;
+  const shipConfigHtml = `
+    <div class="task-shipcfg">
+      <div class="task-shipcfg-head" onclick="toggleShipConfig('${id}')">
+        <span>⚙️ 出貨配置 <span id="shipcfg-arrow-${safeId}">${shipExpanded?'▼':'▶'}</span></span>
+        <span class="task-shipcfg-summary">${shipSummary}</span>
+      </div>
+      <div id="shipcfg-body-${safeId}" style="display:${shipExpanded?'block':'none'};">
+        ${shipBodyHtml}
+      </div>
+    </div>`;
+
   return `
   <div class="task-card ${cardClass}" id="tcard-${id}">
     <div class="task-card-header">
@@ -1627,6 +1837,7 @@ function renderTaskCard(r, now) {
       </div>
     </div>
     <div class="task-stepper">${stepperHtml}</div>
+    ${shipConfigHtml}
     <div class="task-card-footer">
       <div class="task-customer">
         <strong>${name}</strong>${phone}
@@ -2146,7 +2357,7 @@ function renderOrderTools(orderId) {
 
 // loadData() 由密碼驗證通過後呼叫
 // 若已在 session 中驗證過，直接載入
-if (sessionStorage.getItem('98go_auth') === '1') loadData();
+if (sessionStorage.getItem('98go_auth') === '1') { loadData(); loadReportProductMaster(); }
 </script>
 
 <!-- 登記收款 Modal -->
