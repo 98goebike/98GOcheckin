@@ -291,28 +291,17 @@ function fmtDate(val){
   return val.toString().split('T')[0]||val;
 }
 function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val||'—';}
-function maskIdNo(v){
-  if(!v) return '—';
-  const s = v.toString().trim();
-  if (s.length <= 7) return s;
-  const midLen = s.length - 3 - 4;
-  return s.slice(0,3) + '*'.repeat(midLen) + s.slice(-4);
-}
-function maskPhone(v){
-  if(!v) return '—';
-  const s = v.toString().trim().replace(/\D/g,'');
-  if (s.length < 8) return v;
-  return s.slice(0,4) + '-***-' + s.slice(-3);
-}
 
 async function loadReceipt(){
   const params=new URLSearchParams(window.location.search);
   const orderId=params.get('id');
+  const token=params.get('token')||'';
   if(!orderId){document.getElementById('loading').style.display='none';document.getElementById('error-box').style.display='';return;}
 
   try{
     const cbName='cb_'+Date.now();
-    const url=`${SCRIPT_URL}?action=receipt&orderId=${encodeURIComponent(orderId)}&callback=${cbName}`;
+    // token 可能是空字串（舊收據相容模式）：由後端 doReceiptPublic() 依 cutover 規則判斷是否放行
+    const url=`${SCRIPT_URL}?action=receiptPublic&orderId=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}&callback=${cbName}`;
     await new Promise((resolve,reject)=>{
       const timeout=setTimeout(()=>reject(new Error('timeout')),15000);
       window[cbName]=function(data){clearTimeout(timeout);delete window[cbName];script.remove();resolve(data);};
@@ -359,8 +348,9 @@ async function loadReceipt(){
 
       // 買方
       set('r-name',data.name);
-      set('r-idNo',maskIdNo(data.idNo));
-      set('r-phone', maskPhone(data.phone));
+      // 後端已回傳遮蔽後資料，前端不再自行遮蔽
+      set('r-idNo', data.idNo);
+      set('r-phone', data.phone);
       set('r-addr',[data.city,data.district,data.addr].filter(Boolean).join(' '));
       if(data.gender){document.getElementById('r-gender-row').style.display='';set('r-gender',data.gender);}
       if(data.birthday){document.getElementById('r-birthday-row').style.display='';set('r-birthday',fmtDate(data.birthday));}
