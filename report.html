@@ -1805,7 +1805,7 @@ function saveShipConfig(orderId) {
   btn.disabled = true; btn.textContent = '儲存中…';
 
   const cbName = 'cb_ship_' + Date.now();
-  const url = `${APPS_SCRIPT_URL}?action=updatePrep&orderId=${encodeURIComponent(orderId)}&battery=${encodeURIComponent(battery)}&charger=${encodeURIComponent(charger)}&callback=${cbName}`;
+  const url = `${APPS_SCRIPT_URL}?action=reportUpdatePrep&orderId=${encodeURIComponent(orderId)}&battery=${encodeURIComponent(battery)}&charger=${encodeURIComponent(charger)}&token=${encodeURIComponent(getReportSessionToken())}&callback=${cbName}`;
   let finished = false;
   const script = document.createElement('script');
   window[cbName] = function(data) {
@@ -1819,6 +1819,9 @@ function saveShipConfig(orderId) {
       btn.textContent = '✅ 已儲存';
       setTimeout(() => { btn.textContent = orig; }, 1500);
       renderTasks();
+    } else if (data && data.status === 'not_allowed') {
+      btn.textContent = orig;
+      reportRequireLogin('登入已過期，請重新輸入密碼');
     } else {
       btn.textContent = orig;
       hintEl.textContent = '❌ 儲存失敗：' + (data && data.message ? data.message : '請稍後再試，資料尚未存入');
@@ -2084,7 +2087,7 @@ function toggleTaskCheck(orderId, field, checked) {
   // 呼叫 Apps Script 寫回 Sheets
   const cbName = 'cb_' + Date.now();
   const fieldParam = field === '已安裝' ? 'installed' : 'registered';
-  const url = `${APPS_SCRIPT_URL}?action=updateCheck&orderId=${encodeURIComponent(orderId)}&field=${fieldParam}&value=${checked}&callback=${cbName}`;
+  const url = `${APPS_SCRIPT_URL}?action=reportUpdateCheck&orderId=${encodeURIComponent(orderId)}&field=${fieldParam}&value=${checked}&token=${encodeURIComponent(getReportSessionToken())}&callback=${cbName}`;
 
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
@@ -2092,6 +2095,8 @@ function toggleTaskCheck(orderId, field, checked) {
       // 先更新本地資料，再重繪，畫面才會反映最新狀態
       r[field] = checked;
       renderTasks();
+    } else if (data.status === 'not_allowed') {
+      reportRequireLogin('登入已過期，請重新輸入密碼');
     }
   };
   const script = document.createElement('script');
@@ -2108,13 +2113,15 @@ function togglePurchaseCheck(orderId, item, checked) {
   const newText = buildPurchaseStatusText(flags);
 
   const cbName = 'cb_' + Date.now();
-  const url = `${APPS_SCRIPT_URL}?action=updatePrep&orderId=${encodeURIComponent(orderId)}&purchase=${encodeURIComponent(newText)}&callback=${cbName}`;
+  const url = `${APPS_SCRIPT_URL}?action=reportUpdatePrep&orderId=${encodeURIComponent(orderId)}&purchase=${encodeURIComponent(newText)}&token=${encodeURIComponent(getReportSessionToken())}&callback=${cbName}`;
 
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
     if (data.status === 'ok') {
       r['採購狀態'] = newText;
       renderTasks();
+    } else if (data.status === 'not_allowed') {
+      reportRequireLogin('登入已過期，請重新輸入密碼');
     }
   };
   const script = document.createElement('script');
@@ -2283,7 +2290,7 @@ function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
   const fieldMap = { frame:'車架號碼', motor:'馬達編號', plate:'車牌號碼', delivery:'預計交車日' };
   const cbName = 'cb_tools_' + Date.now() + '_' + Math.floor(Math.random()*100000);
   const qs = Object.keys(updates).map(k => `${k}=${encodeURIComponent(updates[k])}`).join('&');
-  const url = `${APPS_SCRIPT_URL}?action=editOrder&orderId=${encodeURIComponent(orderId)}&${qs}&callback=${cbName}`;
+  const url = `${APPS_SCRIPT_URL}?action=reportEditOrder&orderId=${encodeURIComponent(orderId)}&${qs}&token=${encodeURIComponent(getReportSessionToken())}&callback=${cbName}`;
   let finished = false;
   const script = document.createElement('script');
   script.src = url;
@@ -2305,6 +2312,9 @@ function callUpdateOrderTools(orderId, updates, callback, _isRetry) {
         Object.keys(updates).forEach(k => { if (fieldMap[k]) row[fieldMap[k]] = updates[k]; });
       }
       callback(true);
+    } else if (data && data.status === 'not_allowed') {
+      reportRequireLogin('登入已過期，請重新輸入密碼');
+      callback(false, '登入已過期');
     } else {
       // 這種情況是「有回應但狀態不是 ok」（例如找不到訂單），不算網路逾時，不重試，直接回報
       callback(false, data && data.message);
@@ -2719,7 +2729,7 @@ function submitDelivery() {
   btn.textContent = '送出中...';
 
   const cbName = 'cb_' + Date.now();
-  const url = `${APPS_SCRIPT_URL}?action=delivery&orderId=${encodeURIComponent(modalOrderId)}&balMethod=${encodeURIComponent(method)}&balPeriod=${encodeURIComponent(period)}&balDate=${encodeURIComponent(date)}&frame=${encodeURIComponent(frame)}&motor=${encodeURIComponent(motor)}&plate=${encodeURIComponent(plate)}&callback=${cbName}`;
+  const url = `${APPS_SCRIPT_URL}?action=reportDelivery&orderId=${encodeURIComponent(modalOrderId)}&balMethod=${encodeURIComponent(method)}&balPeriod=${encodeURIComponent(period)}&balDate=${encodeURIComponent(date)}&frame=${encodeURIComponent(frame)}&motor=${encodeURIComponent(motor)}&plate=${encodeURIComponent(plate)}&token=${encodeURIComponent(getReportSessionToken())}&callback=${cbName}`;
 
   window[cbName] = function(data) {
     delete window[cbName]; script.remove();
@@ -2727,6 +2737,10 @@ function submitDelivery() {
       closeDeliveryModal();
       alert('✅ 收款登記完成！資料已更新。');
       loadData(); // 重新載入報表
+    } else if (data.status === 'not_allowed') {
+      btn.disabled = false;
+      btn.textContent = '✅ 確認收款完成交車';
+      reportRequireLogin('登入已過期，請重新輸入密碼');
     } else {
       showModalErr('送出失敗：' + (data.message || '請稍後再試'));
       btn.disabled = false;
