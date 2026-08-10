@@ -590,35 +590,56 @@ tr:last-child td{border-bottom:none;}
 </div><!-- end app-body -->
 
 <script>
-// ====== PASSWORD ======
-const CORRECT_PASSWORD = '9866';
-function checkPassword() {
+// ====== PASSWORD / SESSION ======
+// 密碼不再寫死在這裡、也不比對前端——改成呼叫 Apps Script reportLogin（POST body 帶密碼，
+// 不進 URL），驗證通過換一個短效 session token，之後讀訂單資料只帶 token。
+const REPORT_SESSION_KEY = 'report_session_token';
+function getReportSessionToken() { return sessionStorage.getItem(REPORT_SESSION_KEY) || ''; }
+function setReportSessionToken(token) { sessionStorage.setItem(REPORT_SESSION_KEY, token); }
+// token 過期／被清掉時導回登入畫面。CacheService 不保證資料活滿 TTL，
+// 所以任何一次 reportAuthOrders 回 not_allowed 都要走這裡，不能假設 token 一定還有效。
+function reportRequireLogin(message) {
+  sessionStorage.removeItem(REPORT_SESSION_KEY);
+  document.getElementById('app-body').style.display = 'none';
+  document.getElementById('lock-screen').style.display = '';
+  const err = document.getElementById('lock-error');
+  if (err) err.textContent = message || '';
+}
+async function checkPassword() {
   const input = document.getElementById('lock-input');
   const err = document.getElementById('lock-error');
-  if (input.value === CORRECT_PASSWORD) {
-    document.getElementById('lock-screen').style.display = 'none';
-    document.getElementById('app-body').style.display = 'block';
-    sessionStorage.setItem('98go_auth', '1');
-    loadData();
-    loadReportProductMaster();
-    loadBatteryVoltageData();
-  } else {
-    input.classList.add('error');
-    err.textContent = '密碼錯誤，請再試一次';
-    input.value = '';
-    setTimeout(() => { input.classList.remove('error'); err.textContent = ''; input.focus(); }, 1000);
+  const password = input.value;
+  err.textContent = '';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?action=reportLogin', {
+      method: 'POST',
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (data && data.status === 'ok' && data.token) {
+      setReportSessionToken(data.token);
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('app-body').style.display = 'block';
+      loadData();
+      loadReportProductMaster();
+      loadBatteryVoltageData();
+    } else {
+      input.classList.add('error');
+      err.textContent = '密碼錯誤，請再試一次';
+      input.value = '';
+      setTimeout(() => { input.classList.remove('error'); err.textContent = ''; input.focus(); }, 1000);
+    }
+  } catch (e) {
+    err.textContent = '網路異常，請稍後再試';
   }
 }
-// 若本次已驗證過（重新整理不需重輸）
-if (sessionStorage.getItem('98go_auth') === '1') {
+// 若本次已驗證過（重新整理不需重輸；token 若已過期，loadData() 會自動導回登入畫面）
+if (getReportSessionToken()) {
   document.getElementById('lock-screen').style.display = 'none';
   document.getElementById('app-body').style.display = 'block';
 }
 
 // ====== CONFIG ======
-const SHEET_ID = '1eLlGkJ2hvk_XJvJYtVGqGgQ8pCrQolfSkUlGnDhXO8k';
-const SHEET_NAME = '購車保固資料表';
-const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
 window._SCRIPT_URL = APPS_SCRIPT_URL;
 
@@ -643,28 +664,34 @@ let batteryVoltageError = false;
 // ====== LOAD DATA ======
 async function loadData() {  document.getElementById('loading').style.display = 'block';
   document.getElementById('content').style.display = 'none';
+  const token = getReportSessionToken();
+  if (!token) { reportRequireLogin(); return; }
   try {
-    // 加上時間戳參數 + cache:'no-store'，強制瀏覽器每次都發出全新請求，
-    // 避免瀏覽器把先前同一條網址的回應快取重複拿來用，
-    // 造成「Sheets 已經寫入新值，但畫面重新整理後還是顯示舊值」的假象。
-    const res = await fetch(API_URL + '&_ts=' + Date.now(), { cache: 'no-store' });
-    const text = await res.text();
-    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-    const rows = json.table.rows;
-    const cols = json.table.cols;
-    allData = rows.map(row => {
-      const obj = {};
-      cols.forEach((col, i) => {
-        obj[col.label || col.id] = row.c[i] ? (row.c[i].v !== undefined ? row.c[i].v : '') : '';
-      });
-      return obj;
-    }).filter(r => r['單號']);
+    const data = await new Promise((resolve, reject) => {
+      const cbName = 'cb_orders_' + Date.now();
+      const timeout = setTimeout(() => { delete window[cbName]; script.remove(); reject(new Error('逾時')); }, 20000);
+      window[cbName] = function(result) {
+        clearTimeout(timeout);
+        delete window[cbName]; script.remove();
+        resolve(result);
+      };
+      const script = document.createElement('script');
+      // 帶時間戳避免瀏覽器把先前同一條網址的回應快取重複拿來用
+      script.src = `${APPS_SCRIPT_URL}?action=reportAuthOrders&token=${encodeURIComponent(token)}&callback=${cbName}&_ts=${Date.now()}`;
+      script.onerror = () => { clearTimeout(timeout); delete window[cbName]; script.remove(); reject(new Error('網路異常')); };
+      document.head.appendChild(script);
+    });
+
+    if (data.status === 'not_allowed') { reportRequireLogin('登入已過期，請重新輸入密碼'); return; }
+    if (data.status !== 'ok') throw new Error(data.message || '載入失敗');
+
+    allData = data.rows;
     document.getElementById('last-update').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
     renderAll();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
   } catch(e) {
-    document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請確認 Google Sheets 已開放「知道連結的人可以檢視」<br><br>錯誤：${e.message}</div>`;
+    document.getElementById('loading').innerHTML = `<div class="error-box">❌ 無法載入資料，請稍後再試或重新整理頁面重新登入<br><br>錯誤：${e.message}</div>`;
   }
 }
 
@@ -2563,8 +2590,8 @@ function renderOrderTools(orderId) {
 }
 
 // loadData() 由密碼驗證通過後呼叫
-// 若已在 session 中驗證過，直接載入
-if (sessionStorage.getItem('98go_auth') === '1') { loadData(); loadReportProductMaster(); loadBatteryVoltageData(); }
+// 若本次 session 已經有 token，直接載入（token 若已過期，loadData() 會自動導回登入畫面）
+if (getReportSessionToken()) { loadData(); loadReportProductMaster(); loadBatteryVoltageData(); }
 </script>
 
 <!-- 登記收款 Modal -->
