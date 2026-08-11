@@ -436,6 +436,25 @@
 </head>
 <body>
 
+<!-- P0-1 Batch 2：門市登入畫面。客戶用「產生客戶填寫連結」打開的頁面完全跳過這一頁
+     （見下方 initStaffGate()），只有直接開 index.html 的門市人員會看到。 -->
+<div id="lock-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem;background:#F7F5F2;">
+  <div style="max-width:320px;width:100%;background:#fff;border-radius:14px;padding:2rem 1.5rem;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+    <div style="width:56px;height:56px;border-radius:12px;background:#E63946;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem;">
+      <span style="font-size:13px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;">98GO</span>
+      <span style="font-size:8px;color:rgba(255,255,255,.85);letter-spacing:.1em;">e-bike</span>
+    </div>
+    <h2 style="font-size:16px;font-weight:800;color:#2B2D42;margin-bottom:.375rem;">🔒 門市人員登入</h2>
+    <p style="font-size:13px;color:#888;margin-bottom:1.25rem;">請輸入店內存取密碼</p>
+    <input type="password" id="lock-input" placeholder="••••••••" autocomplete="off" maxlength="20"
+      onkeydown="if(event.key==='Enter')checkStaffPassword()"
+      style="width:100%;padding:.7rem .9rem;border:1.5px solid #ddd;border-radius:8px;font-size:14px;text-align:center;letter-spacing:.15em;margin-bottom:.75rem;box-sizing:border-box;">
+    <button onclick="checkStaffPassword()" style="width:100%;padding:.7rem;background:#E63946;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">確認進入</button>
+    <div id="lock-error" style="font-size:12px;color:#E63946;margin-top:.75rem;min-height:1em;"></div>
+  </div>
+</div>
+
+<div id="app-body" style="display:none;">
 <div class="header">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:#E63946;flex-shrink:0;">
     <span style="font-size:14px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.5px;">98GO</span>
@@ -1102,10 +1121,90 @@
 
 </div><!-- /container -->
 
+</div><!-- /app-body（P0-1 Batch 2） -->
+
 <script>
 // ====== CONFIG ======
 // 將下方的 SCRIPT_URL 替換成你的 Google Apps Script 部署網址
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyf7HAMbgsauGk4zIyrrm7jNuo-vjj7l-E8qk8tG4toCfNCjfTSMaJd_odqrqUFq1VG/exec';
+
+// ====== P0-1 Batch 2：門市登入／submission authorization ======
+// key 沿用 report.html 現有的 report_session_token——同一把密碼、同一組
+// 後端 reportLogin/isValidReportSession，不建立第二套密碼系統。
+// 同一分頁內從 report.html 導覽過來會自動共用；不同分頁則各自登入一次。
+const STAFF_SESSION_KEY = 'report_session_token';
+function getStaffSessionToken() { return sessionStorage.getItem(STAFF_SESSION_KEY) || ''; }
+function setStaffSessionToken(token) { sessionStorage.setItem(STAFF_SESSION_KEY, token); }
+function clearStaffSessionToken() { sessionStorage.removeItem(STAFF_SESSION_KEY); }
+
+// session 過期／被拒絕時導回登入畫面，不讓門市看到技術字串。
+// 遠距客戶模式永遠不會呼叫這支——客戶端從頭到尾看不到 lock-screen。
+function staffRequireLogin(message) {
+  clearStaffSessionToken();
+  const appBody = document.getElementById('app-body');
+  if (appBody) appBody.style.display = 'none';
+  const lockScreen = document.getElementById('lock-screen');
+  if (lockScreen) lockScreen.style.display = '';
+  const err = document.getElementById('lock-error');
+  if (err) err.textContent = message || '';
+}
+
+async function checkStaffPassword() {
+  const input = document.getElementById('lock-input');
+  const err = document.getElementById('lock-error');
+  const password = input.value;
+  err.textContent = '';
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=reportLogin', {
+      method: 'POST',
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (data && data.status === 'ok' && data.token) {
+      setStaffSessionToken(data.token);
+      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById('app-body').style.display = '';
+    } else {
+      input.classList.add('error');
+      err.textContent = '密碼錯誤，請再試一次';
+      input.value = '';
+      setTimeout(() => { input.classList.remove('error'); err.textContent = ''; input.focus(); }, 1000);
+    }
+  } catch (e) {
+    err.textContent = '網路異常，請稍後再試';
+  }
+}
+
+// 對 submissionAuthorize 的 JSONP 呼叫，產生連結與門市現場送出前都會用到。
+function callSubmissionAuthorize(token, lockedFields) {
+  return new Promise((resolve) => {
+    const cbName = 'cb_auth_' + Date.now();
+    const url = SCRIPT_URL + '?action=submissionAuthorize'
+      + '&token=' + encodeURIComponent(token)
+      + '&lockedFields=' + encodeURIComponent(JSON.stringify(lockedFields))
+      + '&callback=' + cbName;
+    let scriptEl;
+    window[cbName] = function(result) {
+      delete window[cbName];
+      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      resolve(result);
+    };
+    scriptEl = document.createElement('script');
+    scriptEl.src = url;
+    scriptEl.onerror = () => {
+      delete window[cbName];
+      resolve(null);
+    };
+    document.body.appendChild(scriptEl);
+    setTimeout(() => {
+      if (window[cbName]) {
+        delete window[cbName];
+        if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+        resolve(null);
+      }
+    }, 10000);
+  });
+}
 
 // ====== 商品主檔 API ======
 const PRODUCT_SHEET_ID   = '1fgow7_Wp4qdUsR63hnxeH-sDRzAFYu6dmFBWcoOGMhI';
@@ -1415,11 +1514,24 @@ function initFallbackSelects() {
   if (!encoded) return;
 
   try {
-    const data = JSON.parse(decodeURIComponent(encoded));
+    // P0-1 Batch 2：?order= 現在帶的是完整 submission authorization
+    // （{status, submissionId, expiry, lockedFields, signature}），由
+    // generateRemoteLink() 呼叫 server 的 submissionAuthorize 核發，
+    // 不再是鎖定欄位本身直接明碼放在 URL 裡。下面 data 直接指向
+    // auth.lockedFields，後續所有既有的 data.xxx 讀取完全不用改，
+    // 行為跟改版前一致，只是資料來源多了一層 authorization 包裝。
+    const auth = JSON.parse(decodeURIComponent(encoded));
+    if (!auth || !auth.signature || !auth.submissionId || !auth.lockedFields) {
+      throw new Error('客戶連結缺少有效的 submission authorization');
+    }
+    const data = auth.lockedFields;
 
     // 鎖定模式標記
     window._remoteMode = true;
     window._remoteData = data;
+    // 完整 authorization（含 signature／submissionId／expiry），
+    // submitForm() 最後送出時原封不動附帶，本批尚未被後端驗證。
+    window._remoteAuth = auth;
 
     // 填入並鎖定 step1 車輛欄位（遠距模式：select 改為 disabled）
     const lockSelect = (id, val) => {
@@ -1582,6 +1694,24 @@ function initFallbackSelects() {
   }
 })();
 
+// ====== P0-1 Batch 2：門市登入閘門 ======
+// 一定要放在 initRemoteMode() 之後執行，因為要靠 window._remoteMode
+// 判斷這是客戶連結還是門市直接開頁面。
+// lock-screen 預設是顯示的（HTML 內沒有 display:none)，app-body 預設隱藏——
+// 這裡只決定要不要把這個預設狀態換成「直接顯示 app-body」。
+(function initStaffGate() {
+  const appBody = document.getElementById('app-body');
+  const lockScreen = document.getElementById('lock-screen');
+  // 客戶連結：完全跳過登入，客戶永遠不會看到 lock-screen。
+  if (window._remoteMode || getStaffSessionToken()) {
+    if (appBody) appBody.style.display = '';
+    if (lockScreen) lockScreen.style.display = 'none';
+    return;
+  }
+  // 門市直接開頁面、又沒有現成 session：維持 lock-screen 顯示、
+  // app-body 隱藏（兩者都是 HTML 裡的預設狀態，這裡不用再多做什麼）。
+})();
+
 // ====== CHIP TOGGLE ======
 function toggleChip(el, val) {
   el.classList.toggle('selected');
@@ -1601,6 +1731,43 @@ function toggleChk(id, wrapId) {
 
 // ====== ADDON ======
 // ====== 遠距訂購：產生客戶連結 ======
+// P0-1 Batch 2：跟原本 generateRemoteLink() 內建構 data 物件的邏輯完全相同，
+// 抽成共用函式，讓「產生客戶連結」與「門市現場送出前自動核發 authorization」
+// 兩處用同一份鎖定欄位收集邏輯，避免兩邊分別維護、日後欄位漏改其中一處。
+// 欄位名稱對應程式碼.gs.txt 的 LOCKED_FIELD_KEYS 白名單。
+function collectLockedFieldsFromDOM() {
+  const addons = getAddons();
+  const ge = id => document.getElementById(id)?.value || '';
+  return {
+    model:        document.getElementById('s1-model').value,
+    vehicleType:  document.getElementById('s1-vehicle-type').value,
+    color:        document.getElementById('s1-color').value,
+    vehicleCode:  document.getElementById('s1-vehicle-code').value,
+    batterySalesSpec: document.getElementById('s1-battery-spec').value,
+    batType:      document.getElementById('s1-battype').value,
+    batV:         document.getElementById('s1-batv').value,
+    batAh:        document.getElementById('s1-batah').value,
+    batNote:      document.getElementById('s1-bat-note').value,
+    modelNote:    v('s1-model-note'),
+    date:         ge('s1-date'),
+    delivery:     ge('s1-delivery'),
+    staff:        ge('s1-staff'),
+    speedSetting: document.getElementById('s1-speed')?.value || '',
+    bikePrice:    parseFloat(ge('p-bike') || 0),
+    discount:     parseFloat(ge('p-discount') || 0),
+    deposit:      parseFloat(ge('p-deposit') || 0),
+    depositMethod: (() => { const d = getDepDetails().filter(x=>x.method&&x.amount>0); return d.length===1?d[0].method:d.length>1?'多元付款':''; })(),
+    balanceMethod: ge('p-bal-method'),
+    depositPeriod: '',
+    depDate:       (() => { const d = getDepDetails().filter(x=>x.date); return d.length>0?d[0].date:''; })(),
+    depositDetail: buildDepositDetail(),
+    balDate:       '',
+    fullDate:      ge('p-full-date'),
+    addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
+    addonTotal: addons.reduce((s,a) => s+a.price, 0),
+  };
+}
+
 async function generateRemoteLink() {
   // 驗證車輛基本資料是否已選齊（遠距客人會直接跳到 Step3，
   // 不會經過 validateStep(1)，這裡沒擋到的欄位會永久空白，
@@ -1646,47 +1813,35 @@ async function generateRemoteLink() {
   const e2 = document.getElementById('err2');
   if (e2) e2.classList.remove('show');
 
-  // 先跑到 step2 讓 calcAll 算好，再回來
-  const addons = getAddons();
-
-  const ge = id => document.getElementById(id)?.value || '';
-  const data = {
-    model:        document.getElementById('s1-model').value,
-    vehicleType:  document.getElementById('s1-vehicle-type').value,
-    color:        document.getElementById('s1-color').value,
-    vehicleCode:  document.getElementById('s1-vehicle-code').value,
-    batterySalesSpec: document.getElementById('s1-battery-spec').value,
-    batType:      document.getElementById('s1-battype').value,
-    batV:         document.getElementById('s1-batv').value,
-    batAh:        document.getElementById('s1-batah').value,
-    batNote:      document.getElementById('s1-bat-note').value,
-    modelNote:    v('s1-model-note'),
-    date:         ge('s1-date'),
-    delivery:     ge('s1-delivery'),
-    staff:        ge('s1-staff'),
-    speedSetting: document.getElementById('s1-speed')?.value || '',
-    bikePrice:    parseFloat(ge('p-bike') || 0),
-    discount:     parseFloat(ge('p-discount') || 0),
-    deposit:      parseFloat(ge('p-deposit') || 0),
-    depositMethod: (() => { const d = getDepDetails().filter(x=>x.method&&x.amount>0); return d.length===1?d[0].method:d.length>1?'多元付款':''; })(),
-    balanceMethod: ge('p-bal-method'),
-    depositPeriod: '',
-    depDate:       (() => { const d = getDepDetails().filter(x=>x.date); return d.length>0?d[0].date:''; })(),
-    depositDetail: buildDepositDetail(),
-    balDate:       '',
-    fullDate:      ge('p-full-date'),
-    addonItems: addons.map(a => a.price ? a.name + ':' + a.price : a.name).join('、'),
-    addonTotal: addons.reduce((s,a) => s+a.price, 0),
-  };
-
-  // 直接用 encodeURIComponent 編碼，相容中文字元
-  const encoded = encodeURIComponent(JSON.stringify(data));
-  const longUrl = window.location.origin + window.location.pathname + '?order=' + encoded;
+  const lockedFields = collectLockedFieldsFromDOM();
 
   const inputEl = document.getElementById('remote-link-input');
-  inputEl.value = '產生短網址中，請稍候...';
+  inputEl.value = '產生授權中，請稍候...';
   document.getElementById('remote-link-box').style.display = 'block';
   document.getElementById('remote-link-box').scrollIntoView({behavior:'smooth', block:'center'});
+
+  // P0-1 Batch 2：連結不再直接明碼帶鎖定欄位，改成先跟 server 換一份
+  // 有 report session 背書、HMAC 簽章過的 submission authorization
+  // （呼叫既有 createSubmissionAuthorization()，這裡不重寫任何簽章邏輯）。
+  const staffToken = getStaffSessionToken();
+  if (!staffToken) {
+    document.getElementById('remote-link-box').style.display = 'none';
+    staffRequireLogin('登入已過期，請重新登入後再產生連結');
+    return;
+  }
+  const auth = await callSubmissionAuthorize(staffToken, lockedFields);
+  if (!auth || auth.status !== 'ok') {
+    document.getElementById('remote-link-box').style.display = 'none';
+    staffRequireLogin('登入已過期，請重新登入後再產生連結');
+    return;
+  }
+
+  // 整包 authorization（含 signature／submissionId／expiry／lockedFields）
+  // 一起編碼進 ?order=，initRemoteMode() 對應解析。
+  const encoded = encodeURIComponent(JSON.stringify(auth));
+  const longUrl = window.location.origin + window.location.pathname + '?order=' + encoded;
+
+  inputEl.value = '產生短網址中，請稍候...';
 
   // 呼叫短網址服務（is.gd），失敗的話自動退回原本的完整網址，不影響功能
   try {
@@ -2155,6 +2310,31 @@ async function submitForm() {
     chkWarranty: '已確認', chkUsage: '已確認', chkFinal: '已確認',
     sigImg
   };
+
+  // P0-1 Batch 2：附上 submission authorization。這批 handleRequest() 還
+  // 沒有要求它、也還沒驗證它，純粹先讓合法流程開始攜帶這份資料（staging），
+  // 真正把關留到 Batch 3。
+  if (window._remoteMode) {
+    // 遠距客戶：authorization 是產生連結當下門市已經核發好的那一份，
+    // 原封不動帶上，不在這裡重新產生。
+    finalData.submissionAuth = window._remoteAuth || null;
+  } else {
+    // 門市現場建單：沒有「產生連結」這一步可以先換 authorization，
+    // 所以在真正送出前這一刻，用現有 report session 自動核發一份，
+    // 門市不需要另外多按一顆按鈕。
+    const staffToken = getStaffSessionToken();
+    if (!staffToken) {
+      staffRequireLogin('登入已過期，請重新登入後再送出');
+      return;
+    }
+    const lockedFields = collectLockedFieldsFromDOM();
+    const auth = await callSubmissionAuthorize(staffToken, lockedFields);
+    if (!auth || auth.status !== 'ok') {
+      staffRequireLogin('登入已過期，請重新登入後再送出');
+      return;
+    }
+    finalData.submissionAuth = auth;
+  }
 
   // Upload to Google Sheets（使用 JSONP，確保資料寫入 Sheets）
   document.getElementById('uploading').classList.add('show');
