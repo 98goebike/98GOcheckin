@@ -2149,10 +2149,50 @@ function escAttr(str) {
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-// 收據網址：沿用 index.html 既有的組法（同目錄下 receipt.html?id=原始單號）
-function buildOrderToolsReceiptLink(orderId) {
+// 收據網址：orderId + receiptToken 兩者都必須有才組得出連結，
+// receiptToken 一律來自 action=reportReceiptLink（見 loadOrderToolsReceiptLink()），
+// 這裡不再、也不允許產生沒有 token 的 receipt.html?id=... 連結。
+function buildOrderToolsReceiptLink(orderId, receiptToken) {
   const base = window.location.href.replace(/\/[^/]*$/, '/');
-  return base + 'receipt.html?id=' + encodeURIComponent(orderId);
+  return base + 'receipt.html?id=' + encodeURIComponent(orderId) + '&token=' + encodeURIComponent(receiptToken);
+}
+
+// 訂單助手「訂車完成」／「交車完成」共用同一個收據連結，只呼叫一次 reportReceiptLink。
+// 呼叫前兩張卡片的 textarea／開啟收據連結都先顯示「產生中」，成功後才一次補上兩邊。
+function loadOrderToolsReceiptLink(orderId, safeId, msg1id, msg6id) {
+  const applyText = (text) => {
+    const m1 = document.getElementById(msg1id); if (m1) m1.value = text;
+    const m6 = document.getElementById(msg6id); if (m6) m6.value = text;
+  };
+  const token = getReportSessionToken();
+  if (!token) { reportRequireLogin('登入已過期，請重新輸入密碼'); return; }
+
+  const cbName = 'cb_rlink_' + Date.now();
+  let finished = false;
+  const script = document.createElement('script');
+  window[cbName] = function(data) {
+    finished = true;
+    delete window[cbName]; script.remove();
+    if (data && data.status === 'ok' && data.receiptToken) {
+      const link = buildOrderToolsReceiptLink(orderId, data.receiptToken);
+      const m1 = document.getElementById(msg1id); if (m1) m1.value = buildOrderCreatedMessage(orderId, link);
+      const m6 = document.getElementById(msg6id); if (m6) m6.value = buildDeliveryDoneMessage(orderId, link);
+      const l1 = document.getElementById('rlink1-' + safeId); if (l1) l1.href = link;
+      const l6 = document.getElementById('rlink6-' + safeId); if (l6) l6.href = link;
+    } else if (data && data.status === 'not_allowed') {
+      reportRequireLogin('登入已過期，請重新輸入密碼');
+    } else {
+      applyText('❌ 收據連結產生失敗，請確認訂單資料');
+    }
+  };
+  script.src = `${APPS_SCRIPT_URL}?action=reportReceiptLink&orderId=${encodeURIComponent(orderId)}&token=${encodeURIComponent(token)}&callback=${cbName}`;
+  script.onerror = () => {
+    if (!finished) { finished = true; delete window[cbName]; script.remove(); applyText('❌ 收據連結產生失敗，請稍後再試'); }
+  };
+  document.head.appendChild(script);
+  setTimeout(() => {
+    if (!finished && window[cbName]) { finished = true; delete window[cbName]; script.remove(); applyText('❌ 收據連結產生失敗，請稍後再試'); }
+  }, 15000);
 }
 
 // ── 展開／收合「訂單助手」列 ──
@@ -2186,8 +2226,7 @@ function toggleToolCard(bodyId) {
 }
 
 // ── 4 則 LINE 訊息模板 ──
-function buildOrderCreatedMessage(orderId) {
-  const link = buildOrderToolsReceiptLink(orderId);
+function buildOrderCreatedMessage(orderId, link) {
   const displayId = fmtOrderId(orderId);
   return `您好，感謝您訂購 98GO 電動車 😊
 
@@ -2243,8 +2282,7 @@ ${frameLine}${plateLine}
 以下提供交車前車況檢查影片`;
 }
 
-function buildDeliveryDoneMessage(orderId) {
-  const link = buildOrderToolsReceiptLink(orderId);
+function buildDeliveryDoneMessage(orderId, link) {
   const displayId = fmtOrderId(orderId);
   return `您好，今天已順利完成交車 😊
 
@@ -2421,7 +2459,8 @@ function renderOrderTools(orderId) {
 
   const c0 = 'c0-' + safeId, c1 = 'c1-' + safeId, c2 = 'c2-' + safeId, c3 = 'c3-' + safeId, c5 = 'c5-' + safeId, c6 = 'c6-' + safeId;
   const msg1id = 'msg1-' + safeId, msg2id = 'msg2-' + safeId, msg5id = 'msg5-' + safeId, msg6id = 'msg6-' + safeId, msgBatId = 'msgBat-' + safeId;
-  const receiptLink = buildOrderToolsReceiptLink(orderId);
+  // 收據連結改由 loadOrderToolsReceiptLink() 非同步取得（見下方渲染完成後的呼叫），
+  // 這裡先不產生連結，避免出現沒有 token 的 receipt.html?id=... 網址。
 
   // 電池使用提醒卡：用 AX（實際出貨電池編號）精確比對「電池電壓」F欄
   const shipBatteryCode = getVal(order,'實際出貨電池編號');
@@ -2523,7 +2562,7 @@ function renderOrderTools(orderId) {
         </div>
         <div class="tool-card-body" id="${c1}" style="display:none;">
           <div class="tool-btn-row" style="margin-top:12px;">
-            <a class="tool-btn link" href="${escAttr(receiptLink)}" target="_blank" rel="noopener">開啟收據</a>
+            <a class="tool-btn link" id="rlink1-${safeId}" href="#" target="_blank" rel="noopener">開啟收據</a>
           </div>
           <textarea class="msg-preview" id="${msg1id}"></textarea>
           <div class="tool-btn-row">
@@ -2579,7 +2618,7 @@ function renderOrderTools(orderId) {
         </div>
         <div class="tool-card-body" id="${c6}" style="display:none;">
           <div class="tool-btn-row" style="margin-top:12px;">
-            <a class="tool-btn link" href="${escAttr(receiptLink)}" target="_blank" rel="noopener">開啟收據</a>
+            <a class="tool-btn link" id="rlink6-${safeId}" href="#" target="_blank" rel="noopener">開啟收據</a>
           </div>
           <textarea class="msg-preview" id="${msg6id}"></textarea>
           <div class="tool-btn-row">
@@ -2592,11 +2631,14 @@ function renderOrderTools(orderId) {
   `;
 
   // 訊息內容一律用 .value 賦值（不走 innerHTML），避免資料中的 < > & 等符號破壞畫面
-  document.getElementById(msg1id).value = buildOrderCreatedMessage(orderId);
+  // 「訂車完成」「交車完成」需要收據連結，先顯示產生中，non-blocking 拿到 token 後再補上完整訊息
+  document.getElementById(msg1id).value = '收據連結產生中…';
   document.getElementById(msg2id).value = buildPreLicenseMessage();
   document.getElementById(msg5id).value = buildPickupMessage(order, orderId);
-  document.getElementById(msg6id).value = buildDeliveryDoneMessage(orderId);
+  document.getElementById(msg6id).value = '收據連結產生中…';
   if (batteryMsgText) document.getElementById(msgBatId).value = batteryMsgText;
+
+  loadOrderToolsReceiptLink(orderId, safeId, msg1id, msg6id);
 }
 
 // loadData() 由密碼驗證通過後呼叫
